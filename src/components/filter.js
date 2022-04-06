@@ -12,9 +12,9 @@ export default class Filter extends React.Component {
         initDriver(this.props.uri, this.props.user, this.props.password)
         this.driver = getDriver()
         this.state = {
+            chapter: [],
             speaker: [],
             addressee: [],
-            chapter: [],
             gender: [], 
             selectedSpeaker: "",
             selectedAddressee: "",
@@ -23,27 +23,37 @@ export default class Filter extends React.Component {
     }
 
     async componentDidMount() {
+        const getChp = 'match (c:Chapter) return (c) as chapters'
         const getExchange = 'match path=(c:Character)-[r:SPEAKER_OF]-(j:Japanese)-[s:ADDRESSEE_OF]-(d:Character) return path'
-        //const getPoem = 'match path=(c:Chapter)-[r:INCLUDED_IN]-(j:Japanese)-[s:TRANSLATION_OF]-(t:Translation) return path'
+
         const session = this.driver.session()
 
-        const res1 = await session.readTransaction(tx => tx.run(getExchange))
-        //this.setState({data: res.records.map(row => toNativeTypes(row.get('name')))})
-        let temp1 = res1.records.map(row => {return toNativeTypes(row.get('path'))})
-        let newtemp1 = temp1.map(({segments}) => segments)
+        const resChp = await session.readTransaction(tx => tx.run(getChp))
+        const resExchange = await session.readTransaction(tx => tx.run(getExchange))
+
+        let tempChp = resChp.records.map(row => {return toNativeTypes(row.get('chapters'))}).map((chp) => chp.properties)
+        let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
         
-        let zeros = []
-        let ones = []
-        
-        newtemp1.forEach(([z, o]) => {
-            zeros.push(z)
-            ones.push(o)
+        let speakers = []
+        let addressees = []
+        let chapters = []
+
+        tempExchange.forEach(([s, a]) => {
+            speakers.push(s)
+            addressees.push(a)
         })
 
+        tempChp.forEach((e) => {
+            chapters.push([e.chapter_number, e.kanji, e.chapter_name])
+        })
+        //['1', '桐壺', 'Kiritsubo']
+        //console.log(chapters)
+
         this.setState({
-            speaker: zeros.map(({start}) => start.properties.name),
+            chapter: chapters,
+            speaker: speakers.map(({start}) => start.properties.name),
                     //pnum: zeros.map(({start}) => start.properties.name),
-            addressee: ones.map(({end}) => end.properties.name)
+            addressee: addressees.map(({end}) => end.properties.name)
         }, () => {
             console.log('filter options set')
         })
@@ -54,7 +64,6 @@ export default class Filter extends React.Component {
         //console.log(newtemp2)
         await session.close()
         closeDriver()
-        //console.log('filter mounted')
     }
 
     render() {
@@ -80,6 +89,21 @@ export default class Filter extends React.Component {
         }
         return (
             <div>
+                <form>
+                    <label htmlFor="chapter">Choose a chapter</label>
+                    <br />
+                    <select 
+                        id="chapter"
+                        //value={formData.speaker}
+                        //onChange={updateSelectedSpeaker}
+                        name="chapter"
+                    >
+                        <optgroup>
+                            <option value="">Any</option>
+                            {this.state.chapter.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
+                        </optgroup>
+                    </select>
+                </form>
                 <form>
                     <label htmlFor="speaker">Choose a speaker</label>
                     <br />
