@@ -2,6 +2,7 @@ import React from 'react'
 //import {  } from '../neo4j'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
+import { Dropdown } from 'rsuite'
 
 export default class Filter extends React.Component {
 
@@ -89,6 +90,12 @@ export default class Filter extends React.Component {
         }
         return (
             <div>
+                <label htmlFor="chapter">Choose a chapter:</label>
+                <br />
+                <Dropdown title="chapter">
+                    <Dropdown.Item>New File</Dropdown.Item>
+                    {this.state.chapter.map((row) => <Dropdown.Item key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</Dropdown.Item>)}
+                </Dropdown>
                 <form>
                     <label htmlFor="chapter">Choose a chapter</label>
                     <br />
