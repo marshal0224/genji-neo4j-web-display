@@ -51,10 +51,16 @@ export default class App extends React.Component{
   render() {
     return (
       <div className="App">
-        <Filter ref={this.filterRef} uri={this.uri} user={this.user} password={this.password}/>
-        <button disabled={this.state.queried} onClick={this.query}>Query</button>
-        <button disabled={!this.state.queried} onClick={this.reset}>Reset</button>
-        {this.state.queried && <Poem uri={this.uri} user={this.user} password={this.password} speaker={this.state.speaker} addressee={this.state.addressee}/>}
+        <div>
+          <Filter ref={this.filterRef} uri={this.uri} user={this.user} password={this.password}/>
+          <br/>
+          <button disabled={this.state.queried} onClick={this.query}>Query</button>
+          <button disabled={!this.state.queried} onClick={this.reset}>Reset</button>
+          <br/>
+        </div>
+        <div>
+          {this.state.queried && <Poem uri={this.uri} user={this.user} password={this.password} speaker={this.state.speaker} addressee={this.state.addressee}/>}
+        </div>
       </div>
     )
   }

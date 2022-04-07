@@ -90,12 +90,12 @@ export default class Filter extends React.Component {
         }
         return (
             <div>
-                <label htmlFor="chapter">Choose a chapter:</label>
+                {/* <label htmlFor="chapter">Choose a chapter:</label>
                 <br />
-                <Dropdown title="chapter">
+                    <Dropdown title="chapter">
                     <Dropdown.Item>New File</Dropdown.Item>
                     {this.state.chapter.map((row) => <Dropdown.Item key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</Dropdown.Item>)}
-                </Dropdown>
+                </Dropdown>  */}
                 <form>
                     <label htmlFor="chapter">Choose a chapter</label>
                     <br />
