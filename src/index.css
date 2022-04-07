@@ -15,6 +15,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+form, button {
+  display: inline-block;
+}
+
+table {
+  display: inline-block;
+}
+
 /* optgroup {
   font-family: 'MS Mincho';
 } */
