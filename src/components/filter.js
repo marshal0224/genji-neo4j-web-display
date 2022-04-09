@@ -20,6 +20,10 @@ export default class Filter extends React.Component {
             selectedChapter: "",
             selectedSpeaker: "Any",
             selectedAddressee: "Any",
+            adjmat_sa: [], 
+            lockChapter: false,
+            lockSpeaker: false,
+            lockAddressee: false,
         }
     }
 
@@ -29,47 +33,92 @@ export default class Filter extends React.Component {
 
         const session = this.driver.session()
 
-        const resChp = await session.readTransaction(tx => tx.run(getChp))
-        const resExchange = await session.readTransaction(tx => tx.run(getExchange))
+        try {
+            const resChp = await session.readTransaction(tx => tx.run(getChp))
+            const resExchange = await session.readTransaction(tx => tx.run(getExchange))
+    
+            let tempChp = resChp.records.map(row => {return toNativeTypes(row.get('chapters'))}).map((chp) => chp.properties)
+            let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
+            
+            let speakers = []
+            let addressees = []
+            let chapters = []
+    
+            tempExchange.forEach(([s, a]) => {
+                speakers.push(s)
+                addressees.push(a)
+            })
+            tempChp.forEach((e) => {
+                chapters.push([e.chapter_number, e.kanji, e.chapter_name])
+            })
+            //['1', '桐壺', 'Kiritsubo']
 
-        let tempChp = resChp.records.map(row => {return toNativeTypes(row.get('chapters'))}).map((chp) => chp.properties)
-        let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
-        
-        let speakers = []
-        let addressees = []
-        let chapters = []
+            this.setState({
+                chapter: chapters,
+                speaker: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
+                        //pnum: zeros.map(({start}) => start.properties.name),
+                addressee: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
+            }, () => {
+                //init adjacency mat
+                let width = this.state.speaker.length
+                let mat = []
+                for (let i = 0; i < width; i++){
+                    mat.push([])
+                    for (let j = 0; j < width; j++){
+                        mat[i][j] = 0
+                    }
+                }
+                this.setState({
+                    adjmat_sa: mat
+                }, () => {
+                    console.log('filter options set')
+                    function addEdge(vertex1, vertex2, weight = 1) {
+                        if (vertex1 > this.size - 1 || vertex2 > this.size - 1) {
+                            console.log('invalid vertex');
+                        } else if (vertex1 === vertex2) {
+                            console.log('same vertex');
+                        } else {
+                            this.matrix[vertex1][vertex2] = weight;
+                            this.matrix[vertex2][vertex1] = weight;
+                        }
+                    }
+                    //if a future bug appears here, check if #addressee > #speaker
+                    this.state.speaker.forEach(s => {
+                        let scount = this.state.speaker.indexOf(s)
+                        this.state.addressee.forEach(a => {
+                            let acount = this.state.speaker.indexOf(a)
+                            if (!this.state.adjmat_sa[scount][acount]) {
+                                speakers.findIndex(({ start }) => start.properties.description)
+                            }
+                        })
+                    })
+                })
+            })
+        } catch (e) {
+            console.log('Error in filter: '+e)
+        } finally {
+            await session.close()
+        }
 
-        tempExchange.forEach(([s, a]) => {
-            speakers.push(s)
-            addressees.push(a)
-        })
-
-        tempChp.forEach((e) => {
-            chapters.push([e.chapter_number, e.kanji, e.chapter_name])
-        })
-        //['1', '桐壺', 'Kiritsubo']
-        //console.log(chapters)
-
-        this.setState({
-            chapter: chapters,
-            speaker: speakers.map(({start}) => start.properties.name),
-                    //pnum: zeros.map(({start}) => start.properties.name),
-            addressee: addressees.map(({end}) => end.properties.name)
-        }, () => {
-            console.log('filter options set')
-        })
-
-        //const res2 = await session.readTransaction(tx => tx.run(getPoem))
-        // let temp2 = res2.records.map(row => {return toNativeTypes(row.get('path'))})
-        // let newtemp2 = temp2.map(({segments}) => segments)
-        //console.log(newtemp2)
-        await session.close()
         closeDriver()
+
     }
 
+    // componentDidChange() {
+    //     if (this.state.selectedSpeaker != "Any") {
+    //         console.log('selected speaker is not any now')
+    //     }
+    // }
+
     render() {
-        let speakerForm = [...new Set(this.state.speaker)];
-        let addresseeForm = [...new Set(this.state.addressee)];
+        
+        // if (!this.state.lockChapter && !this.state.lockSpeaker && !this.state.lockAddressee) {
+        //     this.setState({
+        //         adjmat_sa: mat
+        //     }, () => {
+        //         console.log(this.state.adjmat_sa)
+        //     })
+        // }
         let updateSelectedChapter = (event) => {
             this.setState({
                 selectedChapter: event.target.value.split(' ')[0]
@@ -122,12 +171,12 @@ export default class Filter extends React.Component {
                     <br />
                     <select 
                         id="speaker"
-                        //value={formData.speaker}
+                        //onClick={console.log('clicked spaker bar')}
                         onChange={updateSelectedSpeaker}
                         name="speaker"
                     >
                         <option value="">Any</option>
-                        {speakerForm.map((row) => <option key={row}>{row}</option>)}
+                        {this.state.speaker.map((row) => <option key={row}>{row}</option>)}
                     </select>
                 </form>
                 <form>
@@ -140,7 +189,7 @@ export default class Filter extends React.Component {
                     name="addressee"
                 >
                     <option value="">Any</option>
-                    {addresseeForm.map((row) => <option key={row}>{row}</option>)}
+                    {this.state.addressee.map((row) => <option key={row}>{row}</option>)}
                 </select>
             </form>
         </div>
