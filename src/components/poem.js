@@ -17,21 +17,30 @@ export default class Poem extends React.Component {
     async componentDidMount() {
         const session = this.driver.session()
         console.log('poem mounted')
+        const chapter = this.props.chapter
         const speaker = this.props.speaker
         const addressee = this.props.addressee
 
-        const getPoem = `match (s:Character {name: $speaker})-[p: SPEAKER_OF]-(j:Japanese)-[q:ADDRESSEE_OF]-(a:Character {name: $addressee}) return (j) as poems`
-
-        const res = await session.readTransaction(tx => tx.run(getPoem, { speaker, addressee}))
-        let temp = res.records.map(row => {return toNativeTypes(row.get('poems'))})
-        // properties[i]: {Japanese, Romaji, pnum}
-        this.setState({
-            poemProperties: temp.map((poem) => poem.properties)
-        }, 
-        () => {
-            console.log('poemProperties set')
-        })
-        await session.close()
+        const getPoem = `match 
+                            (s:Character {name: $speaker})-[p: SPEAKER_OF]-(j:Japanese)-[q:ADDRESSEE_OF]-(a:Character {name: $addressee}), 
+                            (j:Japanese)-[r:INCLUDED_IN]-(c:Chapter {chapter_number: $chapter})
+                        return (j) as poems`
+        
+        try {
+            const res = await session.readTransaction(tx => tx.run(getPoem, { speaker, addressee, chapter}))
+            let temp = res.records.map(row => {return toNativeTypes(row.get('poems'))})
+            // properties[i]: {Japanese, Romaji, pnum}
+            this.setState({
+                poemProperties: temp.map((poem) => poem.properties)
+            }, 
+            () => {
+                console.log('poemProperties set')
+            })
+        } catch (e) {
+            console.log('Error in poem: '+e)
+        } finally {
+            await session.close()
+        }
         closeDriver()
     }
 

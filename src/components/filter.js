@@ -17,9 +17,9 @@ export default class Filter extends React.Component {
             speaker: [],
             addressee: [],
             gender: [], 
-            selectedSpeaker: "",
-            selectedAddressee: "",
-            selectedPoems: [],
+            selectedChapter: "",
+            selectedSpeaker: "Any",
+            selectedAddressee: "Any",
         }
     }
 
@@ -70,6 +70,14 @@ export default class Filter extends React.Component {
     render() {
         let speakerForm = [...new Set(this.state.speaker)];
         let addresseeForm = [...new Set(this.state.addressee)];
+        let updateSelectedChapter = (event) => {
+            this.setState({
+                selectedChapter: event.target.value.split(' ')[0]
+            }, 
+            () => {
+                console.log('selected chapter now is: ' + this.state.selectedChapter)
+            })
+        }
         let updateSelectedSpeaker = (event) => {
             this.setState({
                 selectedSpeaker: event.target.value
@@ -102,13 +110,11 @@ export default class Filter extends React.Component {
                     <select 
                         id="chapter"
                         //value={formData.speaker}
-                        //onChange={updateSelectedSpeaker}
+                        onChange={updateSelectedChapter}
                         name="chapter"
                     >
-                        <optgroup>
-                            <option value="">Any</option>
-                            {this.state.chapter.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
-                        </optgroup>
+                        <option value="">Any</option>
+                        {this.state.chapter.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
                     </select>
                 </form>
                 <form>

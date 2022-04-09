@@ -15,6 +15,7 @@ export default class App extends React.Component{
     // Init all filter states to be false (unchanged)
     this.state = {
       queried: false,
+      chapter: "",
       speaker: "",
       addressee: "",
     }
@@ -28,6 +29,7 @@ export default class App extends React.Component{
   query = (event) => {
     this.setState({ 
       queried: true,
+      chapter: this.filterRef.current.state.selectedChapter,
       speaker: this.filterRef.current.state.selectedSpeaker,
       addressee: this.filterRef.current.state.selectedAddressee
     }, 
@@ -39,8 +41,6 @@ export default class App extends React.Component{
   reset = (event) => {
     this.setState({ 
       queried: false,
-      speaker: this.filterRef.current.state.selectedSpeaker,
-      addressee: this.filterRef.current.state.selectedAddressee
     }, 
       () => {
         console.log('reset')
@@ -59,7 +59,7 @@ export default class App extends React.Component{
           <br/>
         </div>
         <div>
-          {this.state.queried && <Poem uri={this.uri} user={this.user} password={this.password} speaker={this.state.speaker} addressee={this.state.addressee}/>}
+          {this.state.queried && <Poem uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee}/>}
         </div>
       </div>
     )
