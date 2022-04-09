@@ -38,6 +38,7 @@ export default class App extends React.Component{
       }
     )
   }
+
   reset = (event) => {
     this.setState({ 
       queried: false,
