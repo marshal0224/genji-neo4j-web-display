@@ -44,17 +44,6 @@ export default class Poem extends React.Component {
                             +'[q:ADDRESSEE_OF]-'+getPoem_A 
                             +getPoem_C
                             +' return (j) as poems'
-            // if (chapter === 'Any') {
-            //     getPoem = `match 
-            //                         (s:Character {name: $speaker})-[p: SPEAKER_OF]-(j:Japanese)-[q:ADDRESSEE_OF]-(a:Character {name: $addressee}), 
-            //                         (j:Japanese)-[r:INCLUDED_IN]-(c:Chapter {chapter_number: $chapter})
-            //                     return (j) as poems`
-            // } else {
-            //     getPoem = `match 
-            //                         (s:Character)-[p: SPEAKER_OF]-(j:Japanese)-[q:ADDRESSEE_OF]-(a:Character {name: $addressee}), 
-            //                         (j:Japanese)-[r:INCLUDED_IN]-(c:Chapter {chapter_number: $chapter})
-            //                     return (j) as poems`
-            // }
             console.log(getPoem)
             const res = await session.readTransaction(tx => tx.run(getPoem, { speaker, addressee, chapter}))
             let temp = res.records.map(row => {return toNativeTypes(row.get('poems'))})

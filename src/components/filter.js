@@ -3,10 +3,9 @@ import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
 import { Dropdown } from 'rsuite'
+import { json } from 'neo4j-driver-core'
 
 export default class Filter extends React.Component {
-
-    //driver
 
     constructor(props) {
         super(props)
@@ -26,9 +25,11 @@ export default class Filter extends React.Component {
             chapterList: [], 
             speakerList: [], 
             addresseeList: [],
-            lockChapter: false,
-            lockSpeaker: false,
-            lockAddressee: false,
+            // lockChapter: false,
+            // lockSpeaker: false,
+            // lockAddressee: false,
+            //chp_SA: [0:{dict{speaker: addressee}}]
+            chp_SA: [],
         }
     }
 
@@ -75,9 +76,18 @@ export default class Filter extends React.Component {
                 speakerList: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
                 addresseeList: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
             }, () => {
-                // console.log(this.state.speaker)
-                // console.log(this.state.addressee)
-                //init adjacency mat
+                // init chapter to speaker&addressee mapping
+                let chp_SA = new Array(this.state.chapter.length)
+                for (let i = 0; i < speakers.length; i++) {
+                    let chpnum = speakers[i].end.properties.pnum.substring(0, 2)
+                    if (chpnum.substring(0, 1) == '0') {
+                        chpnum = parseInt(chpnum.substring(1, 2))
+                    } else {
+                        chpnum = parseInt(chpnum)
+                    }
+                    chp_SA[chpnum-1] = [speakers[i].start.properties.name, addressees[i].end.properties.name]
+                }
+                // init adjacency mat
                 let mat = []
                 for (let i = 0; i < charNum; i++){
                     mat.push([])
@@ -85,64 +95,37 @@ export default class Filter extends React.Component {
                         mat[i][j] = 0
                     }
                 }
-                this.setState({
-                    adjmat_sa: mat
-                }, () => {
-                    // if a future bug appears here, check if #addressee > #speaker
-                    // In addition, Genji has the most poems (225), so when the index of a spaker is identified in speakers, we search the next 250 entries for their prospective counterpart. 
-                    let excount = new Set()
-                    this.state.speaker.forEach(s => {
-                        //for each speaker stored in this.state.speaker
-                        let mat_s = chars.indexOf(s)
-                        let scount = this.state.speaker.indexOf(s)
-                        this.state.addressee.forEach(a => {
-                            // if (scount === 0) {
-                            //     console.log(a)
-                            // }
-                            //for each addressee stored in this.state.addressee
-                            let mat_a = chars.indexOf(a)
-                            if (mat[mat_s][mat_a] === 0) {
-                                // if the current adjmat entry for a pair of characters is 0, first find where does the speaker first appear in all the exchanges
-                                let si = speakers.findIndex(e => e.start.properties.name === this.state.speaker[scount])
-                                excount.add(si)
-                                // no need to exclude si=-1 since si is indexed based on this.state.speakers 
-                                // while si does not increment out of bounds of speaker list and si corresponds to the same name as the current speaker from the speaker list
-                                while ((si < speakers.length) && speakers[si].start.properties.name === s) {
-                                    // if the addressee half of this exchange matches the this.state.addressee element being iterated through
-                                    if (addressees[si].end.properties.name === a) {
-                                        // if (si == 58) {
-                                        // console.log(speakers[si].end.properties.pnum+' '+addressees[si].start.properties.pnum)
-                                        // excount += 1
-                                        // }
-                                        // try {
-                                        mat[mat_s][mat_a] = 1
-                                        //mat[mat_a][mat_s] = 1
-                                        // } catch (e){
-                                        //     console.log('error while setting mat'+e+', mat_s and mat_a are '+mat_s+', '+mat_a)
-                                        // }
-                                        //console.log('set'+mat_s+mat_a)
-                                        //break
-                                    } 
-                                    si = si + 1
-                                }
+                // if a future bug appears here, check if #addressee > #speaker
+                // In addition, Genji has the most poems (225), so when the index of a spaker is identified in speakers, we search the next 250 entries for their prospective counterpart. 
+                this.state.speaker.forEach(s => {
+                    //for each speaker stored in this.state.speaker
+                    let mat_s = chars.indexOf(s)
+                    let scount = this.state.speaker.indexOf(s)
+                    this.state.addressee.forEach(a => {
+                        //for each addressee stored in this.state.addressee
+                        let mat_a = chars.indexOf(a)
+                        if (mat[mat_s][mat_a] === 0) {
+                            // if the current adjmat entry for a pair of characters is 0, first find where does the speaker first appear in all the exchanges
+                            let si = speakers.findIndex(e => e.start.properties.name === this.state.speaker[scount])
+                            // no need to exclude si=-1 since si is indexed based on this.state.speakers 
+                            // while si does not increment out of bounds of speaker list and si corresponds to the same name as the current speaker from the speaker list
+                            while ((si < speakers.length) && speakers[si].start.properties.name === s) {
+                                // if the addressee half of this exchange matches the this.state.addressee element being iterated through
+                                if (addressees[si].end.properties.name === a) {
+                                    mat[mat_s][mat_a] = 1
+                                } 
+                                si = si + 1
                             }
-                        })
-                        // } catch (e) {
-                        //     if (e != BreakException) {throw e}
-                        // }
+                        }
                     })
-                    // for (let i = 0; i < this.state.speaker.length; i++) {
-                    //     for (let j = 0; j < this.state.addressee.length; j++){
-                    //         excount = excount + mat[i][j]
-                    //     }
-                    // }
-                    // console.log('adjmat sum: '+excount)
-                    // console.log(excount)
                 })
                 this.setState({
-                    adjmat_SA: mat
+                    adjmat_SA: mat, 
+                    chp_SA: chp_SA
                 }, () => {
-                    // console.log(this.state.adjmat_sa)
+                    // console.log(this.state.chp_SA)
+                    // console.log(this.state.chp_SA[0])
+                    // console.log(this.state.chp_SA[0][0])
                     console.log('filter options set')
                 })
             })
@@ -156,24 +139,23 @@ export default class Filter extends React.Component {
 
     }
 
-    // componentDidChange() {
-    //     if (this.state.selectedSpeaker != "Any") {
-    //         console.log('selected speaker is not any now')
-    //     }
-    // }
-
     render() {
-        
-        // if (!this.state.lockChapter && !this.state.lockSpeaker && !this.state.lockAddressee) {
-        //     this.setState({
-        //         adjmat_sa: mat
-        //     }, () => {
-        //         console.log(this.state.adjmat_sa)
-        //     })
-        // }
         let updateSelectedChapter = (event) => {
+            let lockChapter = event.target.value.split(' ')
+            let index = (this.state.chapter.map(e => json.stringify(e))).indexOf(json.stringify(lockChapter))
+            let validSpeakers, validAddressees = []
+            if (index === -1) {
+                validSpeakers = this.state.speaker
+                validAddressees = this.state.addressee
+            } else {
+                validSpeakers = Array.from(new Set(this.state.chp_SA[index].map(e => e[0])))
+                validAddressees = Array.from(new Set(this.state.chp_SA[index].map(e => e[1])))
+                console.log(validSpeakers)
+            }
             this.setState({
-                selectedChapter: event.target.value.split(' ')[0]
+                selectedChapter: event.target.value.split(' ')[0], 
+                speakerList: validSpeakers, 
+                addresseeList: validAddressees, 
             }, 
             () => {
                 console.log('selected chapter now is: ' + this.state.selectedChapter)
@@ -195,7 +177,7 @@ export default class Filter extends React.Component {
             this.setState({
                 selectedSpeaker: lockedSpeaker,
                 addresseeList: validAddressees, 
-                lockSpeaker: true,
+                // lockSpeaker: true,
             }, 
                 () => {
                     console.log('selected speaker now is: ' + this.state.selectedSpeaker)
@@ -218,7 +200,7 @@ export default class Filter extends React.Component {
             this.setState({
                 selectedAddressee: lockedAddressee,
                 speakerList: validSpeakers, 
-                lockAddressee: true
+                // lockAddressee: true
             }, 
                 () => {
                     console.log('selected addressee now is: ' + this.state.selectedAddressee)
@@ -227,12 +209,6 @@ export default class Filter extends React.Component {
         }
         return (
             <div>
-                {/* <label htmlFor="chapter">Choose a chapter:</label>
-                <br />
-                    <Dropdown title="chapter">
-                    <Dropdown.Item>New File</Dropdown.Item>
-                    {this.state.chapter.map((row) => <Dropdown.Item key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</Dropdown.Item>)}
-                </Dropdown>  */}
                 <form>
                     <label htmlFor="chapter">Choose a chapter</label>
                     <br />
