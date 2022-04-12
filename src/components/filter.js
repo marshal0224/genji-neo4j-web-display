@@ -14,13 +14,18 @@ export default class Filter extends React.Component {
         this.driver = getDriver()
         this.state = {
             chapter: [],
+            characters: [],
+            charNum: 0,
             speaker: [],
             addressee: [],
             gender: [], 
-            selectedChapter: "",
+            selectedChapter: "Any",
             selectedSpeaker: "Any",
             selectedAddressee: "Any",
-            adjmat_sa: [], 
+            adjmat_SA: [], 
+            chapterList: [], 
+            speakerList: [], 
+            addresseeList: [],
             lockChapter: false,
             lockSpeaker: false,
             lockAddressee: false,
@@ -30,16 +35,23 @@ export default class Filter extends React.Component {
     async componentDidMount() {
         const getChp = 'match (c:Chapter) return (c) as chapters'
         const getExchange = 'match path=(c:Character)-[r:SPEAKER_OF]-(j:Japanese)-[s:ADDRESSEE_OF]-(d:Character) return path'
+        const getChar = 'match (c:Character) return c.name as char order by c.name'
 
         const session = this.driver.session()
 
         try {
             const resChp = await session.readTransaction(tx => tx.run(getChp))
             const resExchange = await session.readTransaction(tx => tx.run(getExchange))
-    
+            const resChar = await session.readTransaction(tx => tx.run(getChar))
+            
             let tempChp = resChp.records.map(row => {return toNativeTypes(row.get('chapters'))}).map((chp) => chp.properties)
             let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
-            
+            let chars= resChar.records.map(row => {return toNativeTypes(row.get('char'))}).map(e => Object.values(e).join(''))
+            const charNum = chars.length
+
+            //115 as of April 10th, 2022
+            //console.log(charNum)
+
             let speakers = []
             let addressees = []
             let chapters = []
@@ -48,50 +60,90 @@ export default class Filter extends React.Component {
                 speakers.push(s)
                 addressees.push(a)
             })
+            //speakers: [{start, relationship, end}...]
             tempChp.forEach((e) => {
                 chapters.push([e.chapter_number, e.kanji, e.chapter_name])
             })
             //['1', '桐壺', 'Kiritsubo']
-
             this.setState({
                 chapter: chapters,
+                characters: chars,
+                charNum: charNum,
                 speaker: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
-                        //pnum: zeros.map(({start}) => start.properties.name),
                 addressee: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
+                chapterList: chapters, 
+                speakerList: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
+                addresseeList: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
             }, () => {
+                // console.log(this.state.speaker)
+                // console.log(this.state.addressee)
                 //init adjacency mat
-                let width = this.state.speaker.length
                 let mat = []
-                for (let i = 0; i < width; i++){
+                for (let i = 0; i < charNum; i++){
                     mat.push([])
-                    for (let j = 0; j < width; j++){
+                    for (let j = 0; j < charNum; j++){
                         mat[i][j] = 0
                     }
                 }
                 this.setState({
                     adjmat_sa: mat
                 }, () => {
-                    console.log('filter options set')
-                    function addEdge(vertex1, vertex2, weight = 1) {
-                        if (vertex1 > this.size - 1 || vertex2 > this.size - 1) {
-                            console.log('invalid vertex');
-                        } else if (vertex1 === vertex2) {
-                            console.log('same vertex');
-                        } else {
-                            this.matrix[vertex1][vertex2] = weight;
-                            this.matrix[vertex2][vertex1] = weight;
-                        }
-                    }
-                    //if a future bug appears here, check if #addressee > #speaker
+                    // if a future bug appears here, check if #addressee > #speaker
+                    // In addition, Genji has the most poems (225), so when the index of a spaker is identified in speakers, we search the next 250 entries for their prospective counterpart. 
+                    let excount = new Set()
                     this.state.speaker.forEach(s => {
+                        //for each speaker stored in this.state.speaker
+                        let mat_s = chars.indexOf(s)
                         let scount = this.state.speaker.indexOf(s)
                         this.state.addressee.forEach(a => {
-                            let acount = this.state.speaker.indexOf(a)
-                            if (!this.state.adjmat_sa[scount][acount]) {
-                                speakers.findIndex(({ start }) => start.properties.description)
+                            // if (scount === 0) {
+                            //     console.log(a)
+                            // }
+                            //for each addressee stored in this.state.addressee
+                            let mat_a = chars.indexOf(a)
+                            if (mat[mat_s][mat_a] === 0) {
+                                // if the current adjmat entry for a pair of characters is 0, first find where does the speaker first appear in all the exchanges
+                                let si = speakers.findIndex(e => e.start.properties.name === this.state.speaker[scount])
+                                excount.add(si)
+                                // no need to exclude si=-1 since si is indexed based on this.state.speakers 
+                                // while si does not increment out of bounds of speaker list and si corresponds to the same name as the current speaker from the speaker list
+                                while ((si < speakers.length) && speakers[si].start.properties.name === s) {
+                                    // if the addressee half of this exchange matches the this.state.addressee element being iterated through
+                                    if (addressees[si].end.properties.name === a) {
+                                        // if (si == 58) {
+                                        // console.log(speakers[si].end.properties.pnum+' '+addressees[si].start.properties.pnum)
+                                        // excount += 1
+                                        // }
+                                        // try {
+                                        mat[mat_s][mat_a] = 1
+                                        mat[mat_a][mat_s] = 1
+                                        // } catch (e){
+                                        //     console.log('error while setting mat'+e+', mat_s and mat_a are '+mat_s+', '+mat_a)
+                                        // }
+                                        //console.log('set'+mat_s+mat_a)
+                                        //break
+                                    } 
+                                    si = si + 1
+                                }
                             }
                         })
+                        // } catch (e) {
+                        //     if (e != BreakException) {throw e}
+                        // }
                     })
+                    // for (let i = 0; i < this.state.speaker.length; i++) {
+                    //     for (let j = 0; j < this.state.addressee.length; j++){
+                    //         excount = excount + mat[i][j]
+                    //     }
+                    // }
+                    // console.log('adjmat sum: '+excount)
+                    // console.log(excount)
+                })
+                this.setState({
+                    adjmat_SA: mat
+                }, () => {
+                    // console.log(this.state.adjmat_sa)
+                    console.log('filter options set')
                 })
             })
         } catch (e) {
@@ -128,9 +180,19 @@ export default class Filter extends React.Component {
             })
         }
         let updateSelectedSpeaker = (event) => {
+            let lockedSpeaker = event.target.value
+            let index = this.state.characters.indexOf(lockedSpeaker)
+            let validAddressees = []
+            for (let j = 0; j < this.state.charNum; j++) {
+                if (this.state.adjmat_SA[index][j]) {
+                    validAddressees.push(this.state.characters[j])
+                }
+            }
             this.setState({
-                selectedSpeaker: event.target.value
-                }, 
+                selectedSpeaker: lockedSpeaker,
+                addresseeList: validAddressees, 
+                lockSpeaker: true,
+            }, 
                 () => {
                     console.log('selected speaker now is: ' + this.state.selectedSpeaker)
                 }
@@ -139,7 +201,7 @@ export default class Filter extends React.Component {
         let updateSelectedAddressee = (event) => {
             this.setState({
                 selectedAddressee: event.target.value
-                }, 
+            }, 
                 () => {
                     console.log('selected addressee now is: ' + this.state.selectedAddressee)
                 }
@@ -163,7 +225,7 @@ export default class Filter extends React.Component {
                         name="chapter"
                     >
                         <option value="">Any</option>
-                        {this.state.chapter.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
+                        {this.state.chapterList.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
                     </select>
                 </form>
                 <form>
@@ -176,7 +238,7 @@ export default class Filter extends React.Component {
                         name="speaker"
                     >
                         <option value="">Any</option>
-                        {this.state.speaker.map((row) => <option key={row}>{row}</option>)}
+                        {this.state.speakerList.map((row) => <option key={row}>{row}</option>)}
                     </select>
                 </form>
                 <form>
@@ -189,7 +251,7 @@ export default class Filter extends React.Component {
                     name="addressee"
                 >
                     <option value="">Any</option>
-                    {this.state.addressee.map((row) => <option key={row}>{row}</option>)}
+                    {this.state.addresseeList.map((row) => <option key={row}>{row}</option>)}
                 </select>
             </form>
         </div>
