@@ -29,9 +29,9 @@ export default class App extends React.Component{
   query = (event) => {
     this.setState({ 
       queried: true,
-      chapter: this.filterRef.current.state.selectedChapter,
-      speaker: this.filterRef.current.state.selectedSpeaker,
-      addressee: this.filterRef.current.state.selectedAddressee
+      chapter: this.filterRef.state.selectedChapter,
+      speaker: this.filterRef.state.selectedSpeaker,
+      addressee: this.filterRef.state.selectedAddressee
     }, 
       () => {
         console.log('quried, this.state.addressee from app is now: '+this.state.addressee)
@@ -47,13 +47,14 @@ export default class App extends React.Component{
         console.log('reset')
       }
     )
+  //(fieldEditor1) => {this.fieldEditor1 = fieldEditor1;
   }
 
   render() {
     return (
       <div className="App">
         <div>
-          <Filter ref={this.filterRef} uri={this.uri} user={this.user} password={this.password}/>
+          <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
           <button disabled={this.state.queried} onClick={this.query}>Query</button>
           <button disabled={!this.state.queried} onClick={this.reset}>Reset</button>
