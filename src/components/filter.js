@@ -116,7 +116,7 @@ export default class Filter extends React.Component {
                                         // }
                                         // try {
                                         mat[mat_s][mat_a] = 1
-                                        mat[mat_a][mat_s] = 1
+                                        //mat[mat_a][mat_s] = 1
                                         // } catch (e){
                                         //     console.log('error while setting mat'+e+', mat_s and mat_a are '+mat_s+', '+mat_a)
                                         // }
@@ -183,9 +183,13 @@ export default class Filter extends React.Component {
             let lockedSpeaker = event.target.value
             let index = this.state.characters.indexOf(lockedSpeaker)
             let validAddressees = []
-            for (let j = 0; j < this.state.charNum; j++) {
-                if (this.state.adjmat_SA[index][j]) {
-                    validAddressees.push(this.state.characters[j])
+            if (index === -1) {
+                validAddressees = this.state.addressee
+            } else {
+                for (let j = 0; j < this.state.charNum; j++) {
+                    if (this.state.adjmat_SA[index][j]) {
+                        validAddressees.push(this.state.characters[j])
+                    }
                 }
             }
             this.setState({
@@ -199,8 +203,22 @@ export default class Filter extends React.Component {
             )
         }
         let updateSelectedAddressee = (event) => {
+            let lockedAddressee = event.target.value
+            let index = this.state.characters.indexOf(lockedAddressee)
+            let validSpeakers = []
+            if (index === -1) {
+                validSpeakers = this.state.speaker
+            } else {
+                for (let j=0; j < this.state.charNum; j++) {
+                    if (this.state.adjmat_SA[j][index]) {
+                        validSpeakers.push(this.state.characters[j])
+                    }
+                }
+            }
             this.setState({
-                selectedAddressee: event.target.value
+                selectedAddressee: lockedAddressee,
+                speakerList: validSpeakers, 
+                lockAddressee: true
             }, 
                 () => {
                     console.log('selected addressee now is: ' + this.state.selectedAddressee)
@@ -224,7 +242,7 @@ export default class Filter extends React.Component {
                         onChange={updateSelectedChapter}
                         name="chapter"
                     >
-                        <option value="">Any</option>
+                        <option value="Any">Any</option>
                         {this.state.chapterList.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
                     </select>
                 </form>
@@ -237,7 +255,7 @@ export default class Filter extends React.Component {
                         onChange={updateSelectedSpeaker}
                         name="speaker"
                     >
-                        <option value="">Any</option>
+                        <option value="Any">Any</option>
                         {this.state.speakerList.map((row) => <option key={row}>{row}</option>)}
                     </select>
                 </form>
@@ -250,7 +268,7 @@ export default class Filter extends React.Component {
                     onChange={updateSelectedAddressee}
                     name="addressee"
                 >
-                    <option value="">Any</option>
+                    <option value="Any">Any</option>
                     {this.state.addresseeList.map((row) => <option key={row}>{row}</option>)}
                 </select>
             </form>
