@@ -25,10 +25,9 @@ export default class Filter extends React.Component {
             chapterList: [], 
             speakerList: [], 
             addresseeList: [],
-            // lockChapter: false,
-            // lockSpeaker: false,
-            // lockAddressee: false,
-            //chp_SA: [0:{dict{speaker: addressee}}]
+            lockChapter: false,
+            lockSpeaker: false,
+            lockAddressee: false,
             chp_SA: [],
         }
     }
@@ -85,7 +84,11 @@ export default class Filter extends React.Component {
                     } else {
                         chpnum = parseInt(chpnum)
                     }
-                    chp_SA[chpnum-1] = [speakers[i].start.properties.name, addressees[i].end.properties.name]
+                    if (chp_SA[chpnum-1] == undefined) {
+                        chp_SA[chpnum-1] = [[speakers[i].start.properties.name, addressees[i].end.properties.name]]
+                    } else {
+                        chp_SA[chpnum-1].push([speakers[i].start.properties.name, addressees[i].end.properties.name])
+                    }
                 }
                 // init adjacency mat
                 let mat = []
@@ -150,7 +153,7 @@ export default class Filter extends React.Component {
             } else {
                 validSpeakers = Array.from(new Set(this.state.chp_SA[index].map(e => e[0])))
                 validAddressees = Array.from(new Set(this.state.chp_SA[index].map(e => e[1])))
-                console.log(validSpeakers)
+                console.log(new Set(this.state.chp_SA[index]))
             }
             this.setState({
                 selectedChapter: event.target.value.split(' ')[0], 
