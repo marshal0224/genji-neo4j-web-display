@@ -62,11 +62,30 @@ export default class Poem extends React.Component {
         closeDriver()
     }
 
-    getDerived
+    // getDerived
 
     render() {
         let properties = this.state.poemProperties;
-        console.log('poem rendered')
+        let plist = new Array(properties.length)
+        for (let i = 0; i < properties.length; i++) {
+            plist[i] = [properties[i].pnum, properties[i].Japanese, properties[i].Romaji]
+        }
+        for (let i = 0; i < plist.length-1; i++) {
+            for (let j = 0; j < plist.length-i-1; j++) {
+                if ((parseInt(plist[j][0].substring(0, 2)) > parseInt(plist[j+1][0].substring(0, 2))) 
+                || (parseInt(plist[j][0].substring(0, 2)) >= parseInt(plist[j+1][0].substring(0, 2)) 
+                && parseInt(plist[j][0].substring(4, 6)) > parseInt(plist[j+1][0].substring(4, 6)))) {
+                    let temp = plist[j+1]
+                    plist[j+1] = plist[j]
+                    plist[j] = temp
+                    console.log('swpped')
+                }
+            }
+        }
+        // console.log(plist)
+        // for (let i = 0; i < plist.length-1; i++) {
+        //     if (plist[i][0].substring(0, 2) > plist[i][0].substring(0, 2)
+        // }
         return (
             <table>
                 <thead>
@@ -80,9 +99,14 @@ export default class Poem extends React.Component {
                     </tr>
                 </thead>
                 <tbody>
-                    {properties.map((row) => <tr key={row.pnum}>
-                                                <td>{row.pnum}</td>
-                                                <td>{row.Japanese}</td>
+                    {plist.map((row) => <tr key={row[0]}>
+                                                <td>{row[0]}</td>
+                                                <td>{row[1]}</td>
+                                                <td>
+                                                    <p>field 1</p>
+                                                </td>
+                                                <td><p>field 2</p></td>
+                                                <td><p>field 3</p></td>
                                             </tr>)}
                 </tbody>
             </table>

@@ -1,4 +1,4 @@
-# Note
+# Description
 This project is a React app which aims to display textual data pulled from a Neo4j Graphical Database. This project is part of the Boston University UROP project involving myself and Professor Keith Vincent at Boston University. This project is a work in progress.
 
 # Getting Started with Create React App
