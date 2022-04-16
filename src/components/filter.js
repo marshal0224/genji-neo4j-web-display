@@ -184,15 +184,32 @@ export default class Filter extends React.Component {
                 }
                 // if a filter has a specific selected option, update the constraints on other filters
                 else {
+                    let index = parseInt(lockChapter[0]) - 1
                     if (this.state.selectedAddressee === 'Any') {
-                        validSpeakers = Array.from(new Set(this.state.chp_SA[parseInt(lockChapter[0])-1].map(pair => pair[0]))).sort()
+                        validSpeakers = new Set()
+                        this.state.chp_SA[index].forEach(pair => validSpeakers.add(pair[0]))
+                        validSpeakers = Array.from(validSpeakers).sort()
                     } else {
-                        validSpeakers = Array.from(new Set(this.state.chp_SA.map(chp => chp.filter(pair => pair.includes(this.state.selectedAddressee)).map(pair => pair[0]))))
+                        validSpeakers = new Set()
+                        this.state.chp_SA[index].forEach(pair => {
+                            if (pair[1] === this.state.selectedAddressee) {
+                                validSpeakers.add(pair[0])
+                            }
+                        })
+                        validSpeakers = Array.from(validSpeakers).sort()
                     }
                     if (this.state.selectedSpeaker === 'Any') {
-                        validAddressees = Array.from(new Set(this.state.chp_SA[parseInt(lockChapter[0])-1].map(pair => pair[1]))).sort()
+                        validAddressees = new Set()
+                        this.state.chp_SA[index].forEach(pair => validAddressees.add(pair[1]))
+                        validAddressees = Array.from(validAddressees).sort()
                     } else {
-                        validSpeakers = Array.from(new Set(this.state.chp_SA.map(chp => chp.filter(pair => pair.includes(this.state.selectedSpeaker)).map(pair => pair[1]))))
+                        validAddressees = new Set()
+                        this.state.chp_SA[index].forEach(pair => {
+                            if (pair[0] === this.state.selectedSpeaker) {
+                                validAddressees.add(pair[1])
+                            }
+                        })
+                        validAddressees = Array.from(validAddressees).sort()
                     }
                 }
             } else if (type === 'speaker') {
@@ -217,7 +234,7 @@ export default class Filter extends React.Component {
                     if (this.state.selectedChapter === 'Any') {
                         validAddressees = this.state.addressee
                     } else {
-                        validAddressees = Array.from(new Set(this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].map(pair => pair[1]))).sort()
+                        validAddressees = Array.from(new Set(this.state.chp_SA[parseInt(this.state.selectedChapter)-1].map(pair => pair[1]))).sort()
                     }
                 }
                 // if we have a speaker selected
@@ -256,7 +273,7 @@ export default class Filter extends React.Component {
                         })
                     } else {
                         validAddressees = new Set()
-                        this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].forEach(pair => {
+                        this.state.chp_SA[parseInt(this.state.selectedChapter)-1].forEach(pair => {
                             if (pair[0] === lockSpeaker){
                                 validAddressees.add(pair[1])
                             }
@@ -287,7 +304,7 @@ export default class Filter extends React.Component {
                     if (this.state.selectedChapter === 'Any') {
                         validSpeakers = this.state.speaker
                     } else {
-                        validSpeakers = Array.from(new Set(this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].map(pair => pair[0]))).sort()
+                        validSpeakers = Array.from(new Set(this.state.chp_SA[parseInt(this.state.selectedChapter)-1].map(pair => pair[0]))).sort()
                     }
                 }
                 // if we have an addressee selected
@@ -328,7 +345,7 @@ export default class Filter extends React.Component {
                         validSpeakers = Array.from(validSpeakers)
                     } else {
                         validSpeakers = new Set()
-                        this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].forEach(pair => {
+                        this.state.chp_SA[parseInt(this.state.selectedChapter)-1].forEach(pair => {
                             if (pair[1] === lockAddressee){
                                 validSpeakers.add(pair[0])
                             }
