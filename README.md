@@ -5,6 +5,9 @@
 3. remake the pnum column s.t. it displays chpnum and order of poem within that chp in the same cell
 n. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
+# Neo4j Database Requirements
+Our DB is on Aura, and the Cypher commands embeded in the scripts will likely only fit our DB. If you are interested in using this project for your own DB, consider rewriting the cypher queries, and subsequently how are the data being treated throughout. If you also have a textual database, we will eventually post our node and relationship layout, as well as our schema. Until then, feel free to reach out.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
