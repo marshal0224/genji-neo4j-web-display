@@ -1,9 +1,9 @@
 import React from 'react'
-//import {  } from '../neo4j'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
 import { Dropdown } from 'rsuite'
 import { json } from 'neo4j-driver-core'
+import _ from 'lodash'
 
 export default class Filter extends React.Component {
 
@@ -148,167 +148,227 @@ export default class Filter extends React.Component {
     }
 
     render() {
-        let updateSelectedChapter = (event) => {
-            let lockChapter = event.target.value.split(' ')
-            let index = (this.state.chapter.map(e => json.stringify(e))).indexOf(json.stringify(lockChapter))
-            let validSpeakers = []
-            let validAddressees = []
+        let updateSelection = (event) => {
+            let type = event.target.id
+            let lockChapter, lockSpeaker, lockAddressee
+            // Remember: selected value != options
+            let validSpeakers = this.state.speakerList
+            let validAddressees = this.state.addresseeList
             let validChapters = this.state.chapterList
-                // if a filter has a selected option, chapter filter updates the other filter (in the case of speaker-addressee pair) to display the intersection of this chapter's list of elements and the existing list, where chp_array seteq curr_array
-            if (index === -1) {
-                validChapters = this.state.chapter
-                if (this.state.selectedSpeaker != 'Any') {
-                    validAddressees =  this.state.addresseeList
-                } else {
-                    validAddressees = this.state.addressee
+            if (type === 'chapter') {
+                lockChapter = event.target.value.split(' ')
+                // if a selected value is any, remap the rest of the constraints to remove this filter's effect
+                if (lockChapter[0] === 'Any') {
+                    if (this.state.selectedAddressee === 'Any') {
+                        validSpeakers = this.state.speaker
+                    } else {
+                        validSpeakers = []
+                        let index = this.state.characters.indexOf(this.state.selectedAddressee)
+                        for (let i = 0; i < this.state.characters.length; i++) {
+                            if (this.state.adjmat_SA[i][index]) {
+                                validSpeakers.push(this.state.characters[i])
+                            }
+                        }
+                    } 
+                    if (this.state.selectedSpeaker === 'Any') {
+                        validAddressees = this.state.addressee
+                    } else {
+                        validAddressees = []
+                        let index = this.state.characters.indexOf(this.state.selectedSpeaker)
+                        for (let j = 0; j < this.state.characters.length; j++) {
+                            if (this.state.adjmat_SA[index][j]) {
+                                validAddressees.push(this.state.characters[j])
+                            }
+                        }
+                    }
                 }
-                if (this.state.selectedAddressee != 'Any') {
-                    validSpeakers = this.state.speakerList
-                } else {
-                    validSpeakers = this.state.speaker
+                // if a filter has a specific selected option, update the constraints on other filters
+                else {
+                    if (this.state.selectedAddressee === 'Any') {
+                        validSpeakers = Array.from(new Set(this.state.chp_SA[parseInt(lockChapter[0])-1].map(pair => pair[0]))).sort()
+                    } else {
+                        validSpeakers = Array.from(new Set(this.state.chp_SA.map(chp => chp.filter(pair => pair.includes(this.state.selectedAddressee)).map(pair => pair[0]))))
+                    }
+                    if (this.state.selectedSpeaker === 'Any') {
+                        validAddressees = Array.from(new Set(this.state.chp_SA[parseInt(lockChapter[0])-1].map(pair => pair[1]))).sort()
+                    } else {
+                        validSpeakers = Array.from(new Set(this.state.chp_SA.map(chp => chp.filter(pair => pair.includes(this.state.selectedSpeaker)).map(pair => pair[1]))))
+                    }
+                }
+            } else if (type === 'speaker') {
+                lockSpeaker = event.target.value
+                if (lockSpeaker === 'Any') {
+                    if (this.state.selectedAddressee === 'Any') {
+                        validChapters = this.state.chapter
+                    } else {
+                        // chapters are pushed in order so no need to sort
+                        validChapters = []
+                        for (let i = 0; i < 54; i++) {
+                            if (this.state.chp_SA[i] !== undefined) {
+                                for (let j = 0; j < this.state.chp_SA[i].length; j++) {
+                                    if (this.state.chp_SA[i][j][1] === this.state.selectedAddressee) {
+                                        validChapters.push(this.state.chapter[i])
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (this.state.selectedChapter === 'Any') {
+                        validAddressees = this.state.addressee
+                    } else {
+                        validAddressees = Array.from(new Set(this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].map(pair => pair[1]))).sort()
+                    }
+                }
+                // if we have a speaker selected
+                else {
+                    if (this.state.selectedAddressee === 'Any') {
+                        validChapters = []
+                        for (let i = 0; i < 54; i++) {
+                            if (this.state.chp_SA[i] !== undefined) {
+                                for (let j = 0; j < this.state.chp_SA[i].length; j++) {
+                                    if (this.state.chp_SA[i][j][0] === lockSpeaker) {
+                                        validChapters.push(this.state.chapter[i])
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        validChapters = []
+                        for (let i = 0; i < 54; i++) {
+                            if (this.state.chp_SA[i] !== undefined) {
+                                for (let j = 0; j < this.state.chp_SA[i].length; j++) {
+                                    if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([lockSpeaker, this.state.selectedAddressee])) {
+                                        validChapters.push(this.state.chapter[i])
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (this.state.selectedChapter === 'Any') {
+                        validAddressees = []
+                        this.state.adjmat_SA[this.state.characters.indexOf(lockSpeaker)].forEach((value, i) => {
+                            if (value) {
+                                validAddressees.push(this.state.characters[i])
+                            }
+                        })
+                    } else {
+                        validAddressees = new Set()
+                        this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].forEach(pair => {
+                            if (pair[0] === lockSpeaker){
+                                validAddressees.add(pair[1])
+                            }
+                        })
+                        validAddressees = Array.from(validAddressees).sort()
+                    }
                 }
             } else {
-                if (this.state.selectedSpeaker != 'Any') {
-                    validAddressees =  Array.from(new Set(this.state.chp_SA[index].map(e => e[1]))).filter(e => this.state.addresseeList.includes(e))
-                } else {
-                    validAddressees = Array.from(new Set(this.state.chp_SA[index].map(e => e[1])))
+                // when the addressee filter is changed
+                lockAddressee = event.target.value
+                if (lockAddressee === 'Any') {
+                    if (this.state.selectedSpeaker === 'Any') {
+                        validChapters = this.state.chapter
+                    } else {
+                        // chapters are pushed in order so no need to sort
+                        validChapters = []
+                        for (let i = 0; i < 54; i++) {
+                            if (this.state.chp_SA[i] !== undefined) {
+                                for (let j = 0; j < this.state.chp_SA[i].length; j++) {
+                                    if (this.state.chp_SA[i][j][0] === this.state.selectedSpeaker) {
+                                        validChapters.push(this.state.chapter[i])
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (this.state.selectedChapter === 'Any') {
+                        validSpeakers = this.state.speaker
+                    } else {
+                        validSpeakers = Array.from(new Set(this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].map(pair => pair[0]))).sort()
+                    }
                 }
-                if (this.state.selectedAddressee != 'Any') {
-                    validSpeakers = Array.from(new Set(this.state.chp_SA[index].map(e => e[0]))).filter(e => this.state.speakerList.includes(e))
-                } else {
-                    validSpeakers = Array.from(new Set(this.state.chp_SA[index].map(e => e[0])))
+                // if we have an addressee selected
+                else {
+                    if (this.state.selectedSpeaker === 'Any') {
+                        validChapters = []
+                        for (let i = 0; i < 54; i++) {
+                            if (this.state.chp_SA[i] !== undefined) {
+                                for (let j = 0; j < this.state.chp_SA[i].length; j++) {
+                                    if (this.state.chp_SA[i][j][1] === lockAddressee) {
+                                        validChapters.push(this.state.chapter[i])
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        validChapters = []
+                        for (let i = 0; i < 54; i++) {
+                            if (this.state.chp_SA[i] !== undefined) {
+                                for (let j = 0; j < this.state.chp_SA[i].length; j++) {
+                                    // console.log(this.state.chp_SA[i][j])
+                                    if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([this.state.selectedSpeaker, lockAddressee])) {
+                                        validChapters.push(this.state.chapter[i])
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (this.state.selectedChapter === 'Any') {
+                        validSpeakers = new Set()
+                        _.unzip(this.state.adjmat_SA)[this.state.characters.indexOf(lockAddressee)].forEach((value, i) => {
+                            if (value) {
+                                validSpeakers.add(this.state.characters[i])
+                            }
+                        })
+                        validSpeakers = Array.from(validSpeakers)
+                    } else {
+                        validSpeakers = new Set()
+                        this.state.chp_SA[parseInt(this.state.selectedChapter[0])-1].forEach(pair => {
+                            if (pair[1] === lockAddressee){
+                                validSpeakers.add(pair[0])
+                            }
+                        })
+                        validSpeakers = Array.from(validSpeakers).sort()
+                    }
                 }
-                // console.log(new Set(this.state.chp_SA[index]))
             }
             this.setState({
-                selectedChapter: event.target.value.split(' ')[0], 
                 chapterList: validChapters,
                 speakerList: validSpeakers, 
                 addresseeList: validAddressees, 
             }, 
             () => {
-                console.log('selected chapter now is: ' + this.state.selectedChapter)
+                switch (type) {
+                    case 'chapter':
+                        this.setState({
+                            selectedChapter: lockChapter[0],
+                        }, () => {
+                            console.log('selections set')
+                        }) 
+                        break
+                    case 'speaker':
+                        this.setState({
+                            selectedSpeaker: lockSpeaker,
+                        }, () => {
+                            console.log('selections set')
+                        }) 
+                        break
+                    case 'addressee':
+                        this.setState({
+                            selectedAddressee: lockAddressee,
+                        }, () => {
+                            console.log('selections set')
+                        }) 
+                        break
+                    default:
+                        console.log('unknown select type caught')
+                }
             })
-        }
-        let updateSelectedSpeaker = (event) => {
-            let lockedSpeaker = event.target.value
-            let index = this.state.characters.indexOf(lockedSpeaker)
-            let validChapters = []
-            let validAddressees = []
-            let validSpeakers = this.state.speakerList
-            if (index === -1) {
-                validSpeakers = this.state.speaker
-                if (this.state.selectedChapter != 'Any') {
-                    validAddressees =  this.state.addresseeList
-                } else {
-                    validAddressees = this.state.addressee
-                }
-                if (this.state.selectedAddressee != 'Any') {
-                    validChapters = this.state.chapterList
-                } else {
-                    validChapters = this.state.chapter
-                }
-            } else {
-                if (this.state.selectedChapter !== 'Any') {
-                    let chpnum = this.state.selectedChapter - 1
-                    let chp_char = Array.from(new Set(this.state.chp_SA[chpnum].map(e => e[1])))
-                    // console.log(chp_char)
-                    for (let j = 0; j < this.state.charNum; j++) {
-                        if (this.state.adjmat_SA[index][j]) {
-                            if (chp_char.includes(this.state.characters[j])) {
-                                validAddressees.push(this.state.characters[j])
-                            }
-                        }
-                    }
-                } else {
-                    for (let j = 0; j < this.state.charNum; j++) {
-                        if (this.state.adjmat_SA[index][j]) {
-                            validAddressees.push(this.state.characters[j])
-                        }
-                    }
-                }
-                if (this.state.selectedAddressee !== 'Any') {
-                    for (let i = 0; i < this.state.chapter.length; i++) {
-                        if (this.state.chp_SA[i] !== undefined && this.state.chp_SA[i].map(e => JSON.stringify(e)).includes(JSON.stringify([lockedSpeaker, this.state.selectedAddressee]))) {
-                            validChapters.push(this.state.chapter[i])
-                        }
-                    }
-                } else {
-                    validChapters = this.state.chapterList
-                }
-            }
-            this.setState({
-                selectedSpeaker: lockedSpeaker,
-                chapterList: validChapters,
-                speakerList: validSpeakers, 
-                addresseeList: validAddressees, 
-            }, 
-                () => {
-                    console.log('selected speaker now is: ' + this.state.selectedSpeaker)
-                }
-            )
-        }
-        let updateSelectedAddressee = (event) => {
-            let lockedAddressee = event.target.value
-            let index = this.state.characters.indexOf(lockedAddressee)
-            let validChapters = []
-            let validSpeakers = []
-            let validAddressees = this.state.addresseeList
-            if (index === -1) {
-                validAddressees = this.state.addressee
-                if (this.state.selectedChapter != 'Any') {
-                    validSpeakers =  this.state.speakerList
-                } else {
-                    validSpeakers = this.state.speaker
-                }
-                if (this.state.selectedSpeaker != 'Any') {
-                    validChapters = this.state.chapterList
-                } else {
-                    validChapters = this.state.chapter
-                }
-            } else {
-                if (this.state.selectedChapter !== 'Any') {
-                    let chpnum = this.state.selectedChapter - 1
-                    let chp_char = Array.from(new Set(this.state.chp_SA[chpnum].map(e => e[0])))
-                    // console.log(chp_char)
-                    for (let j = 0; j < this.state.charNum; j++) {
-                        if (this.state.adjmat_SA[j][index]) {
-                            if (chp_char.includes(this.state.characters[j])) {
-                                validSpeakers.push(this.state.characters[j])
-                            }
-                        }
-                    }
-                } else {
-                    for (let j = 0; j < this.state.charNum; j++) {
-                        if (this.state.adjmat_SA[j][index]) {
-                            validSpeakers.push(this.state.characters[j])
-                        }
-                    }
-                }
-                if (this.state.selectedSpeaker !== 'Any') {
-                    // console.log(this.state.selectedSpeaker, lockedAddressee)
-                    // console.log(this.state.chp_SA)
-                    for (let i = 0; i < this.state.chapter.length; i++) {
-                        if (this.state.chp_SA[i] !== undefined && this.state.chp_SA[i].map(e => JSON.stringify(e)).includes(JSON.stringify([this.state.selectedSpeaker, lockedAddressee]))) {
-                            validChapters.push(this.state.chapter[i])
-                            // console.log(this.state.chp_SA[i])
-                        }
-                    }
-                    // console.log(validChapters)
-                } else {
-                    validChapters = this.state.chapterList
-                }
-            }
-            this.setState({
-                selectedAddressee: lockedAddressee,
-                chapterList: validChapters,
-                speakerList: validSpeakers, 
-                addresseeList: validAddressees, 
-            }, 
-                () => {
-                    console.log('selected addressee now is: ' + this.state.selectedAddressee)
-                }
-            )
         }
         return (
             <div>
@@ -318,7 +378,7 @@ export default class Filter extends React.Component {
                     <select 
                         id="chapter"
                         //value={formData.speaker}
-                        onChange={updateSelectedChapter}
+                        onChange={updateSelection}
                         name="chapter"
                     >
                         <option value="Any">Any</option>
@@ -331,11 +391,11 @@ export default class Filter extends React.Component {
                     <select 
                         id="speaker"
                         //onClick={console.log('clicked spaker bar')}
-                        onChange={updateSelectedSpeaker}
+                        onChange={updateSelection}
                         name="speaker"
                     >
                         <option value="Any">Any</option>
-                        {this.state.speakerList.map((row) => <option key={row}>{row}</option>)}
+                        {this.state.speakerList.map((row) => <option key={row+'_s'}>{row}</option>)}
                     </select>
                 </form>
                 <form>
@@ -344,11 +404,11 @@ export default class Filter extends React.Component {
                 <select 
                     id="addressee"
                     //value={formData.speaker}
-                    onChange={updateSelectedAddressee}
+                    onChange={updateSelection}
                     name="addressee"
                 >
                     <option value="Any">Any</option>
-                    {this.state.addresseeList.map((row) => <option key={row}>{row}</option>)}
+                    {this.state.addresseeList.map((row) => <option key={row+'_a'}>{row}</option>)}
                 </select>
             </form>
         </div>
