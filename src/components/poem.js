@@ -44,7 +44,6 @@ export default class Poem extends React.Component {
                             +'[q:ADDRESSEE_OF]-'+getPoem_A 
                             +getPoem_C
                             +' return (j) as poems'
-            console.log(getPoem)
             const res = await session.readTransaction(tx => tx.run(getPoem, { speaker, addressee, chapter}))
             let temp = res.records.map(row => {return toNativeTypes(row.get('poems'))})
             // properties[i]: {Japanese, Romaji, pnum}
@@ -78,10 +77,11 @@ export default class Poem extends React.Component {
                     let temp = plist[j+1]
                     plist[j+1] = plist[j]
                     plist[j] = temp
-                    console.log('swpped')
+                    // console.log('swpped')
                 }
             }
         }
+        console.log('Poem table rendering inited')
         // console.log(plist)
         // for (let i = 0; i < plist.length-1; i++) {
         //     if (plist[i][0].substring(0, 2) > plist[i][0].substring(0, 2)

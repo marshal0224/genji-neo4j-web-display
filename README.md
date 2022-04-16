@@ -1,5 +1,9 @@
-# Description
-This project is a React app which aims to display textual data pulled from a Neo4j Graphical Database. This project is part of the Boston University UROP project involving myself and Professor Keith Vincent at Boston University. This project is a work in progress.
+# TO-DO
+0. Fix the filters
+1. Implement table field dropdown menus
+2. Implement the gender filter
+3. remake the pnum column s.t. it displays chpnum and order of poem within that chp in the same cell
+n. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
 # Getting Started with Create React App
 
