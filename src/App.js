@@ -1,10 +1,11 @@
 //import logo from './logo.svg';
 import './App.css';
 //import { initDriver, closeDriver } from './neo4j.js'
-import React, { useEffect } from 'react'
+import React from 'react'
 //import * as ReactDOMClient from 'react-dom/client';
 import Filter from './components/filter'
 import Poem from './components/poem'
+// import getPoem from 'components/getPoem'
 
 export default class App extends React.Component{
   constructor() {
@@ -21,9 +22,10 @@ export default class App extends React.Component{
     }
 
     this.filterRef = React.createRef()
+    this.ptRef = React.createRef() // poem table ref
 
     this.query = this.query.bind(this)
-    this.reset = this.reset.bind(this)
+    this.test = this.test.bind(this)
   }
   
   query = (event) => {
@@ -34,7 +36,14 @@ export default class App extends React.Component{
       addressee: this.filterRef.state.selectedAddressee
     }, 
       () => {
-        console.log('quried, this.state.addressee from app is now: '+this.state.addressee)
+        this.ptRef.setState({
+          chapter: this.state.chapter,
+          speaker: this.state.speaker,
+          addressee: this.state.addressee,
+        }, 
+        () => {
+          console.log('quried. ptRef.state.addressee is '+this.ptRef.state.addressee)
+        })
       }
     )
   }
@@ -47,7 +56,15 @@ export default class App extends React.Component{
         console.log('reset')
       }
     )
-  //(fieldEditor1) => {this.fieldEditor1 = fieldEditor1;
+  }
+
+  test = (event) => {
+    this.setState({
+      queried: true,
+      chapter: '5',
+      speaker: 'Hikaru Genji',
+      addressee: 'Murasaki',
+    })
   }
 
   render() {
@@ -57,11 +74,12 @@ export default class App extends React.Component{
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
           <button disabled={this.state.queried} onClick={this.query}>Query</button>
-          <button disabled={!this.state.queried} onClick={this.reset}>Reset</button>
+          <button disabled={!this.state.queried} onClick={this.reset}>Reset Table</button>
+          <button onClick={this.test}>Test</button>
           <br/>
         </div>
         <div>
-          {this.state.queried && <Poem uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee}/>}
+          {this.state.queried && <Poem ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee}/>}
         </div>
       </div>
     )
