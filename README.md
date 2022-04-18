@@ -1,5 +1,5 @@
 # TO-DO
-0. Fix the filters
+~~0. Fix the filters~~Now kinda fixed
 1. Implement table field dropdown menus
 2. Implement the gender filter
 3. remake the pnum column s.t. it displays chpnum and order of poem within that chp in the same cell
@@ -7,6 +7,11 @@ n. clean up code, including commenting important logics, deleting unnecessary co
 
 # Neo4j Database Requirements
 Our DB is on Aura, and the Cypher commands embeded in the scripts will likely only fit our DB. If you are interested in using this project for your own DB, consider rewriting the cypher queries, and subsequently how are the data being treated throughout. If you also have a textual database, we will eventually post our node and relationship layout, as well as our schema. Until then, feel free to reach out.
+
+# How to Use
+1. Run `npm i` in the project root directory
+2. Create a .env file at the project root directory. Details of the .env file can be found at [dotenv](https://www.npmjs.com/package/dotenv). 
+3. Refer to the below Create React App description for what you could do next.
 
 # Getting Started with Create React App
 
