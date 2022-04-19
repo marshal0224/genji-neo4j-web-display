@@ -1,8 +1,8 @@
 # TO-DO
 ~~0. Fix the filters~~Now kinda fixed
-1. Implement table field dropdown menus
+1. Improve table field dropdown menus
 2. Implement the gender filter
-3. remake the pnum column s.t. it displays chpnum and order of poem within that chp in the same cell
+3. ~~remake the pnum column s.t. it displays chpnum and order of poem within that chp in the same cell~~Done for now
 n. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
 # Neo4j Database Requirements

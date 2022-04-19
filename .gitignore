@@ -26,3 +26,6 @@ yarn-error.log*
 *.csv
 
 *.txt
+
+scratch.js
+getPoem.js
