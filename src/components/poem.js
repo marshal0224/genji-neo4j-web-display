@@ -241,29 +241,33 @@ export default class Poem extends React.Component {
                     }
                 }
             }
+            // console.log(transTemp)
             transTemp.forEach(element => {
-                let count
-                if (element.length === 2) {
-                    count = 0
-                } else {
-                    count = 1
+                if (element.length !== 1) {
+                    let count
+                    if (element.length === 2) {
+                        count = 0
+                    } else {
+                        count = 1
+                    }
+                    if (Translation[element[count+1].substring(0,6)] === undefined) {
+                        Translation[element[count+1].substring(0,6)] = {}
+                    }
+                    let auth = element[count+1].substring(6,7)
+                    if (auth === 'A') {
+                        auth = 'Waley'
+                    } else if (auth === 'C') {
+                        auth = 'Cranston'
+                    } else if (auth === 'S') {
+                        auth = 'Seidensticker'
+                    } else if (auth === 'T') {
+                        auth = 'Tyler'
+                    } else {
+                        auth = 'Washburn'
+                    }
+                    // console.log(element[count+1].substring(0,6))
+                    Translation[element[count+1].substring(0,6)][auth] = element[count]
                 }
-                if (Translation[element[count+1].substring(0,6)] === undefined) {
-                    Translation[element[count+1].substring(0,6)] = {}
-                }
-                let auth = element[count+1].substring(6,7)
-                if (auth === 'A') {
-                    auth = 'Waley'
-                } else if (auth === 'C') {
-                    auth = 'Cranston'
-                } else if (auth === 'S') {
-                    auth = 'Seidensticker'
-                } else if (auth === 'T') {
-                    auth = 'Tyler'
-                } else {
-                    auth = 'Washburn'
-                }
-                Translation[element[count+1].substring(0,6)][auth] = element[count]
             });
             this.setState({
                 Japanese: plist,
@@ -290,9 +294,9 @@ export default class Poem extends React.Component {
             let pnum = target.className
             let auth = event.target.value
             target.innerHTML = trans[pnum][auth]
-            console.log(target)
         }
         function getOptions(pnum) {
+            // console.log(pnum)
             let options = Object.keys(trans[pnum]).sort();
             return (options)
         }
