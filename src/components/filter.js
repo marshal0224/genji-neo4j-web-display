@@ -1,8 +1,8 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
-import { Dropdown } from 'rsuite'
-import { json } from 'neo4j-driver-core'
+// import { Dropdown } from 'rsuite'
+// import { json } from 'neo4j-driver-core'
 import _ from 'lodash'
 
 export default class Filter extends React.Component {
@@ -39,7 +39,7 @@ export default class Filter extends React.Component {
 
     async componentDidMount() {
         const getChp = 'match (c:Chapter) return (c) as chapters'
-        const getExchange = 'match path=(c:Character)-[r:SPEAKER_OF]-(j:Japanese)-[s:ADDRESSEE_OF]-(d:Character) return path'
+        const getExchange = 'match path=(c:Character)-[r:SPEAKER_OF]-(g:Genji_Poem)-[s:ADDRESSEE_OF]-(d:Character) return path'
         const getChar = 'match (c:Character) return c.name as char order by c.name'
 
         const session = this.driver.session()
@@ -84,12 +84,12 @@ export default class Filter extends React.Component {
                 let chp_SA = new Array(this.state.chapter.length)
                 for (let i = 0; i < speakers.length; i++) {
                     let chpnum = speakers[i].end.properties.pnum.substring(0, 2)
-                    if (chpnum.substring(0, 1) == '0') {
+                    if (chpnum.substring(0, 1) === '0') {
                         chpnum = parseInt(chpnum.substring(1, 2))
                     } else {
                         chpnum = parseInt(chpnum)
                     }
-                    if (chp_SA[chpnum-1] == undefined) {
+                    if (chp_SA[chpnum-1] === undefined) {
                         chp_SA[chpnum-1] = [[speakers[i].start.properties.name, addressees[i].end.properties.name]]
                     } else {
                         chp_SA[chpnum-1].push([speakers[i].start.properties.name, addressees[i].end.properties.name])
