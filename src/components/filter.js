@@ -1,8 +1,6 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
-// import { Dropdown } from 'rsuite'
-// import { json } from 'neo4j-driver-core'
 import _ from 'lodash'
 
 export default class Filter extends React.Component {
@@ -18,44 +16,42 @@ export default class Filter extends React.Component {
             charNum: 0,
             speaker: [],
             addressee: [],
-            gender: [], 
+            genders: [], 
             // value for the filters
             selectedChapter: "Any",
             selectedSpeaker: "Any",
             selectedAddressee: "Any",
-            // data structures for processing
+            selectedSpeakerGender: "Any",
+            selectedAddresseeGender: "Any",
+            // adjmat_SA[speaker index][addressee index] = 0 for no, 1 for yes, where index is index of character in the list of characters. Direction sensitive.
             adjmat_SA: [], 
+            // chp_SA[0][0] = ['Kiritsubo Consort', 'Kiritsubo Emperor'], i.e. 01KR01 is spoken by K.C. to K.E.
             chp_SA: [],
             // lists of filter options
             chapterList: [], 
             speakerList: [], 
             addresseeList: [],
-            // All filters are unlocked initially. Once a filter is locked, 
-            // lockChapter: false,
-            // lockSpeaker: false,
-            // lockAddressee: false,
+            speakerGenderList: [],
+            addresseeGenderList: [],
         }
     }
 
     async componentDidMount() {
         const getChp = 'match (c:Chapter) return (c) as chapters'
         const getExchange = 'match path=(c:Character)-[r:SPEAKER_OF]-(g:Genji_Poem)-[s:ADDRESSEE_OF]-(d:Character) return path'
-        const getChar = 'match (c:Character) return c.name as char order by c.name'
-
+        const getChar = 'match (c:Character) return c.name as char, c.gender as gender order by c.name'
         const session = this.driver.session()
 
         try {
             const resChp = await session.readTransaction(tx => tx.run(getChp))
             const resExchange = await session.readTransaction(tx => tx.run(getExchange))
             const resChar = await session.readTransaction(tx => tx.run(getChar))
-            
+
             let tempChp = resChp.records.map(row => {return toNativeTypes(row.get('chapters'))}).map((chp) => chp.properties)
             let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
             let chars= resChar.records.map(row => {return toNativeTypes(row.get('char'))}).map(e => Object.values(e).join(''))
-            const charNum = chars.length
-
-            //115 as of April 10th, 2022
-            //console.log(charNum)
+            let genders= resChar.records.map(row => {return toNativeTypes(row.get('gender'))}).map(e => Object.values(e).join(''))
+            const charNum = chars.length //115 as of April 10th, 2022, 139
 
             let speakers = []
             let addressees = []
@@ -74,6 +70,7 @@ export default class Filter extends React.Component {
                 chapter: chapters,
                 characters: chars,
                 charNum: charNum,
+                genders: genders,
                 speaker: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
                 addressee: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
                 chapterList: chapters, 
@@ -131,9 +128,6 @@ export default class Filter extends React.Component {
                     adjmat_SA: mat, 
                     chp_SA: chp_SA
                 }, () => {
-                    // console.log(this.state.chp_SA)
-                    // console.log(this.state.chp_SA[0])
-                    // console.log(this.state.chp_SA[0][0])
                     console.log('filter options set')
                 })
             })
@@ -142,23 +136,23 @@ export default class Filter extends React.Component {
         } finally {
             await session.close()
         }
-
         closeDriver()
-
     }
 
     render() {
         let updateSelection = (event) => {
             let type = event.target.id
-            let lockChapter, lockSpeaker, lockAddressee
+            let lockedChapter, lockedSpeaker, lockedAddressee, lockedSpeakerGender, lockedAddresseeGender
             // Remember: selected value != options
             let validSpeakers = this.state.speakerList
             let validAddressees = this.state.addresseeList
             let validChapters = this.state.chapterList
+            let validSpeakerGenders = ['male','female']
+            let validAddresseeGenders = ['male','female','nonhuman']
             if (type === 'chapter') {
-                lockChapter = event.target.value.split(' ')
+                lockedChapter = event.target.value.split(' ')
                 // if a selected value is any, remap the rest of the constraints to remove this filter's effect
-                if (lockChapter[0] === 'Any') {
+                if (lockedChapter[0] === 'Any') {
                     if (this.state.selectedAddressee === 'Any') {
                         validSpeakers = this.state.speaker
                     } else {
@@ -184,7 +178,7 @@ export default class Filter extends React.Component {
                 }
                 // if a filter has a specific selected option, update the constraints on other filters
                 else {
-                    let index = parseInt(lockChapter[0]) - 1
+                    let index = parseInt(lockedChapter[0]) - 1
                     if (this.state.selectedAddressee === 'Any') {
                         validSpeakers = new Set()
                         this.state.chp_SA[index].forEach(pair => validSpeakers.add(pair[0]))
@@ -212,9 +206,55 @@ export default class Filter extends React.Component {
                         validAddressees = Array.from(validAddressees).sort()
                     }
                 }
+            } else if (type === 'speakerGender') {
+                lockedSpeakerGender = event.target.value
+                validSpeakers = this.state.speakerList
+                validAddressees = this.state.addresseeList
+                validAddresseeGenders = []
+                validChapters = this.state.chapterList
+                if (lockedSpeakerGender !== "Any") {
+                    console.log(validSpeakers)
+                    for (let i = 0; i < validSpeakers.length; i++) {
+                        if (this.state.genders[this.state.characters.indexOf(validSpeakers[i])] !== lockedSpeakerGender) {
+                            validSpeakers.splice(i, 1)
+                            i--
+                        }
+                    }
+                    validAddressees.forEach(addr => {
+                        let a = this.state.characters.indexOf(addr)
+                        validSpeakers.every(spkr => {
+                            if (!this.state.adjmat_SA[this.state.characters.indexOf(spkr)][a]) {
+                                let rm = validAddressees.indexOf(addr)
+                                validAddressees.splice(rm, 1)
+                                return false
+                            }
+                        })
+                    })
+                    validAddresseeGenders = Array.from(new Set(validAddressees.map(addr => this.state.genders[this.state.characters.indexOf(addr)])))
+                    console.log(this.state.chp_SA)
+                    // Fix chp_SA 41-43 empty issues next time
+                    validChapters.forEach(chp => {
+                        let count = 0
+                        console.log(this.state.chp_SA[parseInt(chp[0])-1])
+                        this.state.chp_SA[parseInt(chp[0])-1].every(pair => {
+                            let sg = this.state.genders[this.state.characters.indexOf(pair[0])]
+                            let ag = this.state.genders[this.state.characters.indexOf(pair[1])]
+                            if (sg === lockedSpeakerGender && validAddresseeGenders.includes(ag)) {
+                                count += 1
+                                return false
+                            }
+                        })
+                        if (count) {
+                            return false
+                        } else {
+                            let rm = validChapters.indexOf(chp)
+                            validChapters.splice(rm, 1)
+                        }
+                    })
+                }
             } else if (type === 'speaker') {
-                lockSpeaker = event.target.value
-                if (lockSpeaker === 'Any') {
+                lockedSpeaker = event.target.value
+                if (lockedSpeaker === 'Any') {
                     if (this.state.selectedAddressee === 'Any') {
                         validChapters = this.state.chapter
                     } else {
@@ -244,7 +284,7 @@ export default class Filter extends React.Component {
                         for (let i = 0; i < 54; i++) {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
-                                    if (this.state.chp_SA[i][j][0] === lockSpeaker) {
+                                    if (this.state.chp_SA[i][j][0] === lockedSpeaker) {
                                         validChapters.push(this.state.chapter[i])
                                         break
                                     }
@@ -256,7 +296,7 @@ export default class Filter extends React.Component {
                         for (let i = 0; i < 54; i++) {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
-                                    if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([lockSpeaker, this.state.selectedAddressee])) {
+                                    if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([lockedSpeaker, this.state.selectedAddressee])) {
                                         validChapters.push(this.state.chapter[i])
                                         break
                                     }
@@ -266,7 +306,7 @@ export default class Filter extends React.Component {
                     }
                     if (this.state.selectedChapter === 'Any') {
                         validAddressees = []
-                        this.state.adjmat_SA[this.state.characters.indexOf(lockSpeaker)].forEach((value, i) => {
+                        this.state.adjmat_SA[this.state.characters.indexOf(lockedSpeaker)].forEach((value, i) => {
                             if (value) {
                                 validAddressees.push(this.state.characters[i])
                             }
@@ -274,7 +314,7 @@ export default class Filter extends React.Component {
                     } else {
                         validAddressees = new Set()
                         this.state.chp_SA[parseInt(this.state.selectedChapter)-1].forEach(pair => {
-                            if (pair[0] === lockSpeaker){
+                            if (pair[0] === lockedSpeaker){
                                 validAddressees.add(pair[1])
                             }
                         })
@@ -283,8 +323,8 @@ export default class Filter extends React.Component {
                 }
             } else {
                 // when the addressee filter is changed
-                lockAddressee = event.target.value
-                if (lockAddressee === 'Any') {
+                lockedAddressee = event.target.value
+                if (lockedAddressee === 'Any') {
                     if (this.state.selectedSpeaker === 'Any') {
                         validChapters = this.state.chapter
                     } else {
@@ -314,7 +354,7 @@ export default class Filter extends React.Component {
                         for (let i = 0; i < 54; i++) {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
-                                    if (this.state.chp_SA[i][j][1] === lockAddressee) {
+                                    if (this.state.chp_SA[i][j][1] === lockedAddressee) {
                                         validChapters.push(this.state.chapter[i])
                                         break
                                     }
@@ -327,7 +367,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     // console.log(this.state.chp_SA[i][j])
-                                    if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([this.state.selectedSpeaker, lockAddressee])) {
+                                    if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([this.state.selectedSpeaker, lockedAddressee])) {
                                         validChapters.push(this.state.chapter[i])
                                         break
                                     }
@@ -337,7 +377,7 @@ export default class Filter extends React.Component {
                     }
                     if (this.state.selectedChapter === 'Any') {
                         validSpeakers = new Set()
-                        _.unzip(this.state.adjmat_SA)[this.state.characters.indexOf(lockAddressee)].forEach((value, i) => {
+                        _.unzip(this.state.adjmat_SA)[this.state.characters.indexOf(lockedAddressee)].forEach((value, i) => {
                             if (value) {
                                 validSpeakers.add(this.state.characters[i])
                             }
@@ -346,7 +386,7 @@ export default class Filter extends React.Component {
                     } else {
                         validSpeakers = new Set()
                         this.state.chp_SA[parseInt(this.state.selectedChapter)-1].forEach(pair => {
-                            if (pair[1] === lockAddressee){
+                            if (pair[1] === lockedAddressee){
                                 validSpeakers.add(pair[0])
                             }
                         })
@@ -358,30 +398,39 @@ export default class Filter extends React.Component {
                 chapterList: validChapters,
                 speakerList: validSpeakers, 
                 addresseeList: validAddressees, 
+                speakerGenderList: validSpeakerGenders,
+                speakerAddresseeList: validAddresseeGenders,
             }, 
             () => {
                 switch (type) {
                     case 'chapter':
                         this.setState({
-                            selectedChapter: lockChapter[0],
+                            selectedChapter: lockedChapter[0],
                         }, () => {
                             console.log('selections set')
                         }) 
                         break
                     case 'speaker':
                         this.setState({
-                            selectedSpeaker: lockSpeaker,
+                            selectedSpeaker: lockedSpeaker,
                         }, () => {
                             console.log('selections set')
                         }) 
                         break
                     case 'addressee':
                         this.setState({
-                            selectedAddressee: lockAddressee,
+                            selectedAddressee: lockedAddressee,
                         }, () => {
                             console.log('selections set')
                         }) 
                         break
+                    case 'speakerGender':
+                            this.setState({
+                                selectedSpeakerGender: lockedSpeakerGender,
+                            }, () => {
+                                console.log('selections set')
+                            }) 
+                            break
                     default:
                         console.log('unknown select type caught')
                 }
@@ -403,6 +452,20 @@ export default class Filter extends React.Component {
                     </select>
                 </form>
                 <form>
+                    <label htmlFor="speakerGender">Speaker's gender</label>
+                    <br />
+                    <select 
+                        id="speakerGender"
+                        //value={formData.speaker}
+                        onChange={updateSelection}
+                        name="speakerGender"
+                    >
+                        <option value="Any">Any</option>
+                        <option value="male">male</option>
+                        <option value="female">female</option>
+                    </select>
+                </form>
+                <form>
                     <label htmlFor="speaker">Choose a speaker</label>
                     <br />
                     <select 
@@ -413,6 +476,21 @@ export default class Filter extends React.Component {
                     >
                         <option value="Any">Any</option>
                         {this.state.speakerList.map((row) => <option key={row+'_s'}>{row}</option>)}
+                    </select>
+                </form>
+                <form>
+                    <label htmlFor="addresseeGender">Addressee's gender</label>
+                    <br />
+                    <select 
+                        id="addresseeGender"
+                        //value={formData.speaker}
+                        onChange={updateSelection}
+                        name="addresseeGender"
+                    >
+                        <option value="Any">Any</option>
+                        <option value="male">male</option>
+                        <option value="female">female</option>
+                        <option value="nonhuman">nonhuman</option>
                     </select>
                 </form>
                 <form>
