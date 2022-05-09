@@ -208,12 +208,8 @@ export default class Filter extends React.Component {
                 }
             } else if (type === 'speakerGender') {
                 lockedSpeakerGender = event.target.value
-                validSpeakers = this.state.speakerList
-                validAddressees = this.state.addresseeList
                 validAddresseeGenders = []
-                validChapters = this.state.chapterList
                 if (lockedSpeakerGender !== "Any") {
-                    console.log(validSpeakers)
                     for (let i = 0; i < validSpeakers.length; i++) {
                         if (this.state.genders[this.state.characters.indexOf(validSpeakers[i])] !== lockedSpeakerGender) {
                             validSpeakers.splice(i, 1)
@@ -231,22 +227,28 @@ export default class Filter extends React.Component {
                         })
                     })
                     validAddresseeGenders = Array.from(new Set(validAddressees.map(addr => this.state.genders[this.state.characters.indexOf(addr)])))
-                    console.log(this.state.chp_SA)
                     // Fix chp_SA 41-43 empty issues next time
                     validChapters.forEach(chp => {
                         let count = 0
-                        console.log(this.state.chp_SA[parseInt(chp[0])-1])
-                        this.state.chp_SA[parseInt(chp[0])-1].every(pair => {
-                            let sg = this.state.genders[this.state.characters.indexOf(pair[0])]
-                            let ag = this.state.genders[this.state.characters.indexOf(pair[1])]
-                            if (sg === lockedSpeakerGender && validAddresseeGenders.includes(ag)) {
-                                count += 1
-                                return false
+                        let emptyls = [42, 43, 44]
+                        if (!emptyls.includes(parseInt(chp[0]))) {
+                            let exchanges = this.state.chp_SA[parseInt(chp[0])-1]
+                            for (let i= 0; i < exchanges.length; i++) {
+                                let sg = this.state.genders[this.state.characters.indexOf(exchanges[i][0])]
+                                let ag = this.state.genders[this.state.characters.indexOf(exchanges[i][1])]
+                                if (sg === lockedSpeakerGender && validAddresseeGenders.includes(ag)) {
+                                    count = 1
+                                    break
+                                }
                             }
-                        })
-                        if (count) {
-                            return false
-                        } else {
+                        }
+                        if (!count) {
+                            let rm = validChapters.indexOf(chp)
+                            validChapters.splice(rm, 1)
+                        }
+                    })
+                    validChapters.forEach(chp => {
+                        if (parseInt(chp[0]) === 43){
                             let rm = validChapters.indexOf(chp)
                             validChapters.splice(rm, 1)
                         }
