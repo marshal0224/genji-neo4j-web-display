@@ -3,7 +3,7 @@
 2. Change Japanese into a dropdown menu option
 3. Add chapter translations
 4. Add speaker/addressee names between the chapter column and the first dropdown column
-5. #change the gender filter structure to if a non-trivial gender then create new list objects by filtering the current state.xxxlist objects and display the filtered objects instead of the existing state objects, which will not be changed.# 
+5. **change the gender filter structure to if a non-trivial gender then create new list objects by filtering the current state.xxxlist objects and display the filtered objects instead of the existing state objects, which will not be changed.**
 6. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
 # Neo4j Database Requirements
