@@ -1,9 +1,10 @@
 # TO-DO
-~~0. Fix the filters~~Now kinda fixed
-1. Improve table field dropdown menus
-2. Implement the gender filter
-3. ~~remake the pnum column s.t. it displays chpnum and order of poem within that chp in the same cell~~Done for now
-n. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
+1. Include Romaji in table dropdown menus
+2. Change Japanese into a dropdown menu option
+3. Add chapter translations
+4. Add speaker/addressee names between the chapter column and the first dropdown column
+5. #change the gender filter structure to if a non-trivial gender then create new list objects by filtering the current state.xxxlist objects and display the filtered objects instead of the existing state objects, which will not be changed.# 
+6. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
 # Neo4j Database Requirements
 Our DB is on Aura, and the Cypher commands embeded in the scripts will likely only fit our DB. If you are interested in using this project for your own DB, consider rewriting the cypher queries, and subsequently how are the data being treated throughout. If you also have a textual database, we will eventually post our node and relationship layout, as well as our schema. Until then, feel free to reach out.
