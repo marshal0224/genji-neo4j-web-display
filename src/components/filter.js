@@ -29,7 +29,9 @@ export default class Filter extends React.Component {
             chp_SA: [],
             // lists of filter options
             chapterList: [], 
+            // [['Hikaru Genji', 'male'] ... ]
             speakerList: [], 
+            // [['Murasaki', 'female'] ... ]
             addresseeList: [],
             speakerGenderList: [],
             addresseeGenderList: [],
@@ -51,45 +53,53 @@ export default class Filter extends React.Component {
             let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
             let chars= resChar.records.map(row => {return toNativeTypes(row.get('char'))}).map(e => Object.values(e).join(''))
             let genders= resChar.records.map(row => {return toNativeTypes(row.get('gender'))}).map(e => Object.values(e).join(''))
-            const charNum = chars.length //115 as of April 10th, 2022, 139
+            const charNum = chars.length // 139 as of May 18th, 2022
 
             let speakers = []
             let addressees = []
+            let tempSpeakers = []
+            let tempAddressees = []
             let chapters = []
-    
+
+            //speakers: [{start, relationship, end}...]    
             tempExchange.forEach(([s, a]) => {
-                speakers.push(s)
-                addressees.push(a)
+                tempSpeakers.push(s)
+                tempAddressees.push(a)
             })
-            //speakers: [{start, relationship, end}...]
+            speakers = Array.from([...new Set(tempSpeakers.map(({start}) => start.properties.name))]).sort()
+            addressees = Array.from([...new Set(tempAddressees.map(({end}) => end.properties.name))]).sort()
             tempChp.forEach((e) => {
                 chapters.push([e.chapter_number, e.kanji, e.chapter_name])
             })
+            let speakerList = []
+            speakers.forEach(e => speakerList.push([e, genders[speakers.indexOf(e)]]))
+            let addresseeList = []
+            addressees.forEach(e => addresseeList.push([e, genders[addressees.indexOf(e)]]))
             //['1', '桐壺', 'Kiritsubo']
             this.setState({
                 chapters: chapters,
                 characters: chars,
                 charNum: charNum,
                 genders: genders,
-                speakers: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
-                addressees: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
+                speakers: speakers,
+                addressees: addressees,
                 chapterList: chapters, 
-                speakerList: Array.from([...new Set(speakers.map(({start}) => start.properties.name))]).sort(),
-                addresseeList: Array.from([...new Set(addressees.map(({end}) => end.properties.name))]).sort(),
+                speakerList: speakerList,
+                addresseeList: addresseeList,
             }, () => {
                 // init chapter to speaker&addressee mapping
                 let chp_SA = new Array(this.state.chapters.length)
-                for (let i = 0; i < speakers.length; i++) {
-                    let chpnum = speakers[i].end.properties.pnum.substring(0, 2)
+                for (let i = 0; i < tempSpeakers.length; i++) {
+                    let chpnum = tempSpeakers[i].end.properties.pnum.substring(0, 2)
                     if (chpnum.substring(0, 1) === '0') {
                         chpnum = parseInt(chpnum.substring(1, 2))
                     } else {
                         chpnum = parseInt(chpnum)
                     }
                     if (chp_SA[chpnum-1] === undefined) {
-                        chp_SA[chpnum-1] = [[speakers[i].start.properties.name, addressees[i].end.properties.name]]
+                        chp_SA[chpnum-1] = [[tempSpeakers[i].start.properties.name, tempAddressees[i].end.properties.name]]
                     } else {
-                        chp_SA[chpnum-1].push([speakers[i].start.properties.name, addressees[i].end.properties.name])
+                        chp_SA[chpnum-1].push([tempSpeakers[i].start.properties.name, tempAddressees[i].end.properties.name])
                     }
                 }
                 // init adjacency mat
@@ -111,12 +121,12 @@ export default class Filter extends React.Component {
                         let mat_a = chars.indexOf(a)
                         if (mat[mat_s][mat_a] === 0) {
                             // if the current adjmat entry for a pair of characters is 0, first find where does the speaker first appear in all the exchanges
-                            let si = speakers.findIndex(e => e.start.properties.name === this.state.speakers[scount])
+                            let si = tempSpeakers.findIndex(e => e.start.properties.name === this.state.speakers[scount])
                             // no need to exclude si=-1 since si is indexed based on this.state.speakers 
                             // while si does not increment out of bounds of speaker list and si corresponds to the same name as the current speaker from the speaker list
-                            while ((si < speakers.length) && speakers[si].start.properties.name === s) {
+                            while ((si < speakers.length) && tempSpeakers[si].start.properties.name === s) {
                                 // if the addressee half of this exchange matches the this.state.addressee element being iterated through
-                                if (addressees[si].end.properties.name === a) {
+                                if (tempAddressees[si].end.properties.name === a) {
                                     mat[mat_s][mat_a] = 1
                                 } 
                                 si = si + 1
@@ -158,6 +168,7 @@ export default class Filter extends React.Component {
                     } else {
                         validSpeakers = []
                         let index = this.state.characters.indexOf(this.state.selectedAddressee)
+                        console.log(index)
                         for (let i = 0; i < this.state.characters.length; i++) {
                             if (this.state.adjmat_SA[i][index]) {
                                 validSpeakers.push(this.state.characters[i])
@@ -411,12 +422,14 @@ export default class Filter extends React.Component {
             }
             this.setState({
                 chapterList: validChapters,
-                speakerList: validSpeakers, 
-                addresseeList: validAddressees, 
+                speakerList: validSpeakers,// 
+                // speakerList: validSpeakers.map(e => [e, this.state.genders[this.state.characters.indexOf(e)]]), 
+                addresseeList: validAddressees,// addresseeList: validAddressees.map(e => [e, this.state.genders[this.state.characters.indexOf(e)]]), 
                 speakerGenderList: validSpeakerGenders,
                 speakerAddresseeList: validAddresseeGenders,
             }, 
             () => {
+                console.log(this.state.speakerList)
                 switch (type) {
                     case 'chapter':
                         this.setState({
@@ -458,12 +471,12 @@ export default class Filter extends React.Component {
                     <br />
                     <select 
                         id="chapter"
-                        //value={formData.speaker}
+                        value={this.state.selectedChapter}
                         onChange={updateSelection}
                         name="chapter"
                     >
                         <option value="Any">Any</option>
-                        {this.state.chapterList.map((row) => <option key={row[2]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
+                        {this.state.chapterList.map((row) => <option key={row[0]} value={row[0]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
                     </select>
                 </form>
                 <form>
@@ -485,12 +498,12 @@ export default class Filter extends React.Component {
                     <br />
                     <select 
                         id="speaker"
-                        //onClick={console.log('clicked spaker bar')}
+                        value={this.state.selectedSpeaker}
                         onChange={updateSelection}
                         name="speaker"
                     >
                         <option value="Any">Any</option>
-                        {this.state.speakerList.map((row) => <option key={row+'_s'}>{row}</option>)}
+                        {this.state.speakerList.map(row => <option key={row[0]+'_s'} value={row[0]}>{row[0]}</option>)}
                     </select>
                 </form>
                 <form>
@@ -518,7 +531,7 @@ export default class Filter extends React.Component {
                     name="addressee"
                 >
                     <option value="Any">Any</option>
-                    {this.state.addresseeList.map((row) => <option key={row+'_a'}>{row}</option>)}
+                    {this.state.addresseeList.map((row) => <option key={row[0]+'_a'}>{row[0]}</option>)}
                 </select>
             </form>
         </div>
