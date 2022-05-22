@@ -61,7 +61,7 @@ export default class Filter extends React.Component {
             let tempAddressees = []
             let chapters = []
 
-            //speakers: [{start, relationship, end}...]    
+            //tempSpeakers: [{start, relationship, end}...]    
             tempExchange.forEach(([s, a]) => {
                 tempSpeakers.push(s)
                 tempAddressees.push(a)
@@ -115,24 +115,25 @@ export default class Filter extends React.Component {
                 this.state.speakers.forEach(s => {
                     //for each speaker stored in this.state.speaker
                     let mat_s = chars.indexOf(s)
-                    let scount = this.state.speakers.indexOf(s)
+                    // let scount = this.state.speakers.indexOf(s)
                     this.state.addressees.forEach(a => {
                         //for each addressee stored in this.state.addressee
                         let mat_a = chars.indexOf(a)
                         if (mat[mat_s][mat_a] === 0) {
                             // if the current adjmat entry for a pair of characters is 0, first find where does the speaker first appear in all the exchanges
-                            let si = tempSpeakers.findIndex(e => e.start.properties.name === this.state.speakers[scount])
-                            // no need to exclude si=-1 since si is indexed based on this.state.speakers 
-                            // while si does not increment out of bounds of speaker list and si corresponds to the same name as the current speaker from the speaker list
-                            while ((si < speakers.length) && tempSpeakers[si].start.properties.name === s) {
+                            let ei = tempSpeakers.findIndex(e => e.start.properties.name === s)
+                            // no need to exclude ei=-1 since si is indexed based on this.state.speakers 
+                            // while ei does not increment out of bounds of speaker list and ei corresponds to the same name as the current speaker from the speaker list
+                            while ((ei < tempSpeakers.length) && tempSpeakers[ei].start.properties.name === s) {
                                 // if the addressee half of this exchange matches the this.state.addressee element being iterated through
-                                if (tempAddressees[si].end.properties.name === a) {
+                                if (tempAddressees[ei].end.properties.name === a) {
                                     mat[mat_s][mat_a] = 1
                                 } 
-                                si = si + 1
+                                ei = ei + 1
                             }
                         }
                     })
+                    // console.log(mat.map(row => row.reduce((partialSum, a) => partialSum + a, 0)))
                 })
                 this.setState({
                     adjmat_SA: mat, 
@@ -246,10 +247,11 @@ export default class Filter extends React.Component {
                         }
                     }
                     validAddressees.forEach(addr => {
-                        let a = this.state.characters.indexOf(addr[0])
-                        validSpeakers.every(spkr => {
-                            if (!this.state.adjmat_SA[this.state.characters.indexOf(spkr[0])][a]) {
-                                validAddressees[validAddressees.indexOf(addr)][2] = 0
+                        let chp = this.state.selectedChapter-1
+                        addr[2] = 0
+                        validSpeakers.filter(row => row[2]===1).every(spkr => {
+                            if (JSON.stringify(this.state.chp_SA[chp]).includes(JSON.stringify([spkr[0], addr[0]]))) {
+                                addr[2] = 1
                                 return false
                             }
                         })
@@ -274,19 +276,14 @@ export default class Filter extends React.Component {
                             validChapters[rm][validChapters[rm].length-1] = 0
                         }
                     })
-                    // remove after entering the missing chapters
-                    validChapters.forEach(chp => {
-                        if (parseInt(chp[0]) === 43){
-                            let rm = validChapters.indexOf(chp)
-                            validChapters.splice(rm, 1)
-                        }
-                    })
                 }
             } else if (type === 'speaker') {
                 lockedSpeaker = event.target.value
                 if (lockedSpeaker === 'Any') {
+                    // For all speaker and all addressee, all chapters should be made available
                     if (this.state.selectedAddressee === 'Any') {
-                        validChapters = this.state.chapters.map(e => [e, 1])
+                        validChapters = this.state.chapters.map(e => [...e, 1])
+                        console.log(validChapters)
                     } else {
                         // chapters are pushed in order so no need to sort
                         validChapters = []
@@ -315,7 +312,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][0] === lockedSpeaker) {
-                                        validChapters.push([this.state.chapters[i], 1])
+                                        validChapters.push([...this.state.chapters[i], 1])
                                         break
                                     }
                                 }
@@ -327,7 +324,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([lockedSpeaker, this.state.selectedAddressee])) {
-                                        validChapters.push([this.state.chapters[i], 1])
+                                        validChapters.push([...this.state.chapters[i], 1])
                                         break
                                     }
                                 }
@@ -362,7 +359,6 @@ export default class Filter extends React.Component {
                         validAddressees[i][2] = 1
                     }
                     for (let i = 0; i < validChapters.length; i++) {
-                        console.log(validChapters[i])
                         validChapters[i][validChapters[i].length-1] = 1
                     }
                 } else {
@@ -374,11 +370,12 @@ export default class Filter extends React.Component {
                             validAddressees[i][2] = 1
                         }
                     }
-                    validAddressees.forEach(addr => {
-                        validSpeakers.every(spkr => {
-                            let s = this.state.characters.indexOf(spkr[0])
-                            if (!this.state.adjmat_SA[s][this.state.characters.indexOf(addr[0])]) {
-                                validSpeakers[validSpeakers.indexOf(spkr)][2] = 0
+                    validSpeakers.forEach(spkr => {
+                        let chp = this.state.selectedChapter-1
+                        spkr[2] = 0
+                        validAddressees.filter(row => row[2] === 1).every(addr => {
+                            if (JSON.stringify(this.state.chp_SA[chp]).includes(JSON.stringify([spkr[0], addr[0]]))) {
+                                spkr[2] = 1
                                 return false
                             }
                         })
@@ -416,7 +413,7 @@ export default class Filter extends React.Component {
                 lockedAddressee = event.target.value
                 if (lockedAddressee === 'Any') {
                     if (this.state.selectedSpeaker === 'Any') {
-                        validChapters = this.state.chapters.map(row => [row, 1])
+                        validChapters = this.state.chapters.map(row => [...row, 1])
                     } else {
                         // chapters are pushed in order so no need to sort
                         validChapters = []
@@ -424,7 +421,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][0] === this.state.selectedSpeaker) {
-                                        validChapters.push([this.state.chapters[i], 1])
+                                        validChapters.push([...this.state.chapters[i], 1])
                                         break
                                     }
                                 }
@@ -445,7 +442,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][1] === lockedAddressee) {
-                                        validChapters.push([this.state.chapters[i], 1])
+                                        validChapters.push([...this.state.chapters[i], 1])
                                         break
                                     }
                                 }
@@ -457,7 +454,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([this.state.selectedSpeaker, lockedAddressee])) {
-                                        validChapters.push([this.state.chapters[i], i])
+                                        validChapters.push([...this.state.chapters[i], i])
                                         break
                                     }
                                 }
@@ -466,7 +463,6 @@ export default class Filter extends React.Component {
                     }
                     if (this.state.selectedChapter === 'Any') {
                         validSpeakers = new Set()
-                        console.log(_.unzip(this.state.adjmat_SA)[this.state.characters.indexOf(lockedAddressee)])
                         _.unzip(this.state.adjmat_SA)[this.state.characters.indexOf(lockedAddressee)].forEach((value, i) => {
                             if (value) {
                                 validSpeakers.add(this.state.characters[i])
@@ -476,6 +472,7 @@ export default class Filter extends React.Component {
                     } else {
                         validSpeakers = new Set()
                         this.state.chp_SA[parseInt(this.state.selectedChapter)-1].forEach(pair => {
+                            console.log(pair)
                             if (pair[1] === lockedAddressee){
                                 validSpeakers.add(pair[0])
                             }
@@ -484,12 +481,12 @@ export default class Filter extends React.Component {
                     }
                 }
                 // update display based on the gender filters
-                if (selectedSpeakerGender !== 'Any') {
-                    validSpeakers.filter(e => e[1] !== selectedSpeakerGender).forEach(row =>row[row.length-1] = 0)
-                }
-                if (selectedAddresseeGender !== 'Any') {
-                    validSpeakers.filter(e => e[1] !== selectedAddresseeGender).forEach(row => row[row.length-1] = 0)
-                }
+                // if (selectedSpeakerGender !== 'Any') {
+                //     validSpeakers.filter(e => e[1] !== selectedSpeakerGender).forEach(row =>row[row.length-1] = 0)
+                // } 
+                // if (selectedAddresseeGender !== 'Any') {
+                //     validAddressees.filter(e => e[1] !== selectedAddresseeGender).forEach(row => row[row.length-1] = 0)
+                // } 
             }
             this.setState({
                 chapterList: validChapters,
@@ -499,13 +496,11 @@ export default class Filter extends React.Component {
                 speakerAddresseeList: validAddresseeGenders,
             }, 
             () => {
-                console.log(this.state.speakerList)
                 switch (type) {
                     case 'chapter':
                         this.setState({
                             selectedChapter: lockedChapter[0],
                         }, () => {
-                            console.log(this.state.speakerList)
                             console.log('selections set')
                         }) 
                         break
@@ -513,7 +508,6 @@ export default class Filter extends React.Component {
                         this.setState({
                             selectedSpeaker: lockedSpeaker,
                         }, () => {
-                            console.log(this.state.speakerList)
                             console.log('selections set')
                         }) 
                         break
