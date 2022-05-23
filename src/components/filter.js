@@ -27,14 +27,14 @@ export default class Filter extends React.Component {
             adjmat_SA: [], 
             // chp_SA[0][0] = ['Kiritsubo Consort', 'Kiritsubo Emperor'], i.e. 01KR01 is spoken by K.C. to K.E.
             chp_SA: [],
-            // lists of filter options
+            // lists of filter options. Note that the last element in each unit cell is EXCLUSIVELY for display toggle based on the gender filters, and should not be used for any other purposes. 
             chapterList: [], 
             // [['Hikaru Genji', 'male', 1] ... ] where 1 is used in the gender filter as a flag for display
             speakerList: [], 
             // [['Murasaki', 'female', 1] ... ]
             addresseeList: [],
-            speakerGenderList: [],
-            addresseeGenderList: [],
+            speakerGenderList: ['male', 'female'],
+            addresseeGenderList: ['male', 'female', 'nonhuman'],
         }
     }
 
@@ -246,17 +246,44 @@ export default class Filter extends React.Component {
                             validSpeakers[i][2] = 1
                         }
                     }
-                    validAddressees.forEach(addr => {
+                    for (let i = 0; i < validAddressees.length; i++) {
                         let chp = this.state.selectedChapter-1
-                        addr[2] = 0
-                        validSpeakers.filter(row => row[2]===1).every(spkr => {
-                            if (JSON.stringify(this.state.chp_SA[chp]).includes(JSON.stringify([spkr[0], addr[0]]))) {
-                                addr[2] = 1
-                                return false
+                        let addr = validAddressees[i][0]
+                        let addr_index = this.state.characters.indexOf(addr)
+                        validAddressees[i][2] = 0
+                        for (let j = 0; j < validSpeakers.filter(row => row[2]===1).length; j++) {
+                            let spkr = validSpeakers.filter(row => row[2]===1)[j][0]
+                            let spkr_index = this.state.characters.indexOf(spkr)
+                            if (!isNaN(chp)) {
+                                if (JSON.stringify(this.state.chp_SA[chp]).includes(JSON.stringify([spkr, addr]))) {
+                                    validAddressees[i][2] = 1
+                                    break
+                                }
+                            } else {
+                                // when chapter is any
+                                if (this.state.adjmat_SA[spkr_index][addr_index]===1) {
+                                    validAddressees[i][2] = 1
+                                    break
+                                }
                             }
-                        })
-                    })
-                    validAddresseeGenders = Array.from(new Set(validAddressees.filter(row => row[2]).map(addr => addr[1])))
+                        }
+                    }
+                    validAddresseeGenders = Array.from(new Set(validAddressees.filter(row => row[2]===1).map(addr => addr[1])))
+                    if (validAddresseeGenders.length === 2) {
+                        switch((validAddresseeGenders[0]+validAddresseeGenders[1]).length) {
+                            case 10:
+                                validAddresseeGenders = ['male', 'female']
+                            case 12:
+                                validAddresseeGenders = ['male', 'nonhuman']
+                            case 14:
+                                validAddresseeGenders = ['female', 'nonhuman']
+                            default:
+                                console.log('Error occured in speaker gender filter')
+                        }
+                    } else if (validAddresseeGenders.length === 3) {
+                        validAddresseeGenders = ['male', 'female', 'nonhuman']
+                    }
+                    // when male/female is specified for speaker, set chapters without that gender of speaker to not displaying.  
                     validChapters.forEach(chp => {
                         let count = 0
                         let emptyls = [42, 43, 44]
@@ -283,7 +310,6 @@ export default class Filter extends React.Component {
                     // For all speaker and all addressee, all chapters should be made available
                     if (this.state.selectedAddressee === 'Any') {
                         validChapters = this.state.chapters.map(e => [...e, 1])
-                        console.log(validChapters)
                     } else {
                         // chapters are pushed in order so no need to sort
                         validChapters = []
@@ -370,17 +396,32 @@ export default class Filter extends React.Component {
                             validAddressees[i][2] = 1
                         }
                     }
-                    validSpeakers.forEach(spkr => {
+                    for (let i = 0; i < validSpeakers.length; i++) {
                         let chp = this.state.selectedChapter-1
-                        spkr[2] = 0
-                        validAddressees.filter(row => row[2] === 1).every(addr => {
-                            if (JSON.stringify(this.state.chp_SA[chp]).includes(JSON.stringify([spkr[0], addr[0]]))) {
-                                spkr[2] = 1
-                                return false
+                        let spkr = validSpeakers[i][0]
+                        let spkr_index = this.state.characters.indexOf(spkr)
+                        validSpeakers[i][2] = 0
+                        for (let j = 0; j < validAddressees.filter(row => row[2]===1).length; j++) {
+                            let addr = validAddressees.filter(row => row[2]===1)[j][0]
+                            let addr_index = this.state.characters.indexOf(addr)
+                            if (!isNaN(chp)) {
+                                if (JSON.stringify(this.state.chp_SA[chp]).includes(JSON.stringify([spkr, addr]))) {
+                                    validSpeakers[i][2] = 1
+                                    break
+                                }
+                            } else {
+                                // when chapter is any
+                                if (this.state.adjmat_SA[spkr_index][addr_index]===1) {
+                                    validSpeakers[i][2] = 1
+                                    break
+                                }
                             }
-                        })
-                    })
-                    validSpeakerGenders = Array.from(new Set(validSpeakers.filter(row => row[2]).map(spkr => spkr[1])))
+                        }
+                    }
+                    validSpeakerGenders = Array.from(new Set(validSpeakers.filter(row => row[2]===1).map(spkr => spkr[1])))
+                    if (validSpeakerGenders.length === 2) {
+                        validSpeakerGenders = ['male', 'female']
+                    }
                     validChapters.forEach(chp => {
                         let count = 0
                         let emptyls = [42, 43, 44]
@@ -397,14 +438,7 @@ export default class Filter extends React.Component {
                         }
                         if (!count) {
                             let rm = validChapters.indexOf(chp)
-                        validChapters[rm][validChapters[rm].length-1] = 0
-                        }
-                    })
-                    // remove after entering the missing chapters
-                    validChapters.forEach(chp => {
-                        if (parseInt(chp[0]) === 43){
-                            let rm = validChapters.indexOf(chp)
-                            validChapters.splice(rm, 1)
+                            validChapters[rm][validChapters[rm].length-1] = 0
                         }
                     })
                 }
@@ -480,20 +514,13 @@ export default class Filter extends React.Component {
                         validSpeakers = Array.from(validSpeakers).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     }
                 }
-                // update display based on the gender filters
-                // if (selectedSpeakerGender !== 'Any') {
-                //     validSpeakers.filter(e => e[1] !== selectedSpeakerGender).forEach(row =>row[row.length-1] = 0)
-                // } 
-                // if (selectedAddresseeGender !== 'Any') {
-                //     validAddressees.filter(e => e[1] !== selectedAddresseeGender).forEach(row => row[row.length-1] = 0)
-                // } 
             }
             this.setState({
                 chapterList: validChapters,
                 speakerList: validSpeakers,
                 addresseeList: validAddressees,
                 speakerGenderList: validSpeakerGenders,
-                speakerAddresseeList: validAddresseeGenders,
+                addresseeGenderList: validAddresseeGenders,
             }, 
             () => {
                 switch (type) {
@@ -562,8 +589,7 @@ export default class Filter extends React.Component {
                         name="speakerGender"
                     >
                         <option value="Any">Any</option>
-                        <option value="male">male</option>
-                        <option value="female">female</option>
+                        {this.state.speakerGenderList.map(row => <option key={row+'_sg'} value={row}>{row}</option>)}
                     </select>
                 </form>
                 <form>
@@ -589,9 +615,7 @@ export default class Filter extends React.Component {
                         name="addresseeGender"
                     >
                         <option value="Any">Any</option>
-                        <option value="male">male</option>
-                        <option value="female">female</option>
-                        <option value="nonhuman">nonhuman</option>
+                        {this.state.addresseeGenderList.map(row => <option key={row+'_ag'} value={row}>{row}</option>)}
                     </select>
                 </form>
                 <form>
