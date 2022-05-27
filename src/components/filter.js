@@ -197,33 +197,31 @@ export default class Filter extends React.Component {
                 else {
                     // speaker
                     let index = parseInt(lockedChapter[0]) - 1
+                    validSpeakers = new Set()
                     if (this.state.selectedAddressee === 'Any') {
-                        validSpeakers = new Set()
                         this.state.chp_SA[index].forEach(pair => validSpeakers.add(pair[0]))
-                        validSpeakers = Array.from(validSpeakers).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     } else {
-                        validSpeakers = new Set()
                         this.state.chp_SA[index].forEach(pair => {
                             if (pair[1] === this.state.selectedAddressee) {
                                 validSpeakers.add(pair[0])
                             }
                         })
-                        validSpeakers = Array.from(validSpeakers).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     }
+                    validSpeakers = Array.from(validSpeakers).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     // addressee
+                    validAddressees = new Set()
                     if (this.state.selectedSpeaker === 'Any') {
-                        validAddressees = new Set()
                         this.state.chp_SA[index].forEach(pair => validAddressees.add(pair[1]))
-                        validAddressees = Array.from(validAddressees).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     } else {
-                        validAddressees = new Set()
                         this.state.chp_SA[index].forEach(pair => {
                             if (pair[0] === this.state.selectedSpeaker) {
                                 validAddressees.add(pair[1])
                             }
                         })
-                        validAddressees = Array.from(validAddressees).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     }
+                    validAddressees = Array.from(validAddressees).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
+                    validSpeakerGenders = Array.from(new Set(validSpeakers.map(e => e[1])))
+                    validAddresseeGenders = Array.from(new Set(validAddressees.map(e => e[1])))
                 }
             } else if (type === 'speakerGender') {
                 lockedSpeakerGender = event.target.value
@@ -269,20 +267,6 @@ export default class Filter extends React.Component {
                         }
                     }
                     validAddresseeGenders = Array.from(new Set(validAddressees.filter(row => row[2]===1).map(addr => addr[1])))
-                    if (validAddresseeGenders.length === 2) {
-                        switch((validAddresseeGenders[0]+validAddresseeGenders[1]).length) {
-                            case 10:
-                                validAddresseeGenders = ['male', 'female']
-                            case 12:
-                                validAddresseeGenders = ['male', 'nonhuman']
-                            case 14:
-                                validAddresseeGenders = ['female', 'nonhuman']
-                            default:
-                                console.log('Error occured in speaker gender filter')
-                        }
-                    } else if (validAddresseeGenders.length === 3) {
-                        validAddresseeGenders = ['male', 'female', 'nonhuman']
-                    }
                     // when male/female is specified for speaker, set chapters without that gender of speaker to not displaying.  
                     validChapters.forEach(chp => {
                         let count = 0
@@ -373,6 +357,7 @@ export default class Filter extends React.Component {
                             }
                         })
                         validAddressees = Array.from(validAddressees).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
+                        console.log('right')
                     }
                 }
             } else if (type === 'addresseeGender') {
@@ -419,9 +404,6 @@ export default class Filter extends React.Component {
                         }
                     }
                     validSpeakerGenders = Array.from(new Set(validSpeakers.filter(row => row[2]===1).map(spkr => spkr[1])))
-                    if (validSpeakerGenders.length === 2) {
-                        validSpeakerGenders = ['male', 'female']
-                    }
                     validChapters.forEach(chp => {
                         let count = 0
                         let emptyls = [42, 43, 44]
@@ -515,6 +497,26 @@ export default class Filter extends React.Component {
                     }
                 }
             }
+            if (validSpeakerGenders.length === 2) {
+                    validSpeakerGenders = ['male', 'female']
+            }
+            if (validAddresseeGenders.length === 2) {
+                switch((validAddresseeGenders[0]+validAddresseeGenders[1]).length) {
+                    case 10:
+                        validAddresseeGenders = ['male', 'female']
+                        break
+                    case 12:
+                        validAddresseeGenders = ['male', 'nonhuman']
+                        break
+                    case 14:
+                        validAddresseeGenders = ['female', 'nonhuman']
+                        break
+                    default:
+                        console.log('Error occured in speaker gender filter')
+                }
+            } else if (validAddresseeGenders.length === 3) {
+                validAddresseeGenders = ['male', 'female', 'nonhuman']
+            } 
             this.setState({
                 chapterList: validChapters,
                 speakerList: validSpeakers,
