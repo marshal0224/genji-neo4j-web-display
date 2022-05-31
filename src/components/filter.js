@@ -209,15 +209,18 @@ export default class Filter extends React.Component {
                 else {
                     // speaker
                     let index = parseInt(lockedChapter[0]) - 1
+                    let chpSpeakers = this.state.chp_SA[index]
+                    let prevSpeakers = validSpeakers
                     validSpeakers = new Set()
                     if (this.state.selectedAddressee === 'Any') {
-                        this.state.chp_SA[index].forEach(pair => validSpeakers.add(pair[0]))
+                        chpSpeakers.filter(e => e[2] && prevSpeakers.includes(e[0])).forEach(pair => validSpeakers.add(pair[0]))
                     } else {
-                        this.state.chp_SA[index].forEach(pair => {
-                            if (pair[1] === this.state.selectedAddressee) {
-                                validSpeakers.add(pair[0])
-                            }
-                        })
+                        // this.state.chp_SA[index].forEach(pair => {
+                        //     if (pair[1] === this.state.selectedAddressee) {
+                        //         validSpeakers.add(pair[0])
+                        //     }
+                        // })
+                        chpSpeakers.filter(e => e[2] && prevSpeakers.includes(e[0]) && e[1] === this.state.selectedAddressee)
                     }
                     validSpeakers = Array.from(validSpeakers).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
                     // addressee
@@ -313,15 +316,6 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][1] === this.state.selectedAddressee) {
-                                        // if (selectedAddresseeGender !== 'Any') {
-                                        //     validChapters.push([...this.state.chapters[i], 1])
-                                        //     break
-                                        // } else {
-                                        //     if (this.state.genders(this.state.characters.indexOf(this.state.chp_SA[i][j][1]) === selectedAddresseeGender)) {
-                                        //         validChapters.push([...this.state.chapters[i], 1])
-                                        //         break
-                                        //     }
-                                        // }state.chapters[i], this.state.chp_SA[i][j]
                                         validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j], this.state.genders, this.state.characters)
                                     }
                                 }
@@ -346,16 +340,6 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][0] === lockedSpeaker) {
-                                        // if (selectedAddresseeGender !== 'Any') {
-                                        //     validChapters.push([...this.state.chapters[i], 1])
-                                        //     break
-                                        // } else {
-                                        //     if (this.state.genders(this.state.characters.indexOf(this.state.chp_SA[i][j][1]) === selectedAddresseeGender)) {
-                                        //         validChapters.push([...this.state.chapters[i], 1])
-                                        //         break
-                                        //     }
-                                        // }
-                                        // validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j])
                                         validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j], this.state.genders, this.state.characters)
                                     }
                                 }
@@ -367,16 +351,6 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([lockedSpeaker, this.state.selectedAddressee])) {
-                                        // if (selectedAddresseeGender !== 'Any') {
-                                        //     validChapters.push([...this.state.chapters[i], 1])
-                                        //     break
-                                        // } else {
-                                        //     if (this.state.genders(this.state.characters.indexOf(this.state.chp_SA[i][j][1]) === selectedAddresseeGender)) {
-                                        //         validChapters.push([...this.state.chapters[i], 1])
-                                        //         break
-                                        //     }
-                                        // }
-                                        // validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j])
                                         validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j], this.state.genders, this.state.characters)
                                     }
                                 }
@@ -412,6 +386,7 @@ export default class Filter extends React.Component {
                             }
                         })
                     }
+                    validAddresseeGenders = Array.from(new Set(validAddressees.filter(e => e[2]).map(e => e[1])))
                 }
             } else if (type === 'addresseeGender') {
                 lockedAddresseeGender = event.target.value
@@ -490,16 +465,6 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][0] === this.state.selectedSpeaker) {
-                                        // if (selectedSpeakerGender !== 'Any') {
-                                        //     validChapters.push([...this.state.chapters[i], 1])
-                                        //     break
-                                        // } else {
-                                        //     if (this.state.genders(this.state.characters.indexOf(this.state.chp_SA[i][j][0]) === selectedSpeakerGender)) {
-                                        //         validChapters.push([...this.state.chapters[i], 1])
-                                        //         break
-                                        //     }
-                                        // }
-                                        // validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j])
                                         validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j], this.state.genders, this.state.characters)
                                     }
                                 }
@@ -524,18 +489,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (this.state.chp_SA[i][j][1] === lockedAddressee) {
-                                    //     if (selectedSpeakerGender !== 'Any') {
-                                    //         validChapters.push([...this.state.chapters[i], 1])
-                                    //         break
-                                    //     } else {
-                                    //         if (this.state.genders(this.state.characters.indexOf(this.state.chp_SA[i][j][0]) === selectedSpeakerGender)) {
-                                    //             validChapters.push([...this.state.chapters[i], 1])
-                                    //             break
-                                    //         }
-                                    //     }
-                                        // validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j])
                                         validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j], this.state.genders, this.state.characters)
-                                    
                                     }
                                 }
                             }
@@ -546,11 +500,7 @@ export default class Filter extends React.Component {
                             if (this.state.chp_SA[i] !== undefined) {
                                 for (let j = 0; j < this.state.chp_SA[i].length; j++) {
                                     if (JSON.stringify(this.state.chp_SA[i][j]) === JSON.stringify([this.state.selectedSpeaker, lockedAddressee])) {
-                                        // validChapters.push([...this.state.chapters[i], i])
-                                        // break
-                                        // validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j])
                                         validChapters = chpGen(validChapters, selectedSpeakerGender, selectedAddresseeGender, this.state.chapters[i], this.state.chp_SA[i][j], this.state.genders, this.state.characters)
-
                                     }
                                 }
                             }
@@ -586,6 +536,7 @@ export default class Filter extends React.Component {
                             }
                         })
                     }
+                    validSpeakerGenders = Array.from(new Set(validSpeakers.filter(e => e[2]).map(e => e[1])))
                 }
             }
             if (validSpeakerGenders.length === 2) {
