@@ -163,6 +163,13 @@ export default class Filter extends React.Component {
             } 
             return list
         }
+        // filter tests: 
+        // for each of the following step, check if all filters update as expected:
+        // 1. one filter to a value and back to any at a time
+        // 2. two filters each to a value and back to any at a time
+        // i.e. chp-sgen, chp-spkr, chp-agen, chp-addr, sgen-spkr, sgen-agen, sgen-addr, spkr-agen, spkr-addr, agen-addr, each done once an hit order. 
+        // 3. three filters each to a value and back to any at time, do so with all orders
+        // so on and so forth. A good chapter is 14 since it has a nonhuman addressee and a good number of spkr/addr overall
         let updateSelection = (event) => {
             let type = event.target.id
             let lockedChapter, lockedSpeaker, lockedAddressee, lockedSpeakerGender, lockedAddresseeGender
@@ -215,11 +222,6 @@ export default class Filter extends React.Component {
                     if (this.state.selectedAddressee === 'Any') {
                         chpSpeakers.filter(e => e[2] && prevSpeakers.includes(e[0])).forEach(pair => validSpeakers.add(pair[0]))
                     } else {
-                        // this.state.chp_SA[index].forEach(pair => {
-                        //     if (pair[1] === this.state.selectedAddressee) {
-                        //         validSpeakers.add(pair[0])
-                        //     }
-                        // })
                         chpSpeakers.filter(e => e[2] && prevSpeakers.includes(e[0]) && e[1] === this.state.selectedAddressee)
                     }
                     validSpeakers = Array.from(validSpeakers).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
@@ -235,9 +237,9 @@ export default class Filter extends React.Component {
                         })
                     }
                     validAddressees = Array.from(validAddressees).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
-                    validSpeakerGenders = Array.from(new Set(validSpeakers.map(e => e[1])))
-                    validAddresseeGenders = Array.from(new Set(validAddressees.map(e => e[1])))
                 }
+                validSpeakerGenders = Array.from(new Set(validSpeakers.map(e => e[1])))
+                validAddresseeGenders = Array.from(new Set(validAddressees.map(e => e[1])))
             } else if (type === 'speakerGender') {
                 lockedSpeakerGender = event.target.value
                 if (lockedSpeakerGender === "Any") {
@@ -520,7 +522,6 @@ export default class Filter extends React.Component {
                     } else {
                         validSpeakers = new Set()
                         this.state.chp_SA[parseInt(this.state.selectedChapter)-1].forEach(pair => {
-                            console.log(pair)
                             if (pair[1] === lockedAddressee){
                                 validSpeakers.add(pair[0])
                             }
