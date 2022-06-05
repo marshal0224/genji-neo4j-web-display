@@ -225,13 +225,15 @@ export default class Poem extends React.Component {
             let transRes = res.records.map(row => {return toNativeTypes(row.get('trans'))})
             let Japanese = poemRes.map(row => row.segments[1].start.properties)
             let transTemp = transRes.map(row => Object.values(row.end.properties))
-
+            let speakers = poemRes.map(row => row.segments[0].start.properties.name)
+            let addressees = poemRes.map(row => row.segments[1].end.properties.name)
             let Translation = {}
-            let plist = new Set()// new Array(properties.length)
+            let plist = new Set()
             for (let i = 0; i < Japanese.length; i++) {
-                plist.add(JSON.stringify([Japanese[i].pnum, Japanese[i].Japanese, Japanese[i].Romaji]))
+                plist.add(JSON.stringify([Japanese[i].pnum, Japanese[i].Japanese, Japanese[i].Romaji, speakers[i], addressees[i]]))
             }
             plist = Array.from(plist).map(item => JSON.parse(item))
+            // sorting the list of poems
             for (let i = 0; i < plist.length-1; i++) {
                 for (let j = 0; j < plist.length-i-1; j++) {
                     if ((parseInt(plist[j][0].substring(0, 2)) > parseInt(plist[j+1][0].substring(0, 2))) 
@@ -243,7 +245,7 @@ export default class Poem extends React.Component {
                     }
                 }
             }
-            // console.log(transTemp)
+            // prepare the list of translations
             transTemp.forEach(element => {
                 if (element.length !== 1) {
                     let count
@@ -312,6 +314,8 @@ export default class Poem extends React.Component {
                 <thead>
                     <tr>
                         <th>Chapter Name</th>
+                        <th>Speaker</th>
+                        <th>Addressee</th>
                         <th>Japanese</th>
                         <th></th>
                         <th></th>
@@ -322,6 +326,8 @@ export default class Poem extends React.Component {
                 <tbody>
                     {plist.map((row) => <tr key={row[0]}>
                                                 <td>{this.parsePnum(row[0])}</td>
+                                                <td>{row[3]}</td>
+                                                <td>{row[4]}</td>
                                                 <td>{row[1]}</td>
                                                 <td>
                                                     <select onChange={updateSelection}>
