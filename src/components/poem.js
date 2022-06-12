@@ -227,10 +227,12 @@ export default class Poem extends React.Component {
             let transTemp = transRes.map(row => Object.values(row.end.properties))
             let speakers = poemRes.map(row => row.segments[0].start.properties.name)
             let addressees = poemRes.map(row => row.segments[1].end.properties.name)
-            let Translation = {}
+            let Translation = {} // note: the name of Translation should be changed into something else since we have Japanese and Romaji included in it
             let plist = new Set()
             for (let i = 0; i < Japanese.length; i++) {
-                plist.add(JSON.stringify([Japanese[i].pnum, Japanese[i].Japanese, Japanese[i].Romaji, speakers[i], addressees[i]]))
+                // plist.add(JSON.stringify([Japanese[i].pnum, Japanese[i].Japanese, Japanese[i].Romaji, speakers[i], addressees[i]]))
+                plist.add(JSON.stringify([Japanese[i].pnum, speakers[i], addressees[i]]))
+                
             }
             plist = Array.from(plist).map(item => JSON.parse(item))
             // sorting the list of poems
@@ -245,6 +247,10 @@ export default class Poem extends React.Component {
                     }
                 }
             }
+            // make Japanese non-repetitive
+            let jsonObject = Japanese.map(JSON.stringify);
+            let uniqueSet = new Set(jsonObject);
+            Japanese = Array.from(uniqueSet).map(JSON.parse);
             // prepare the list of translations
             transTemp.forEach(element => {
                 if (element.length !== 1) {
@@ -276,8 +282,14 @@ export default class Poem extends React.Component {
                     }
                     // console.log(element[count+1].substring(0,6))
                     Translation[element[count+1].substring(0,6)][auth] = element[pnum_count]
+                    // console.log(Translation)
                 }
             });
+            Japanese.forEach(e => {
+                let n = e.pnum
+                Translation[n].Japanese = e.Japanese
+                Translation[n].Romaji = e.Romaji
+            })
             this.setState({
                 Japanese: plist,
                 Translation: Translation,
@@ -314,21 +326,26 @@ export default class Poem extends React.Component {
                 <thead>
                     <tr>
                         <th>Chapter Name</th>
-                        <th>Speaker</th>
-                        <th>Addressee</th>
-                        <th>Japanese</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
+                        <th className='spkrCol'>Speaker</th>
+                        <th className='addrCol'>Addressee</th>
+                        <th>Translation A</th>
+                        <th>Translation B</th>
+                        <th>Translation C</th>
+                        <th>Translation D</th>
                     </tr>
                 </thead>
                 <tbody>
                     {plist.map((row) => <tr key={row[0]}>
                                                 <td>{this.parsePnum(row[0])}</td>
-                                                <td>{row[3]}</td>
-                                                <td>{row[4]}</td>
-                                                <td>{row[1]}</td>
+                                                <td className='spkrCol'>{row[1]}</td>
+                                                <td className='addrCol'>{row[2]}</td>
+                                                <td>
+                                                    <select onChange={updateSelection}>
+                                                        <option>select:</option>
+                                                        {getOptions(row[0]).map((item) => <option key={trans[row[0]][item]}>{item}</option>)}
+                                                    </select>
+                                                    <p className={row[0]}></p>
+                                                </td>
                                                 <td>
                                                     <select onChange={updateSelection}>
                                                         <option>select:</option>

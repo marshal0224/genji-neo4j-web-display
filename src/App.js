@@ -1,11 +1,8 @@
-//import logo from './logo.svg';
 import './App.css';
-//import { initDriver, closeDriver } from './neo4j.js'
 import React from 'react'
-//import * as ReactDOMClient from 'react-dom/client';
 import Filter from './components/filter'
 import Poem from './components/poem'
-// import getPoem from 'components/getPoem'
+import $ from 'jquery';
 
 export default class App extends React.Component{
   constructor() {
@@ -19,13 +16,15 @@ export default class App extends React.Component{
       chapter: "",
       speaker: "",
       addressee: "",
+      spkrOn: true,
+      addrOn: true,
     }
 
     this.filterRef = React.createRef()
     this.ptRef = React.createRef() // poem table ref
 
-    this.query = this.query.bind(this)
-    this.test = this.test.bind(this)
+    // this.query = this.query.bind(this)
+    // this.test = this.test.bind(this)
   }
   
   query = (event) => {
@@ -48,7 +47,7 @@ export default class App extends React.Component{
     )
   }
 
-  reset = (event) => {
+  resetTable = (event) => {
     this.setState({ 
       queried: false,
     }, 
@@ -67,6 +66,42 @@ export default class App extends React.Component{
     })
   }
 
+  spkrDisplay
+
+  toggleSpkr = (event) => {
+    this.setState({
+      spkrOn: !this.state.spkrOn
+    },
+      () => {
+        if (this.state.spkrOn) {
+          this.spkrDisplay = 'table-cell'
+        } else {
+          this.spkrDisplay = 'none'
+        }
+        $('.spkrCol').css('display', this.spkrDisplay)
+        console.log('speaker display is' + this.state.spkrOn)
+      }
+    )
+  }
+
+  addrDisplay
+
+  toggleAddr = (event) => {
+    this.setState({
+      addrOn: !this.state.addrOn
+    },
+      () => {
+        if (this.state.addrOn) {
+          this.addrDisplay = 'table-cell'
+        } else {
+          this.addrDisplay = 'none'
+        }
+        $('.addrCol').css('display', this.addrDisplay)
+        console.log('addressee display is' + this.state.addrOn)
+      }
+    )
+  }
+
   render() {
     return (
       <div className="App">
@@ -74,8 +109,10 @@ export default class App extends React.Component{
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
           <button disabled={this.state.queried} onClick={this.query}>Query</button>
-          <button disabled={!this.state.queried} onClick={this.reset}>Reset Table</button>
+          <button disabled={!this.state.queried} onClick={this.resetTable}>Reset Table</button>
           <button onClick={this.test}>Test</button>
+          <button disabled={!this.state.queried} onClick={this.toggleSpkr}>Toggle Speaker</button>
+          <button disabled={!this.state.queried} onClick={this.toggleAddr}>Toggle Addressee</button>
           <br/>
         </div>
         <div>
