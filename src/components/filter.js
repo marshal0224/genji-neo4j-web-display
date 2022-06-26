@@ -616,7 +616,6 @@ export default class Filter extends React.Component {
                             selectedSpeaker: lockedSpeaker,
                             selectedSpeakerGender: lockedSpeakerGender,
                         }, () => {
-                            console.log(this.state.selectedSpeakerGender)
                             console.log('speaker set')
                         }) 
                         break
