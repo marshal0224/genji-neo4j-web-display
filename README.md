@@ -1,10 +1,6 @@
 # TO-DO
 1. Chapter "to-something" case seems to be working, but should be tested more extensively. Need to pay close attention to "to-any" case behavior and determine the bugs it has. 
-2. Include Romaji in table dropdown menus
-3. Change Japanese into a dropdown menu option
-4. Add chapter translations
-5. Add speaker/addressee names between the chapter column and the first dropdown column
-6. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
+4. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
 # Neo4j Database Requirements
 Our DB is on Aura, and the Cypher commands embeded in the scripts will likely only fit our DB. If you are interested in using this project for your own DB, consider rewriting the cypher queries, and subsequently how are the data being treated throughout. If you also have a textual database, we will eventually post our node and relationship layout, as well as our schema. Until then, feel free to reach out.

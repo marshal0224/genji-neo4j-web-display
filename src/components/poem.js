@@ -195,16 +195,22 @@ export default class Poem extends React.Component {
         const chapter = this.props.chapter
         const speaker = this.props.speaker
         const addressee = this.props.addressee
+        const spkrGen = this.props.spkrGen
+        const addrGen = this.props.addrGen
         
         try {
             let getSpeaker, getAddressee, getChapter
-            if (speaker === 'Any') {
+            if (speaker === 'Any' && spkrGen === 'Any') {
                 getSpeaker = '(s:Character)'
-            } else {
+            } else if (speaker === 'Any' && spkrGen !== 'Any') {
+                getSpeaker = '(s:Character {gender: "'+spkrGen+'"})'
+            } else{
                 getSpeaker = '(s:Character {name: "'+speaker+'"})'
             } 
-            if (addressee === 'Any') {
+            if (addressee === 'Any' && addrGen === 'Any') {
                 getAddressee = '(a:Character)'
+            } else if (addressee === 'Any' && addrGen !== 'Any') {
+                getAddressee = '(a:Character {gender: "'+addrGen+'"})'
             } else {
                 getAddressee = '(a:Character {name: "'+addressee+'"})'
             }
@@ -321,6 +327,7 @@ export default class Poem extends React.Component {
             let options = Object.keys(trans[pnum]).sort();
             return (options)
         }
+        console.log(trans)
         return (
             <table>
                 <thead>

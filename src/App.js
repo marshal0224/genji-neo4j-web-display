@@ -16,6 +16,8 @@ export default class App extends React.Component{
       chapter: "",
       speaker: "",
       addressee: "",
+      spkrGen: "Any",
+      addrGen: "Any",
       spkrOn: true,
       addrOn: true,
     }
@@ -32,16 +34,20 @@ export default class App extends React.Component{
       queried: true,
       chapter: this.filterRef.state.selectedChapter,
       speaker: this.filterRef.state.selectedSpeaker,
-      addressee: this.filterRef.state.selectedAddressee
+      addressee: this.filterRef.state.selectedAddressee,
+      spkrGen: this.filterRef.state.selectedSpeakerGender,
+      addrGen: this.filterRef.state.selectedAddresseeGender,
     }, 
       () => {
         this.ptRef.setState({
           chapter: this.state.chapter,
           speaker: this.state.speaker,
           addressee: this.state.addressee,
+          spkrGen: this.state.spkrGen,
+          addrGen: this.state.addrGen,
         }, 
         () => {
-          console.log('quried. ptRef.state.addressee is '+this.ptRef.state.addressee)
+          console.log('quried')
         })
       }
     )
@@ -116,7 +122,7 @@ export default class App extends React.Component{
           <br/>
         </div>
         <div>
-          {this.state.queried && <Poem ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee}/>}
+          {this.state.queried && <Poem ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen}/>}
         </div>
       </div>
     )
