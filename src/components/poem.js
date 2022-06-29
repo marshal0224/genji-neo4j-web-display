@@ -317,17 +317,20 @@ export default class Poem extends React.Component {
         let plist = this.state.Japanese;
         let trans = this.state.Translation
         let updateSelection = (event) => {
-            let target = event.target.parentElement.querySelector('p')
+            let target = event.target.parentElement.querySelector('p') // updates the p tag each time the selection is changed
             let pnum = target.className
             let auth = event.target.value
-            target.innerHTML = trans[pnum][auth]
+            if (auth === 'select:') {
+                target.innerHTML = ''
+            } else {
+                target.innerHTML = trans[pnum][auth]
+            }
         }
         function getOptions(pnum) {
             // console.log(pnum)
             let options = Object.keys(trans[pnum]).sort();
             return (options)
         }
-        console.log(trans)
         return (
             <table>
                 <thead>
@@ -335,7 +338,9 @@ export default class Poem extends React.Component {
                         <th>Chapter Name</th>
                         <th className='spkrCol'>Speaker</th>
                         <th className='addrCol'>Addressee</th>
-                        <th>Translation A</th>
+                        <th>
+                            Translation A
+                        </th>
                         <th>Translation B</th>
                         <th>Translation C</th>
                         <th>Translation D</th>
@@ -349,16 +354,28 @@ export default class Poem extends React.Component {
                                                 <td>
                                                     <select onChange={updateSelection}>
                                                         <option>select:</option>
-                                                        {getOptions(row[0]).map((item) => <option key={trans[row[0]][item]}>{item}</option>)}
+                                                        {getOptions(row[0]).map((item) => {
+                                                                if (item === 'Japanese') {
+                                                                    return <option selected key={trans[row[0]][item]}>{item}</option>
+                                                                } else {
+                                                                    return <option key={trans[row[0]][item]}>{item}</option>
+                                                                }
+                                                            })}
                                                     </select>
-                                                    <p className={row[0]}></p>
+                                                    <p className={row[0]}>{trans[row[0]]['Japanese']}</p>
                                                 </td>
                                                 <td>
                                                     <select onChange={updateSelection}>
                                                         <option>select:</option>
-                                                        {getOptions(row[0]).map((item) => <option key={trans[row[0]][item]}>{item}</option>)}
+                                                        {getOptions(row[0]).map((item) => {
+                                                                if (item === 'Romaji') {
+                                                                    return <option selected key={trans[row[0]][item]}>{item}</option>
+                                                                } else {
+                                                                    return <option key={trans[row[0]][item]}>{item}</option>
+                                                                }
+                                                            })}
                                                     </select>
-                                                    <p className={row[0]}></p>
+                                                    <p className={row[0]}>{trans[row[0]]['Romaji']}</p>
                                                 </td>
                                                 <td>
                                                     <select onChange={updateSelection}>
