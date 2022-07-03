@@ -1,6 +1,6 @@
 # TO-DO
 1. Chapter "to-something" case seems to be working, but should be tested more extensively. Need to pay close attention to "to-any" case behavior and determine the bugs it has. 
-2. default column, rest columns togglable (ideally can toggle both columns and cells)
+2. check if poem handles inputs of "any" properly
 3. look into the write function
 4. clean up code, including commenting important logics, deleting unnecessary console logs, breaking up now-huge components into react-style components, speeding the app up, and adding to this file s.t. it makes more sense
 
