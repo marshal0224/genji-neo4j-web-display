@@ -215,28 +215,28 @@ export default class Filter extends React.Component {
                 // if a filter has a specific selected option, update the constraints on other filters
                 else {
                     let index = parseInt(lockedChapter[0]) - 1
-                    let chpSpeakers = this.state.chp_SA[index]
+                    let chpExchanges = this.state.chp_SA[index]
                     validSpeakers = new Set()
                     // If no set addressee, then set speakers as defined by this chapter's speaker and the speaker gender
                     if (this.state.selectedAddressee === 'Any') {
                         if (selectedSpeakerGender === 'Any' && selectedAddresseeGender === 'Any') {
-                            chpSpeakers.forEach(e => validSpeakers.add(e[0]))
+                            chpExchanges.forEach(e => validSpeakers.add(e[0]))
                         } else if (selectedSpeakerGender === 'Any') {
-                            chpSpeakers.filter(pair => {
+                            chpExchanges.filter(pair => {
                                 let gen = this.state.genders[this.state.characters.indexOf(pair[1])]
                                 if (gen === selectedAddresseeGender) {
                                     return true
                                 } else return false
                             }).forEach(e => validSpeakers.add(e[0]))
                         } else if (selectedAddresseeGender === 'Any') {
-                            chpSpeakers.filter(pair => {
+                            chpExchanges.filter(pair => {
                                 let gen = this.state.genders[this.state.characters.indexOf(pair[0])]
                                 if (gen === selectedSpeakerGender) {
                                     return true
                                 } else return false
                             }).forEach(e => validSpeakers.add(e[0]))
                         } else {
-                            chpSpeakers.filter(pair => {
+                            chpExchanges.filter(pair => {
                                 let sgen = this.state.genders[this.state.characters.indexOf(pair[0])]
                                 let agen = this.state.genders[this.state.characters.indexOf(pair[1])]
                                 if (sgen === selectedSpeakerGender && agen === selectedAddresseeGender) {
@@ -246,13 +246,13 @@ export default class Filter extends React.Component {
                         }
                     } else {
                         if (selectedSpeakerGender === 'Any') {
-                            chpSpeakers.filter(pair => {
+                            chpExchanges.filter(pair => {
                                 if (pair[1] === this.state.selectedAddressee) {
                                     return true
                                 } else return false
                             }).forEach(e => validSpeakers.add(e[0]))
                         } else {
-                            chpSpeakers.filter(pair => {
+                            chpExchanges.filter(pair => {
                                 let sgen = this.state.genders[this.state.characters.indexOf(pair[0])]
                                 if (pair[1] === this.state.selectedAddressee && sgen === selectedSpeakerGender) {
                                     return true
@@ -272,8 +272,8 @@ export default class Filter extends React.Component {
                         })
                     }
                     validAddressees = Array.from(validAddressees).sort().map(e => [e, this.state.genders[this.state.characters.indexOf(e)], 1])
-                    validSpeakerGenders = Array.from(new Set(chpSpeakers.map(e => this.state.genders[this.state.characters.indexOf(e[0])])))
-                    validAddresseeGenders = Array.from(new Set(chpSpeakers.map(e => this.state.genders[this.state.characters.indexOf(e[1])])))
+                    validSpeakerGenders = Array.from(new Set(chpExchanges.map(e => this.state.genders[this.state.characters.indexOf(e[0])])))
+                    validAddresseeGenders = Array.from(new Set(validAddressees.map(e => e[1])))
                 }
             } else if (type === 'speakerGender') {
                 lockedSpeakerGender = event.target.value
