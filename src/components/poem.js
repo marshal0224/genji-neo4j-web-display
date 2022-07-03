@@ -311,31 +311,43 @@ export default class Poem extends React.Component {
         closeDriver()
     }
 
-    // getDerived
+    updateSelection = (event) => {
+        let target = event.target.parentElement.querySelector('p') // updates the p tag each time the selection is changed
+        let pnum = target.className
+        let type = event.target.value
+        if (type === 'select:') {
+            target.innerHTML = ''
+        } else {
+            target.innerHTML = this.state.Translation[pnum][type]
+        }
+        event.target.value = type
+        console.log(type)
+    }
+
+    getOptions(pnum) {
+        // console.log(pnum)
+        let options = Object.keys(this.state.Translation[pnum]).sort();
+        return (options)
+    }
+
+    setColumnOptions = (event) => {
+        let type = event.target.value
+        if (type !== 'Select:') {
+            let col = '.ptcol'+JSON.stringify(event.target.className).slice(-2,-1)
+            let cells = document.querySelectorAll(col)
+            cells.forEach(e => {
+                        e.querySelectorAll('select').forEach(e => {
+                        e.value = type
+                        let p = e.parentElement.querySelector('p')
+                        let pnum = p.className
+                        p.innerHTML = this.state.Translation[pnum][type]
+                    })
+            })
+        }
+    }
 
     render() {
-        let plist = this.state.Japanese;
-        let trans = this.state.Translation
-        let updateSelection = (event) => {
-            let target = event.target.parentElement.querySelector('p') // updates the p tag each time the selection is changed
-            let pnum = target.className
-            let auth = event.target.value
-            if (auth === 'select:') {
-                target.innerHTML = ''
-            } else {
-                target.innerHTML = trans[pnum][auth]
-            }
-        }
-
-        function getOptions(pnum) {
-            // console.log(pnum)
-            let options = Object.keys(trans[pnum]).sort();
-            return (options)
-        }
-
-        let setColumnOptions = (event) => {
-            let col = parseInt(JSON.stringify(event.target.className).slice(-2,-1))
-        }
+        
 
         return (
             <table>
@@ -345,8 +357,8 @@ export default class Poem extends React.Component {
                         <th className='spkrCol'>Speaker</th>
                         <th className='addrCol'>Addressee</th>
                         <th>
-                            <select className='ptheader1' onChange={setColumnOptions}>
-                                <option>Default</option>
+                            <select className='ptheader1' onChange={this.setColumnOptions}>
+                                <option>Select:</option>
                                 <option>Japanese</option>
                                 <option>Romaji</option>
                                 <option>Cranston</option>
@@ -356,57 +368,88 @@ export default class Poem extends React.Component {
                                 <option>Washburn</option>
                             </select>
                         </th>
-                        <th>Translation B</th>
-                        <th>Translation C</th>
-                        <th>Translation D</th>
+                        <th>
+                            <select className='ptheader2' onChange={this.setColumnOptions}>
+                                <option>Select:</option>
+                                <option>Japanese</option>
+                                <option>Romaji</option>
+                                <option>Cranston</option>
+                                <option>Seidensticker</option>
+                                <option>Tyler</option>
+                                <option>Waley</option>
+                                <option>Washburn</option>
+                            </select>
+                        </th>
+                        <th>
+                            <select className='ptheader3' onChange={this.setColumnOptions}>
+                                <option>Select:</option>
+                                <option>Japanese</option>
+                                <option>Romaji</option>
+                                <option>Cranston</option>
+                                <option>Seidensticker</option>
+                                <option>Tyler</option>
+                                <option>Waley</option>
+                                <option>Washburn</option>
+                            </select>
+                        </th>
+                        <th>
+                            <select className='ptheader4' onChange={this.setColumnOptions}>
+                                <option>Select:</option>
+                                <option>Japanese</option>
+                                <option>Romaji</option>
+                                <option>Cranston</option>
+                                <option>Seidensticker</option>
+                                <option>Tyler</option>
+                                <option>Waley</option>
+                                <option>Washburn</option>
+                            </select></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {plist.map((row) => <tr key={row[0]}>
-                                                <td>{this.parsePnum(row[0])}</td>
-                                                <td className='spkrCol'>{row[1]}</td>
-                                                <td className='addrCol'>{row[2]}</td>
-                                                <td className='ptcol1'>
-                                                    <select onChange={updateSelection}>
-                                                        <option>select:</option>
-                                                        {getOptions(row[0]).map((item) => {
-                                                                if (item === 'Japanese') {
-                                                                    return <option selected key={trans[row[0]][item]}>{item}</option>
-                                                                } else {
-                                                                    return <option key={trans[row[0]][item]}>{item}</option>
-                                                                }
-                                                            })}
-                                                    </select>
-                                                    <p className={row[0]}>{trans[row[0]]['Japanese']}</p>
-                                                </td>
-                                                <td className='ptcol2'>
-                                                    <select onChange={updateSelection}>
-                                                        <option>select:</option>
-                                                        {getOptions(row[0]).map((item) => {
-                                                                if (item === 'Romaji') {
-                                                                    return <option selected key={trans[row[0]][item]}>{item}</option>
-                                                                } else {
-                                                                    return <option key={trans[row[0]][item]}>{item}</option>
-                                                                }
-                                                            })}
-                                                    </select>
-                                                    <p className={row[0]}>{trans[row[0]]['Romaji']}</p>
-                                                </td>
-                                                <td className='ptcol3'>
-                                                    <select onChange={updateSelection}>
-                                                        <option>select:</option>
-                                                        {getOptions(row[0]).map((item) => <option key={trans[row[0]][item]}>{item}</option>)}
-                                                    </select>
-                                                    <p className={row[0]}></p>
-                                                </td>
-                                                <td className='ptcol4'>
-                                                    <select onChange={updateSelection}>
-                                                        <option>select:</option>
-                                                        {getOptions(row[0]).map((item) => <option key={trans[row[0]][item]}>{item}</option>)}
-                                                    </select>
-                                                    <p className={row[0]}></p>
-                                                </td>
-                                            </tr>)}
+                    {this.state.Japanese.map((row) => 
+                        <tr key={row[0]}>
+                            <td>{this.parsePnum(row[0])}</td>
+                            <td className='spkrCol'>{row[1]}</td>
+                            <td className='addrCol'>{row[2]}</td>
+                            <td className='ptcol1'>
+                                <select onChange={this.updateSelection}>
+                                    <option>select:</option>
+                                    {this.getOptions(row[0]).map((item) => {
+                                        if (item === 'Japanese') {
+                                            return <option selected key={this.state.Translation[row[0]][item]}>{item}</option>
+                                        } else {
+                                            return <option key={this.state.Translation[row[0]][item]}>{item}</option>
+                                        }})}
+                                </select>
+                                <p className={row[0]}>{this.state.Translation[row[0]]['Japanese']}</p>
+                            </td>
+                            <td className='ptcol2'>
+                                <select onChange={this.updateSelection}>
+                                    <option>select:</option>
+                                    {this.getOptions(row[0]).map((item) => {
+                                        if (item === 'Romaji') {
+                                            return <option selected key={this.state.Translation[row[0]][item]}>{item}</option>
+                                        } else {
+                                            return <option key={this.state.Translation[row[0]][item]}>{item}</option>
+                                        }})}
+                                </select>
+                                <p className={row[0]}>{this.state.Translation[row[0]]['Romaji']}</p>
+                            </td>
+                            <td className='ptcol3'>
+                                <select onChange={this.updateSelection}>
+                                    <option>select:</option>
+                                    {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
+                                </select>
+                                <p className={row[0]}></p>
+                            </td>
+                            <td className='ptcol4'>
+                                <select onChange={this.updateSelection}>
+                                    <option>select:</option>
+                                    {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
+                                </select>
+                                <p className={row[0]}></p>
+                            </td>
+                        </tr>)}
                 </tbody>
             </table>
         )
