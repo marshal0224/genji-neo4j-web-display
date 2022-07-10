@@ -2,7 +2,7 @@ import './App.css';
 import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
-import Test from './components/scratch'
+import Edit from './components/edit'
 import $ from 'jquery';
 
 export default class App extends React.Component{
@@ -92,7 +92,7 @@ export default class App extends React.Component{
           <button onClick={this.test}>Test</button>
           <button disabled={!this.state.queried} onClick={this.toggleSpkr}>Toggle Speaker</button>
           <button disabled={!this.state.queried} onClick={this.toggleAddr}>Toggle Addressee</button>
-          <Test uri={this.uri} user={this.user} password={this.password}/>
+          <Edit uri={this.uri} user={this.user} password={this.password}/>
           <br/>
         </div>
         <div>
