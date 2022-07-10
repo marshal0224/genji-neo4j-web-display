@@ -2,6 +2,7 @@ import './App.css';
 import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
+import Test from './components/scratch'
 import $ from 'jquery';
 
 export default class App extends React.Component{
@@ -24,44 +25,17 @@ export default class App extends React.Component{
 
     this.filterRef = React.createRef()
     this.ptRef = React.createRef() // poem table ref
-
-    // this.query = this.query.bind(this)
-    // this.test = this.test.bind(this)
   }
   
   query = (event) => {
     this.setState({ 
-      queried: true,
+      queried: !this.state.queried,
       chapter: this.filterRef.state.selectedChapter,
       speaker: this.filterRef.state.selectedSpeaker,
       addressee: this.filterRef.state.selectedAddressee,
       spkrGen: this.filterRef.state.selectedSpeakerGender,
       addrGen: this.filterRef.state.selectedAddresseeGender,
-    }, 
-      () => {
-        this.ptRef.setState({
-          chapter: this.state.chapter,
-          speaker: this.state.speaker,
-          addressee: this.state.addressee,
-          spkrGen: this.state.spkrGen,
-          addrGen: this.state.addrGen,
-        }, 
-        () => {
-          console.log('quried')
-        })
-      }
-    )
-  }
-
-  resetTable = (event) => {
-    this.setState({ 
-      queried: false,
-    }, 
-      () => {
-        console.log('reset')
-      }
-    )
-  }
+  })}
 
   test = (event) => {
     this.setState({
@@ -114,17 +88,15 @@ export default class App extends React.Component{
         <div>
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
-          <button disabled={this.state.queried} onClick={this.query}>Query</button>
-          <button disabled={!this.state.queried} onClick={this.resetTable}>Reset Table</button>
+          <button onClick={this.query}>Query</button>
           <button onClick={this.test}>Test</button>
           <button disabled={!this.state.queried} onClick={this.toggleSpkr}>Toggle Speaker</button>
           <button disabled={!this.state.queried} onClick={this.toggleAddr}>Toggle Addressee</button>
+          <Test uri={this.uri} user={this.user} password={this.password}/>
           <br/>
         </div>
         <div>
-          {this.state.queried && <Poem ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen}/>}
+          <Poem key={this.state.queried} ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen}/>
         </div>
       </div>
-    )
-  }
-}
+    )}}
