@@ -2,7 +2,6 @@ import './App.css';
 import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
-import Edit from './components/edit'
 import $ from 'jquery';
 
 export default class App extends React.Component{
@@ -92,9 +91,9 @@ export default class App extends React.Component{
           <button onClick={this.test}>Test</button>
           <button disabled={!this.state.queried} onClick={this.toggleSpkr}>Toggle Speaker</button>
           <button disabled={!this.state.queried} onClick={this.toggleAddr}>Toggle Addressee</button>
-          <Edit uri={this.uri} user={this.user} password={this.password}/>
           <br/>
         </div>
+        <br />
         <div>
           <Poem key={this.state.queried} ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen}/>
         </div>
