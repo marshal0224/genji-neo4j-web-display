@@ -2,108 +2,88 @@ import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
 
+// edit pipeline
+// 1. initialize (e.g., mounts upon login)
+// 2. maps cell type
+// 3. retrieves current content
+// 4. displays current content in the input box for editing
+// 5. upon editing completion, updates DB content according to input
+
 export default class Edit extends React.Component {
     constructor(props){
         super(props)
-        // initDriver(this.props.uri, this.props.user, this.props.password)
-        // this.driver = getDriver()
         this.state = {
             uri: this.props.uri, 
             user: this.props.user,
             password: this.props.password,
-            age: '',
+            propertyVal: '',
+            propertyName: this.props.propertyName,
+            pnum: this.props.pnum,
         }
-        this.fun = this.fun.bind(this)
-        this.getAge = this.getAge.bind(this)
-        this.updateStateAge = this.updateStateAge.bind(this)
-        this.updateAge = this.updateAge.bind(this)
-    }
-    // edit pipeline
-    // 1. initialize (e.g., mounts upon login)
-    // 2. maps cell type
-    // 3. retrieves current content
-    // 4. displays current content in the input box for editing
-    // 5. upon editing completion, updates DB content according to input
-    async fun() {
-        initDriver(this.state.uri, this.state.user, this.state.password)
-        const driver = getDriver()
-        const session = driver.session()
-        const read = await session.readTransaction(tx => {
-            return tx.run(
-                'MATCH (p:People {name:"Marshal Dong"}) return count(p)'
-            )
-        })
-        let flag = read.records.map(row => {return toNativeTypes(row.get('count(p)'))})[0].low
-        const write = await session.writeTransaction(tx => {
-            if (flag === 0) {
-                return tx.run(
-                    'CREATE (p:People {name:"Marshal Dong", age:"21"})'
-                )
-            } else {
-                return tx.run(
-                    'MATCH (p:People {name:"Marshal Dong"}) WITH p SKIP 1 DELETE p'
-                )
-            }
-        })
-        console.log('clicked! flag is '+flag)
-        closeDriver()
+        this.getDBPropertyVal = this.getDBPropertyVal.bind(this)
+        this.updateStatePropertyVal = this.updateStatePropertyVal.bind(this)
+        this.updateDBPropertyVal = this.updateDBPropertyVal.bind(this)
     }
 
-    async getAge() {
+    async getDBPropertyVal() {
         initDriver(this.state.uri, this.state.user, this.state.password)
         const driver = getDriver()
         const session = driver.session()
+        let propertyName = this.state.propertyName
+        let pnum = this.state.pnum
         const read = await session.readTransaction(tx => {
             return tx.run(
-                'MATCH (p:People {name:"Marshal Dong"}) return p.age as age'
-            )
+                'MATCH (n:Genji_Poem {pnum:"'+pnum+'"}) return n.'+propertyName+' as val'
+            , {pnum, propertyName})
         })
-        let age = read.records.map(row => {return toNativeTypes(row.get('age'))})[0].low
-        // age = parseInt(age[0][0]+age[0][1]+age[0][2])
-        // console.log(age[0].low)
+        let val = read.records.map(row => {return toNativeTypes(row.get('val'))})
+        val = JSON.stringify(val[0].valueOf())
+        console.log(val)
+        let len = val.length
+        val = val.substring(0, len-1).split(',')
+        let res = ''
+        for (let i=0; i < val.length; i++) {
+            let e = val[i].split(':')[1]
+            e = e.substring(1,e.length-1)
+            res += e
+        }
         this.setState({
-            age: age,
+            propertyVal: res,
         })
         closeDriver()
     }
 
-    async updateAge() {
+    async updateDBPropertyVal() {
         initDriver(this.state.uri, this.state.user, this.state.password)
         const driver = getDriver()
         const session = driver.session()
-        let age = this.state.age
+        let propertyName = this.state.propertyName
+        let propertyVal = this.state.propertyVal
+        let pnum = this.state.pnum
         const write = await session.writeTransaction(tx => {
             return tx.run(
-                'MATCH (p:People {name:"Marshal Dong"}) SET p.age = '+age+' RETURN p.age AS age'
-            , {age})
+                'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = '+propertyVal+' RETURN p.'+propertyName+' AS val'
+            , {pnum, propertyName, propertyVal})
         })
-        // const read = await session.readTransaction(tx => {
-        //     return tx.run(
-        //         'MATCH (p:People {name:"Marshal Dong"}) return p.age as age'
-        //     )
-        // })
-        // let age = read.records.map(row => {return toNativeTypes(row.get('age'))})
-        // age = parseInt(age[0][0]+age[0][1]+age[0][2])
         console.log('updated')
         closeDriver()
     }
 
-    updateStateAge(event) {
+    updateStatePropertyVal(event) {
         this.setState({
-            age: event.target.value
+            propertyVal: event.target.value
         })
     }
 
     render() {
-        console.log('current age is: '+this.state.age)
+        console.log('current val is: '+this.state.propertyVal)
         return(
             <div>
-                <button onClick={this.fun}>Click me</button>
                 <label>
                     Age:
-                    <input value={this.state.age} onChange={this.updateStateAge}></input>
-                    <button onClick={this.getAge}>Get Age</button>
-                    <button onClick={this.updateAge}>Update Age</button>
+                    <input value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></input>
+                    <button onClick={this.getDBPropertyVal}>Get Val</button>
+                    <button onClick={this.updateDBPropertyVal}>Update Val</button>
                 </label>
             </div>
         )

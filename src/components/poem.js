@@ -1,18 +1,22 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
+import Edit from './edit'
 
 export default class Poem extends React.Component { 
 
     constructor(props) {
         super(props)
-        initDriver(this.props.uri, this.props.user, this.props.password)
         this.driver = getDriver()
         this.state = {
             Japanese: [],
-            Translation: {}
+            Translation: {},
+            uri: this.props.uri,
+            user: this.props.user,
+            password: this.props.password
         }
         this.parsePnum = this.parsePnum.bind(this)
+        initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
     parsePnum(pnum) {
@@ -286,9 +290,7 @@ export default class Poem extends React.Component {
                     } else {
                         auth = 'Washburn'
                     }
-                    // console.log(element[count+1].substring(0,6))
                     Translation[element[count+1].substring(0,6)][auth] = element[pnum_count]
-                    // console.log(Translation)
                 }
             });
             Japanese.forEach(e => {
@@ -325,7 +327,6 @@ export default class Poem extends React.Component {
     }
 
     getOptions(pnum) {
-        // console.log(pnum)
         let options = Object.keys(this.state.Translation[pnum]).sort();
         return (options)
     }
@@ -347,9 +348,9 @@ export default class Poem extends React.Component {
     }
 
     render() {
-        
-
         return (
+        <div>
+            <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={'01KR01'}/>
             <table>
                 <thead>
                     <tr>
@@ -452,6 +453,7 @@ export default class Poem extends React.Component {
                         </tr>)}
                 </tbody>
             </table>
+            </div>
         )
     }
 }
