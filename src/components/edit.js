@@ -62,7 +62,7 @@ export default class Edit extends React.Component {
         let pnum = this.state.pnum
         const write = await session.writeTransaction(tx => {
             return tx.run(
-                'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = '+propertyVal+' RETURN p.'+propertyName+' AS val'
+                'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = "'+propertyVal+'" RETURN n.'+propertyName+' AS val'
             , {pnum, propertyName, propertyVal})
         })
         console.log('updated')
@@ -81,7 +81,7 @@ export default class Edit extends React.Component {
             <div>
                 <label>
                     Age:
-                    <input value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></input>
+                    <textarea value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></textarea>
                     <button onClick={this.getDBPropertyVal}>Get Val</button>
                     <button onClick={this.updateDBPropertyVal}>Update Val</button>
                 </label>
