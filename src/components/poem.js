@@ -350,7 +350,7 @@ export default class Poem extends React.Component {
     render() {
         return (
         <div>
-            <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={'01KR01'}/>
+            <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={'01KR02'}/>
             <table>
                 <thead>
                     <tr>
