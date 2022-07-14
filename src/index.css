@@ -3,13 +3,13 @@ body {
   /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif; */
-  /* font-family: 'MS Mincho';
+  font-family: 'MS Mincho';
   font-style: normal;
   font-weight: 400;
   font-size: 16px;
-  line-height: 16px; */
+  line-height: 16px;
   /* identical to box height */ 
-  /* text-align: center; */
+  text-align: center;
   
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -21,6 +21,12 @@ form, button {
 
 table {
   display: inline-block;
+}
+
+td p {
+  writing-mode: vertical-rl;
+  /* height: 5em; */
+  word-break:normal;
 }
 
 code {

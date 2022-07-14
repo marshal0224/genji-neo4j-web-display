@@ -89,8 +89,8 @@ export default class App extends React.Component{
           <br/>
           <button onClick={this.query}>Query</button>
           <button onClick={this.test}>Test</button>
-          <button disabled={!this.state.queried} onClick={this.toggleSpkr}>Toggle Speaker</button>
-          <button disabled={!this.state.queried} onClick={this.toggleAddr}>Toggle Addressee</button>
+          <button onClick={this.toggleSpkr}>Toggle Speaker</button>
+          <button onClick={this.toggleAddr}>Toggle Addressee</button>
           <br/>
         </div>
         <br />
