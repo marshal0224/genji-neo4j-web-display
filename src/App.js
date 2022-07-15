@@ -21,20 +21,26 @@ export default class App extends React.Component{
       spkrOn: true,
       addrOn: true,
     }
-
+    this.changeKey = this.changeKey.bind(this)
     this.filterRef = React.createRef()
     this.ptRef = React.createRef() // poem table ref
   }
   
+  changeKey() {
+    this.setState({
+      queried: !this.state.queried
+    })
+  }
+
   query = (event) => {
     this.setState({ 
-      queried: !this.state.queried,
+      // queried: !this.state.queried,
       chapter: this.filterRef.state.selectedChapter,
       speaker: this.filterRef.state.selectedSpeaker,
       addressee: this.filterRef.state.selectedAddressee,
       spkrGen: this.filterRef.state.selectedSpeakerGender,
       addrGen: this.filterRef.state.selectedAddresseeGender,
-  })}
+  }, () => this.changeKey())}
 
   test = (event) => {
     this.setState({
@@ -95,7 +101,8 @@ export default class App extends React.Component{
         </div>
         <br />
         <div>
-          <Poem key={this.state.queried} ref={(ptRef) => {this.ptRef = ptRef}} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen}/>
+          {/* Turns out that ref={(ptRef) => {this.ptRef = ptRef}} does not do anything as a prop */}
+          <Poem key={this.state.queried} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey}/>
         </div>
       </div>
     )}}

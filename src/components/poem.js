@@ -13,11 +13,19 @@ export default class Poem extends React.Component {
             Translation: {},
             uri: this.props.uri,
             user: this.props.user,
-            password: this.props.password
+            password: this.props.password,
+            flag: true,
         }
         this.parsePnum = this.parsePnum.bind(this)
+        // this.rerenderAfterEdit = this.rerenderAfterEdit.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
+
+    // rerenderAfterEdit() {
+    //     this.setState({
+    //         flag: !this.state.flag,
+    //     }, (() => console.log('flag is '+this.state.flag)))
+    // }
 
     parsePnum(pnum) {
         let [chp, _, order] = pnum.match(/.{1,2}/g)
@@ -323,7 +331,6 @@ export default class Poem extends React.Component {
             target.innerHTML = this.state.Translation[pnum][type]
         }
         event.target.value = type
-        console.log(type)
     }
 
     getOptions(pnum) {
@@ -350,7 +357,7 @@ export default class Poem extends React.Component {
     render() {
         return (
         <div>
-            <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={'01KR02'}/>
+            <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={'01KR02'} changeKey={this.props.changeKey}/>
             <table>
                 <thead>
                     <tr>
