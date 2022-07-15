@@ -38,7 +38,6 @@ export default class Edit extends React.Component {
         })
         let val = read.records.map(row => {return toNativeTypes(row.get('val'))})
         val = JSON.stringify(val[0].valueOf())
-        console.log(val)
         let len = val.length
         val = val.substring(0, len-1).split(',')
         let res = ''
@@ -67,6 +66,7 @@ export default class Edit extends React.Component {
         })
         console.log('updated')
         closeDriver()
+        this.props.changeKey()
     }
 
     updateStatePropertyVal(event) {
@@ -80,7 +80,7 @@ export default class Edit extends React.Component {
         return(
             <div>
                 <label>
-                    Age:
+                    {this.state.propertyName}: 
                     <textarea value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></textarea>
                     <button onClick={this.getDBPropertyVal}>Get Val</button>
                     <button onClick={this.updateDBPropertyVal}>Update Val</button>
