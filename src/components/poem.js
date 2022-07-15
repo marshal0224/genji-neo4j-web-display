@@ -422,7 +422,9 @@ export default class Poem extends React.Component {
                                             return <option key={this.state.Translation[row[0]][item]}>{item}</option>
                                         }})}
                                 </select>
-                                <p className={row[0]}>{this.state.Translation[row[0]]['Japanese']}</p>
+                                <p className={row[0]}>
+                                    {this.state.Translation[row[0]]['Japanese']}
+                                </p>
                             </td>
                             <td className='ptcol2'>
                                 <select onChange={this.updateSelection}>
