@@ -9,23 +9,18 @@ export default class Poem extends React.Component {
         super(props)
         this.driver = getDriver()
         this.state = {
-            Japanese: [],
-            Translation: {},
+            Japanese: [], // pnum, speaker, addressee
+            Translation: {}, // Japanese and translations. These variables need to be renamed
             uri: this.props.uri,
             user: this.props.user,
             password: this.props.password,
             flag: true,
         }
         this.parsePnum = this.parsePnum.bind(this)
+        this.getPropertyType = this.getPropertyType.bind(this)
         // this.rerenderAfterEdit = this.rerenderAfterEdit.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
-
-    // rerenderAfterEdit() {
-    //     this.setState({
-    //         flag: !this.state.flag,
-    //     }, (() => console.log('flag is '+this.state.flag)))
-    // }
 
     parsePnum(pnum) {
         let [chp, _, order] = pnum.match(/.{1,2}/g)
@@ -354,10 +349,15 @@ export default class Poem extends React.Component {
         }
     }
 
+    getPropertyType(row) {
+        if (document.getElementsByClassName(row[0])[0] !== undefined){
+            return Object.keys(this.state.Translation[row[0]]).find(key => this.state.Translation[row[0]][key] === document.getElementsByClassName(row[0])[0].innerHTML)
+        }
+    }
+
     render() {
         return (
         <div>
-            <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={'01KR02'} changeKey={this.props.changeKey}/>
             <table>
                 <thead>
                     <tr>
@@ -432,6 +432,7 @@ export default class Poem extends React.Component {
                                 <p className={row[0]}>
                                     {this.state.Translation[row[0]]['Japanese']}
                                 </p>
+                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol2'>
                                 <select onChange={this.updateSelection}>
@@ -444,6 +445,7 @@ export default class Poem extends React.Component {
                                         }})}
                                 </select>
                                 <p className={row[0]}>{this.state.Translation[row[0]]['Romaji']}</p>
+                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol3'>
                                 <select onChange={this.updateSelection}>
@@ -451,6 +453,7 @@ export default class Poem extends React.Component {
                                     {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
+                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol4'>
                                 <select onChange={this.updateSelection}>
@@ -458,6 +461,7 @@ export default class Poem extends React.Component {
                                     {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
+                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                         </tr>)}
                 </tbody>
