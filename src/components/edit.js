@@ -1,7 +1,6 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
-
 // edit pipeline
 // 1. initialize (e.g., mounts upon login)
 // 2. maps cell type
@@ -76,12 +75,11 @@ export default class Edit extends React.Component {
     }
 
     render() {
-        console.log('current val is: '+this.state.propertyVal)
         return(
             <div>
                 <label>
-                    {this.state.propertyName}: 
                     <textarea value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></textarea>
+                    <br/>
                     <button onClick={this.getDBPropertyVal}>Get Val</button>
                     <button onClick={this.updateDBPropertyVal}>Update Val</button>
                 </label>
