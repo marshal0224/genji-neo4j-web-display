@@ -9,16 +9,15 @@ export default class Poem extends React.Component {
         super(props)
         this.driver = getDriver()
         this.state = {
-            Japanese: [], // pnum, speaker, addressee
+            ptHeader: [], // pnum, speaker, addressee
             Translation: {}, // Japanese and translations. These variables need to be renamed
             uri: this.props.uri,
             user: this.props.user,
             password: this.props.password,
-            flag: true,
+            propname: [], // a matrix of edit propertyNames
         }
         this.parsePnum = this.parsePnum.bind(this)
         this.getPropertyType = this.getPropertyType.bind(this)
-        // this.rerenderAfterEdit = this.rerenderAfterEdit.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
@@ -301,9 +300,17 @@ export default class Poem extends React.Component {
                 Translation[n].Japanese = e.Japanese
                 Translation[n].Romaji = e.Romaji
             })
+            // preparing a matrix of edit propertyNames
+            let propname = Array.from(Array(plist.length), () => new Array(4))
+            propname.forEach(row => {
+                row[0] = 'Japanese'
+                row[1] = 'Romaji'
+            })
+            // console.log(propname)
             this.setState({
-                Japanese: plist,
+                ptHeader: plist,
                 Translation: Translation,
+                propname: propname,
             }, 
             () => {
                 console.log('Japanese set')
@@ -326,6 +333,13 @@ export default class Poem extends React.Component {
             target.innerHTML = this.state.Translation[pnum][type]
         }
         event.target.value = type
+        let propname = this.state.propname
+        let i = parseInt(pnum.substring(4,6))
+        let j = parseInt(event.target.parentElement.className.substring(5,6))
+        propname[i-1][j-1] = type
+        this.setState({
+            propname: propname,
+        })
     }
 
     getOptions(pnum) {
@@ -344,18 +358,28 @@ export default class Poem extends React.Component {
                         let p = e.parentElement.querySelector('p')
                         let pnum = p.className
                         p.innerHTML = this.state.Translation[pnum][type]
+                        if (type === 'Japanese') {
+                            p.type = 'JP'
+                        }
                     })
+            })
+            let j = parseInt(JSON.stringify(event.target.className).slice(-2,-1))
+            let propname = this.state.propname
+            propname.forEach(row => row[j-1] = type)
+            this.setState({
+                propname: propname,
             })
         }
     }
 
-    getPropertyType(row) {
-        if (document.getElementsByClassName(row[0])[0] !== undefined){
-            return Object.keys(this.state.Translation[row[0]]).find(key => this.state.Translation[row[0]][key] === document.getElementsByClassName(row[0])[0].innerHTML)
+    getPropertyType(row, order) {
+        if (document.getElementsByClassName(row[0])[order] !== undefined){
+            return Object.keys(this.state.Translation[row[0]]).find(key => this.state.Translation[row[0]][key] === document.getElementsByClassName(row[0])[order].innerHTML)
         }
     }
 
     render() {
+        // console.log(this.state.propname)
         return (
         <div>
             <table>
@@ -414,7 +438,7 @@ export default class Poem extends React.Component {
                     </tr>
                 </thead>
                 <tbody>
-                    {this.state.Japanese.map((row) => 
+                    {this.state.ptHeader.map((row) => 
                         <tr key={row[0]}>
                             <td>{this.parsePnum(row[0])}</td>
                             <td className='spkrCol'>{row[1]}</td>
@@ -429,10 +453,10 @@ export default class Poem extends React.Component {
                                             return <option key={this.state.Translation[row[0]][item]}>{item}</option>
                                         }})}
                                 </select>
-                                <p className={row[0]}>
+                                <p type='JP' className={row[0]}>
                                     {this.state.Translation[row[0]]['Japanese']}
                                 </p>
-                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][0]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol2'>
                                 <select onChange={this.updateSelection}>
@@ -445,7 +469,7 @@ export default class Poem extends React.Component {
                                         }})}
                                 </select>
                                 <p className={row[0]}>{this.state.Translation[row[0]]['Romaji']}</p>
-                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][1]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol3'>
                                 <select onChange={this.updateSelection}>
@@ -453,7 +477,7 @@ export default class Poem extends React.Component {
                                     {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
-                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][2]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol4'>
                                 <select onChange={this.updateSelection}>
@@ -461,7 +485,7 @@ export default class Poem extends React.Component {
                                     {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
-                                {this.getPropertyType(row) !== undefined && <Edit key={this.state.flag} uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.getPropertyType(row)} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][3]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                         </tr>)}
                 </tbody>
