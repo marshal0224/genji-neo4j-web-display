@@ -17,7 +17,6 @@ export default class Poem extends React.Component {
             propname: [], // a matrix of edit propertyNames
         }
         this.parsePnum = this.parsePnum.bind(this)
-        this.getPropertyType = this.getPropertyType.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
@@ -369,12 +368,6 @@ export default class Poem extends React.Component {
             this.setState({
                 propname: propname,
             })
-        }
-    }
-
-    getPropertyType(row, order) {
-        if (document.getElementsByClassName(row[0])[order] !== undefined){
-            return Object.keys(this.state.Translation[row[0]]).find(key => this.state.Translation[row[0]][key] === document.getElementsByClassName(row[0])[order].innerHTML)
         }
     }
 
