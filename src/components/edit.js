@@ -31,7 +31,7 @@ export default class Edit extends React.Component {
         let propertyName = this.props.propertyName
         let pnum = this.state.pnum
         let read
-        if (propertyName === 'Japanese') {
+        if (propertyName === 'Japanese' || propertyName === 'Romaji') {
             read = await session.readTransaction(tx => {
                 return tx.run(
                     'MATCH (n:Genji_Poem {pnum:"'+pnum+'"}) return n.'+propertyName+' as val'
@@ -75,18 +75,22 @@ export default class Edit extends React.Component {
         let propertyVal = this.state.propertyVal
         let pnum = this.state.pnum
         let write
-        if (propertyName === 'Japanese') {
-            write = await session.writeTransaction(tx => {
-                return tx.run(
-                    'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = "'+propertyVal+'" RETURN n.'+propertyName+' AS val'
-                , {pnum, propertyName, propertyVal})
-            })
+        if (window.confirm('About to update a DB property')) {
+            if (propertyName === 'Japanese') {
+                write = await session.writeTransaction(tx => {
+                    return tx.run(
+                        'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = "'+propertyVal+'" RETURN n.'+propertyName+' AS val'
+                    , {pnum, propertyName, propertyVal})
+                })
+            } else {
+                write = await session.writeTransaction(tx => {
+                    return tx.run(
+                        'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"'+propertyName+'"}) SET t.translation="'+propertyVal+'"'
+                        , {pnum, propertyName})
+                })
+            }
         } else {
-            write = await session.writeTransaction(tx => {
-                return tx.run(
-                    'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"'+propertyName+'"}) SET t.translation="'+propertyVal+'"'
-                    , {pnum, propertyName})
-            })
+            alert('DB update canceled')
         }
         // let val = write.records.map(row => {return toNativeTypes(row.get('val'))})
         // console.log(val)
@@ -103,13 +107,14 @@ export default class Edit extends React.Component {
     }
 
     render() {
+        // this.getDBPropertyVal()
         return(
             <div>
                 <label>
                     <textarea value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></textarea>
                     <br/>
                     <button onClick={this.getDBPropertyVal}>Get Val</button>
-                    <button onClick={this.updateDBPropertyVal}>Update Val</button>
+                    <button onClick={this.updateDBPropertyVal}>Update</button>
                 </label>
             </div>
         )
