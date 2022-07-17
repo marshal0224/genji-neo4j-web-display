@@ -21,12 +21,14 @@ form, button {
 
 table {
   display: inline-block;
+  white-space: pre-wrap;
 }
 
-td p {
+[type=JP] {
   writing-mode: vertical-rl;
-  height: 7em;
   word-break:normal;
+  text-align: left;
+  margin: auto;
 }
 
 code {
