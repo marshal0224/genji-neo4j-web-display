@@ -76,7 +76,7 @@ export default class Edit extends React.Component {
         let pnum = this.state.pnum
         let write
         if (window.confirm('About to update a DB property')) {
-            if (propertyName === 'Japanese') {
+            if (propertyName === 'Japanese' || propertyName === 'Romaji') {
                 write = await session.writeTransaction(tx => {
                     return tx.run(
                         'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = "'+propertyVal+'" RETURN n.'+propertyName+' AS val'
