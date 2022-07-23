@@ -1,0 +1,14 @@
+.Title {
+    box-sizing: border-box;
+    width: 100%;
+    display: inline-block;
+    justify-content: center;
+    align-items: baseline;
+    padding: 1em;
+    margin-bottom: 2em;
+    background-image: url("assets/Genji_emaki_azumaya.jpg");
+    background-position: center;
+    background-size: cover;
+    color: white;
+    text-align: center;
+}
