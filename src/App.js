@@ -2,6 +2,8 @@ import './App.css';
 import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
+import Title from './components/title';
+import Footer from './components/footer'
 import $ from 'jquery';
 
 export default class App extends React.Component{
@@ -127,6 +129,7 @@ export default class App extends React.Component{
   render() {
     return (
       <div className="App">
+        <Title />
         <div>
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
@@ -152,5 +155,6 @@ export default class App extends React.Component{
         <div>
           <Poem key={this.state.queried} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth}/>
         </div>
+        <Footer />
       </div>
     )}}

@@ -330,6 +330,11 @@ export default class Poem extends React.Component {
             target.innerHTML = ''
         } else {
             target.innerHTML = this.state.Translation[pnum][type]
+            if (type === 'Japanese') {
+                target.setAttribute('type', 'JP')
+            } else {
+                target.setAttribute('type', 'non-JP')
+            }
         }
         event.target.value = type
         let propname = this.state.propname
@@ -358,7 +363,9 @@ export default class Poem extends React.Component {
                         let pnum = p.className
                         p.innerHTML = this.state.Translation[pnum][type]
                         if (type === 'Japanese') {
-                            p.type = 'JP'
+                            p.setAttribute('type', 'JP')
+                        } else {
+                            p.setAttribute('type', 'non-JP')
                         }
                     })
             })
