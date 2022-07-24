@@ -9,12 +9,12 @@ export default class Poem extends React.Component {
         super(props)
         this.driver = getDriver()
         this.state = {
-            ptHeader: [], // pnum, speaker, addressee
-            Translation: {}, // Japanese and translations. These variables need to be renamed
+            ptHeader: [], // pnum, Waley#, speaker, addressee
+            info: {}, 
             uri: this.props.uri,
             user: this.props.user,
             password: this.props.password,
-            propname: [], // a matrix of edit propertyNames
+            propname: [], // a matrix of Edit propertyNames
         }
         this.parsePnum = this.parsePnum.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
@@ -203,47 +203,45 @@ export default class Poem extends React.Component {
         const spkrGen = this.props.spkrGen
         const addrGen = this.props.addrGen
         
-        try {
+        // try {
             let getSpeaker, getAddressee, getChapter
             if (speaker === 'Any' && spkrGen === 'Any') {
-                getSpeaker = '(s:Character)'
+                getSpeaker = '(:Character)'
             } else if (speaker === 'Any' && spkrGen !== 'Any') {
-                getSpeaker = '(s:Character {gender: "'+spkrGen+'"})'
+                getSpeaker = '(:Character {gender: "'+spkrGen+'"})'
             } else{
-                getSpeaker = '(s:Character {name: "'+speaker+'"})'
+                getSpeaker = '(:Character {name: "'+speaker+'"})'
             } 
             if (addressee === 'Any' && addrGen === 'Any') {
-                getAddressee = '(a:Character)'
+                getAddressee = '(:Character)'
             } else if (addressee === 'Any' && addrGen !== 'Any') {
-                getAddressee = '(a:Character {gender: "'+addrGen+'"})'
+                getAddressee = '(:Character {gender: "'+addrGen+'"})'
             } else {
-                getAddressee = '(a:Character {name: "'+addressee+'"})'
+                getAddressee = '(:Character {name: "'+addressee+'"})'
             }
             if (chapter === 'Any') {
-                getChapter = ', (g)-[r:INCLUDED_IN]-(c:Chapter), '
+                getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter), '
             } else {
                 //as of Apirl 2022, the chapter numbers are in string
-                getChapter = ', (g)-[r:INCLUDED_IN]-(c:Chapter {chapter_number: "'+chapter+'"}), '
+                getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "'+chapter+'"}), '
             }
-            let get =   'match exchange='+getSpeaker+'-[p:SPEAKER_OF]-(g:Genji_Poem)-'
-                            +'[q:ADDRESSEE_OF]-'+getAddressee 
+            let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
+                            +'[:ADDRESSEE_OF]-'+getAddressee 
                             +getChapter
-                            +'trans=(g)-[u:TRANSLATION_OF]-(t:Translation)'
-                            +' return exchange, trans'
+                            +'trans=(g)-[:TRANSLATION_OF]-(t:Translation), '
+                            +'waley=(t)-[:TRANSLATOR_OF]-(:People {name:"Waley"}) '
+                            +' return exchange, trans, waley'
             const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
-            // console.log(get)
             let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
-            let transRes = res.records.map(row => {return toNativeTypes(row.get('trans'))})
-            let Japanese = poemRes.map(row => row.segments[1].start.properties)
-            let transTemp = transRes.map(row => Object.values(row.end.properties))
+            let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
+            // let waley_pages = res.records.map(row => {return toNativeTypes(row.get('waley'))})
             let speakers = poemRes.map(row => row.segments[0].start.properties.name)
             let addressees = poemRes.map(row => row.segments[1].end.properties.name)
-            let Translation = {} // note: the name of Translation should be changed into something else since we have Japanese and Romaji included in it
+            let Japanese = poemRes.map(row => row.segments[1].start.properties)
+            let info = {}
             let plist = new Set()
             for (let i = 0; i < Japanese.length; i++) {
-                // plist.add(JSON.stringify([Japanese[i].pnum, Japanese[i].Japanese, Japanese[i].Romaji, speakers[i], addressees[i]]))
                 plist.add(JSON.stringify([Japanese[i].pnum, speakers[i], addressees[i]]))
-                
             }
             plist = Array.from(plist).map(item => JSON.parse(item))
             // sorting the list of poems
@@ -252,9 +250,9 @@ export default class Poem extends React.Component {
                     if ((parseInt(plist[j][0].substring(0, 2)) > parseInt(plist[j+1][0].substring(0, 2))) 
                     || (parseInt(plist[j][0].substring(0, 2)) >= parseInt(plist[j+1][0].substring(0, 2)) 
                     && parseInt(plist[j][0].substring(4, 6)) > parseInt(plist[j+1][0].substring(4, 6)))) {
-                        let poemRes = plist[j+1]
+                        let temp = plist[j+1]
                         plist[j+1] = plist[j]
-                        plist[j] = poemRes
+                        plist[j] = temp
                     }
                 }
             }
@@ -262,26 +260,18 @@ export default class Poem extends React.Component {
             let jsonObject = Japanese.map(JSON.stringify);
             let uniqueSet = new Set(jsonObject);
             Japanese = Array.from(uniqueSet).map(JSON.parse);
-            // prepare the list of translations
+            // prepares translations, notes, Waley#, etc., in info
             transTemp.forEach(element => {
-                if (element.length !== 1) {
-                    let count
-                    if (element.length === 2) {
-                        count = 0
-                    } else {
-                        count = 1
+                // element: [keys, properties]
+                if (element[0].length !== 0 && element[0].includes('id')) {
+                    let auth, pnum
+                    pnum = element[1][element[0].indexOf('id')].substring(0, 6)
+                    auth = element[1][element[0].indexOf('id')].substring(6, 7)
+                    if (info[pnum] === undefined) {
+                        info[pnum] = {}
                     }
-                    let pnum_count = count
-                    if (Translation[element[count+1].substring(0,6)] === undefined) {
-                        Translation[element[count+1].substring(0,6)] = {}
-                    }
-                    let auth = element[count+1].substring(6,7)
                     if (auth === 'A') {
                         auth = 'Waley'
-                        // special case handler: Waley trans with a page number
-                        if (element.length === 3) {
-                            pnum_count -= 1
-                        }
                     } else if (auth === 'C') {
                         auth = 'Cranston'
                     } else if (auth === 'S') {
@@ -291,13 +281,30 @@ export default class Poem extends React.Component {
                     } else {
                         auth = 'Washburn'
                     }
-                    Translation[element[count+1].substring(0,6)][auth] = element[pnum_count]
+                    if (element[0].includes('translation')) {
+                        info[pnum][auth] = element[1][element[0].indexOf('translation')]
+                    } else {
+                        info[pnum][auth] = 'N/A'
+                    }
+                    if (element[0].includes('WaleyPageNum')) {
+                        info[pnum]['WaleyPageNum'] = element[1][element[0].indexOf('WaleyPageNum')]
+                    } else {
+                        info[pnum]['WaleyPageNum'] = 'N/A'
+                    }
+                } 
+                if (element[0].length === 1 ) {
+                    console.log('DB entry issue at: '+element)
                 }
             });
             Japanese.forEach(e => {
                 let n = e.pnum
-                Translation[n].Japanese = e.Japanese
-                Translation[n].Romaji = e.Romaji
+                if (info[n] === undefined) {
+                    info[n] = {}
+                    info[n]['WaleyPageNum'] = 'N/A'
+                    console.log('manually creating info object for '+n)
+                }
+                info[n].Japanese = e.Japanese
+                info[n].Romaji = e.Romaji
             })
             // preparing a matrix of edit propertyNames
             let propname = Array.from(Array(plist.length), () => new Array(4))
@@ -305,21 +312,12 @@ export default class Poem extends React.Component {
                 row[0] = 'Japanese'
                 row[1] = 'Romaji'
             })
-            // console.log(propname)
             this.setState({
                 ptHeader: plist,
-                Translation: Translation,
+                info: info,
                 propname: propname,
-            }, 
-            () => {
-                console.log('Japanese set')
             })
-        } catch (e) {
-            console.log('Error in poem: '+e)
-        } finally {
-            await session.close()
-        }
-        closeDriver()
+            closeDriver()
     }
 
     updateSelection = (event) => {
@@ -329,7 +327,7 @@ export default class Poem extends React.Component {
         if (type === 'select:') {
             target.innerHTML = ''
         } else {
-            target.innerHTML = this.state.Translation[pnum][type]
+            target.innerHTML = this.state.info[pnum][type]
             if (type === 'Japanese') {
                 target.setAttribute('type', 'JP')
             } else {
@@ -347,7 +345,7 @@ export default class Poem extends React.Component {
     }
 
     getOptions(pnum) {
-        let options = Object.keys(this.state.Translation[pnum]).sort();
+        let options = Object.keys(this.state.info[pnum]).sort();
         return (options)
     }
 
@@ -361,7 +359,7 @@ export default class Poem extends React.Component {
                         e.value = type
                         let p = e.parentElement.querySelector('p')
                         let pnum = p.className
-                        p.innerHTML = this.state.Translation[pnum][type]
+                        p.innerHTML = this.state.info[pnum][type]
                         if (type === 'Japanese') {
                             p.setAttribute('type', 'JP')
                         } else {
@@ -379,13 +377,13 @@ export default class Poem extends React.Component {
     }
 
     render() {
-        // console.log(this.state.propname)
         return (
         <div>
             <table>
                 <thead>
                     <tr>
-                        <th>Chapter Name</th>
+                        <th>Name</th>
+                        <th>Waley Page</th>
                         <th className='spkrCol'>Speaker</th>
                         <th className='addrCol'>Addressee</th>
                         <th>
@@ -441,6 +439,7 @@ export default class Poem extends React.Component {
                     {this.state.ptHeader.map((row) => 
                         <tr key={row[0]}>
                             <td>{this.parsePnum(row[0])}</td>
+                            <td>{this.state.info[row[0]]['WaleyPageNum']}</td>
                             <td className='spkrCol'>{row[1]}</td>
                             <td className='addrCol'>{row[2]}</td>
                             <td className='ptcol1'>
@@ -448,13 +447,13 @@ export default class Poem extends React.Component {
                                     <option>select:</option>
                                     {this.getOptions(row[0]).map((item) => {
                                         if (item === 'Japanese') {
-                                            return <option selected key={this.state.Translation[row[0]][item]}>{item}</option>
+                                            return <option selected key={this.state.info[row[0]][item]}>{item}</option>
                                         } else {
-                                            return <option key={this.state.Translation[row[0]][item]}>{item}</option>
+                                            return <option key={this.state.info[row[0]][item]}>{item}</option>
                                         }})}
                                 </select>
                                 <p type='JP' className={row[0]}>
-                                    {this.state.Translation[row[0]]['Japanese']}
+                                    {this.state.info[row[0]]['Japanese']}
                                 </p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][0]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
@@ -463,18 +462,18 @@ export default class Poem extends React.Component {
                                     <option>select:</option>
                                     {this.getOptions(row[0]).map((item) => {
                                         if (item === 'Romaji') {
-                                            return <option selected key={this.state.Translation[row[0]][item]}>{item}</option>
+                                            return <option selected key={this.state.info[row[0]][item]}>{item}</option>
                                         } else {
-                                            return <option key={this.state.Translation[row[0]][item]}>{item}</option>
+                                            return <option key={this.state.info[row[0]][item]}>{item}</option>
                                         }})}
                                 </select>
-                                <p className={row[0]}>{this.state.Translation[row[0]]['Romaji']}</p>
+                                <p className={row[0]}>{this.state.info[row[0]]['Romaji']}</p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][1]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol3'>
                                 <select onChange={this.updateSelection}>
                                     <option>select:</option>
-                                    {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
+                                    {this.getOptions(row[0]).map((item) => <option key={this.state.info[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][2]} pnum={row[0]} changeKey={this.props.changeKey}/>}
@@ -482,7 +481,7 @@ export default class Poem extends React.Component {
                             <td className='ptcol4'>
                                 <select onChange={this.updateSelection}>
                                     <option>select:</option>
-                                    {this.getOptions(row[0]).map((item) => <option key={this.state.Translation[row[0]][item]}>{item}</option>)}
+                                    {this.getOptions(row[0]).map((item) => <option key={this.state.info[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][3]} pnum={row[0]} changeKey={this.props.changeKey}/>}

@@ -3,7 +3,6 @@ import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
 import Title from './components/title';
-import Footer from './components/footer'
 import $ from 'jquery';
 
 export default class App extends React.Component{
@@ -16,6 +15,7 @@ export default class App extends React.Component{
     this.app_password = process.env.REACT_APP_PASSWORD
     // Init all filter states to be false (unchanged)
     this.state = {
+      displayPT: false,
       queried: false,
       chapter: "",
       speaker: "",
@@ -44,7 +44,7 @@ export default class App extends React.Component{
 
   query = (event) => {
     this.setState({ 
-      // queried: !this.state.queried,
+      displayPT: true,
       chapter: this.filterRef.state.selectedChapter,
       speaker: this.filterRef.state.selectedSpeaker,
       addressee: this.filterRef.state.selectedAddressee,
@@ -54,6 +54,7 @@ export default class App extends React.Component{
 
   test = (event) => {
     this.setState({
+      displayPT: true,
       queried: true,
       chapter: '5',
       speaker: 'Hikaru Genji',
@@ -153,8 +154,7 @@ export default class App extends React.Component{
         </div>
         <br />
         <div>
-          <Poem key={this.state.queried} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth}/>
+          {this.state.displayPT && <Poem key={this.state.queried} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth}/>}
         </div>
-        <Footer />
       </div>
     )}}
