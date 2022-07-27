@@ -386,7 +386,7 @@ export default class Poem extends React.Component {
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Waley Page</th>
+                        {/* <th>Waley Page</th> */}
                         <th className='spkrCol'>Speaker</th>
                         <th className='addrCol'>Addressee</th>
                         <th>
@@ -442,10 +442,10 @@ export default class Poem extends React.Component {
                     {this.state.ptHeader.map((row) => 
                         <tr key={row[0]}>
                             <td>{this.parsePnum(row[0])}</td>
-                            <td>
+                            {/* <td>
                                 {this.state.info[row[0]]['WaleyPageNum']}
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={row[0]} changeKey={this.props.changeKey}/>}
-                            </td>
+                            </td> */}
                             <td className='spkrCol'>
                                 {row[1]}
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[1]} changeKey={this.props.changeKey}/>}
