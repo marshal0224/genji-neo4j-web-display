@@ -58,8 +58,11 @@ export default class Edit extends React.Component {
                 , {pnum, propertyName})
             })
         }
-        if (!read.records[0]._fields[0]) {
-            console.log(read.records[0])
+        if (!read.records.length) {
+            this.setState({
+                propertyVal: 'No Waley trans., cannot enter Waley page here as updating will not do anything!'
+            })
+        } else if (!read.records[0]._fields[0]) {
             this.setState({
                 propertyVal: 'not entered'
             })
@@ -149,7 +152,6 @@ export default class Edit extends React.Component {
     }
 
     render() {
-        // this.getDBPropertyVal()
         return(
             <div>
                 <label>
