@@ -16,7 +16,7 @@ export default class App extends React.Component{
     // Init all filter states to be false (unchanged)
     this.state = {
       displayPT: false,
-      queried: false,
+      key: false,
       chapter: "",
       speaker: "",
       addressee: "",
@@ -26,6 +26,7 @@ export default class App extends React.Component{
       addrOn: true,
       app_username: '',
       app_password: '',
+      auth: false,
     }
     this.changeKey = this.changeKey.bind(this)
     this.updateUsername = this.updateUsername.bind(this)
@@ -38,7 +39,7 @@ export default class App extends React.Component{
   
   changeKey() {
     this.setState({
-      queried: !this.state.queried
+      key: !this.state.key
     })
   }
 
@@ -51,16 +52,6 @@ export default class App extends React.Component{
       spkrGen: this.filterRef.state.selectedSpeakerGender,
       addrGen: this.filterRef.state.selectedAddresseeGender,
   }, () => this.changeKey())}
-
-  test = (event) => {
-    this.setState({
-      displayPT: true,
-      queried: true,
-      chapter: '5',
-      speaker: 'Hikaru Genji',
-      addressee: 'Murasaki',
-    })
-  }
 
   spkrDisplay
 
@@ -154,7 +145,7 @@ export default class App extends React.Component{
         </div>
         <br />
         <div>
-          {this.state.displayPT && <Poem key={this.state.queried} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth}/>}
+          {this.state.displayPT && <Poem key={this.state.key} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth}/>}
         </div>
       </div>
     )}}
