@@ -228,9 +228,8 @@ export default class Poem extends React.Component {
             let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
                             +'[:ADDRESSEE_OF]-'+getAddressee 
                             +getChapter
-                            +'trans=(g)-[:TRANSLATION_OF]-(t:Translation), '
-                            +'waley=(t)-[:TRANSLATOR_OF]-(:People {name:"Waley"}) '
-                            +' return exchange, trans, waley'
+                            +'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
+                            +' return exchange, trans'
             const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
             let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
             let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
@@ -267,6 +266,7 @@ export default class Poem extends React.Component {
                     let auth, pnum
                     pnum = element[1][element[0].indexOf('id')].substring(0, 6)
                     auth = element[1][element[0].indexOf('id')].substring(6, 7)
+                    console.log(auth)
                     if (info[pnum] === undefined) {
                         info[pnum] = {}
                     }
@@ -316,7 +316,7 @@ export default class Poem extends React.Component {
                 ptHeader: plist,
                 info: info,
                 propname: propname,
-            })
+            }, () => console.log(info))
             closeDriver()
     }
 
@@ -346,6 +346,10 @@ export default class Poem extends React.Component {
 
     getOptions(pnum) {
         let options = Object.keys(this.state.info[pnum]).sort();
+        let w = options.indexOf('WaleyPageNum')
+        if (w > -1) {
+            options.splice(w, 1)
+        }
         return (options)
     }
 
