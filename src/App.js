@@ -132,9 +132,7 @@ export default class App extends React.Component{
       <div className="App">
         <Title />
         <div>
-          <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
-          <br/>
-          <label>
+        <label>
             Username:
             <input onChange={this.updateUsername}></input>
           </label>
@@ -144,12 +142,13 @@ export default class App extends React.Component{
           </label>
           <button disabled={this.state.auth} onClick={this.login}>Log in</button>
           <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
-          <br/>
+        </div>
+        <div>
+          <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
           <button onClick={this.query}>Query</button>
-          <button onClick={this.test}>Test</button>
-          <button onClick={this.toggleSpkr}>Toggle Speaker</button>
-          <button onClick={this.toggleAddr}>Toggle Addressee</button>
+          {/* <button onClick={this.toggleSpkr}>Toggle Speaker</button> */}
+          {/* <button onClick={this.toggleAddr}>Toggle Addressee</button> */}
           <br/>
         </div>
         <br />

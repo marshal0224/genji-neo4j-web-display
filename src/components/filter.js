@@ -48,13 +48,11 @@ export default class Filter extends React.Component {
             const resChp = await session.readTransaction(tx => tx.run(getChp))
             const resExchange = await session.readTransaction(tx => tx.run(getExchange))
             const resChar = await session.readTransaction(tx => tx.run(getChar))
-
             let tempChp = resChp.records.map(row => {return toNativeTypes(row.get('chapters'))}).map((chp) => chp.properties)
             let tempExchange = resExchange.records.map(row => {return toNativeTypes(row.get('path'))}).map(({segments}) => segments)
             let chars= resChar.records.map(row => {return toNativeTypes(row.get('char'))}).map(e => Object.values(e).join(''))
             let genders= resChar.records.map(row => {return toNativeTypes(row.get('gender'))}).map(e => Object.values(e).join(''))
             const charNum = chars.length // 139 as of May 18th, 2022
-
             let speakers = []
             let addressees = []
             let tempSpeakers = []
