@@ -40,3 +40,16 @@
 table, th, td {
   border: 1px solid black ;
 }
+
+.login {
+  position: absolute;
+  right: 0;
+}
+
+.login > label {
+  float: left;
+}
+
+/* .login > button { */
+  /* float: right; */
+/* } */

@@ -131,16 +131,17 @@ export default class App extends React.Component{
     return (
       <div className="App">
         <Title />
-        <div>
-        <label>
+        <div className='login'>
+          <label>
             Username:
             <input onChange={this.updateUsername}></input>
           </label>
+          <button disabled={this.state.auth} onClick={this.login}>Log in</button>
+          <br/>
           <label>
             Password:
             <input onChange={this.updatePassword}></input>
           </label>
-          <button disabled={this.state.auth} onClick={this.login}>Log in</button>
           <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
         </div>
         <div>
