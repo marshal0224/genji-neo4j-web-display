@@ -266,7 +266,6 @@ export default class Poem extends React.Component {
                     let auth, pnum
                     pnum = element[1][element[0].indexOf('id')].substring(0, 6)
                     auth = element[1][element[0].indexOf('id')].substring(6, 7)
-                    console.log(auth)
                     if (info[pnum] === undefined) {
                         info[pnum] = {}
                     }
@@ -316,7 +315,7 @@ export default class Poem extends React.Component {
                 ptHeader: plist,
                 info: info,
                 propname: propname,
-            }, () => console.log(info))
+            })
             closeDriver()
     }
 
