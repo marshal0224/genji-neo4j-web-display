@@ -3,8 +3,8 @@ import '../title.css';
 function Title() {
   return (
     <div className="Title">
-      <h1>The Tale of Genji Waka Display</h1>
-      <p>We can add subsitle(s) as needed</p>
+      <h1>The Tale of Genji Poem Database</h1>
+      <p>Beta version</p>
     </div>
   )
 }
