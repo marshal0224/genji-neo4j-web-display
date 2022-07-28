@@ -39,6 +39,10 @@ table {
   margin: auto; */
 }
 
+.pg p {
+  text-align: center;
+}
+
 table p, table textarea {
   writing-mode: horizontal-tb;
   word-break:normal;

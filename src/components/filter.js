@@ -647,7 +647,7 @@ export default class Filter extends React.Component {
         return (
             <div>
                 <form>
-                    <label htmlFor="chapter">Choose a chapter</label>
+                    <label htmlFor="chapter">Chapter</label>
                     <br />
                     <select 
                         id="chapter"
@@ -660,7 +660,7 @@ export default class Filter extends React.Component {
                     </select>
                 </form>
                 <form>
-                    <label htmlFor="speakerGender">Speaker's gender</label>
+                    <label htmlFor="speakerGender">Speaker Gender</label>
                     <br />
                     <select 
                         id="speakerGender"
@@ -673,7 +673,7 @@ export default class Filter extends React.Component {
                     </select>
                 </form>
                 <form>
-                    <label htmlFor="speaker">Choose a speaker</label>
+                    <label htmlFor="speaker">Speaker</label>
                     <br />
                     <select 
                         id="speaker"
@@ -686,7 +686,7 @@ export default class Filter extends React.Component {
                     </select>
                 </form>
                 <form>
-                    <label htmlFor="addresseeGender">Addressee's gender</label>
+                    <label htmlFor="addresseeGender">Addressee Gender</label>
                     <br />
                     <select 
                         id="addresseeGender"
@@ -699,7 +699,7 @@ export default class Filter extends React.Component {
                     </select>
                 </form>
                 <form>
-                <label htmlFor="addressee">Choose an addressee</label>
+                <label htmlFor="addressee">Addressee</label>
                 <br />
                 <select 
                     id="addressee"

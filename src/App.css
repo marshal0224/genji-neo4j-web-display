@@ -42,12 +42,15 @@ table, th, td {
 }
 
 .login {
+  display: inline-block;
   position: absolute;
   right: 0;
+  background-color: rgba(0,0,0,0.2);
 }
 
 .login > label {
   float: left;
+  color: white;
 }
 
 /* .login > button { */

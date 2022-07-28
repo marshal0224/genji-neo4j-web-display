@@ -16,12 +16,13 @@ export default class Poem extends React.Component {
             password: this.props.password,
             propname: [], // a matrix of Edit propertyNames
         }
-        this.parsePnum = this.parsePnum.bind(this)
+        this.parseOrder = this.parseOrder.bind(this)
+        this.parseChp = this.parseChp.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
-    parsePnum(pnum) {
-        let [chp, _, order] = pnum.match(/.{1,2}/g)
+    parseChp(pnum) {
+        let [chp, _, smt] = pnum.match(/.{1,2}/g)
         let chp_name
         switch(chp){
             case '01':
@@ -189,9 +190,16 @@ export default class Poem extends React.Component {
             default: 
                 console.log('unknown chapter caught')
         }
+        return (
+            <p>{chp} {chp_name}</p>
+        )
+    }
+
+    parseOrder(pnum) {
+        let [chp, _, order] = pnum.match(/.{1,2}/g)
         order = parseInt(order)
         return (
-            <p>{chp} {chp_name} {order}</p>
+            <p>{order}</p>
         )
     }
 
@@ -255,6 +263,7 @@ export default class Poem extends React.Component {
                     }
                 }
             }
+            console.log(plist)
             // make Japanese non-repetitive
             let jsonObject = Japanese.map(JSON.stringify);
             let uniqueSet = new Set(jsonObject);
@@ -346,8 +355,17 @@ export default class Poem extends React.Component {
     getOptions(pnum) {
         let options = Object.keys(this.state.info[pnum]).sort();
         let w = options.indexOf('WaleyPageNum')
+        let j = options.indexOf('Japanese')
+        let r = options.indexOf('Romaji')
         if (w > -1) {
             options.splice(w, 1)
+        }
+        // notice that one can improve this by taking care of the below two while preparing for info
+        if (j > -1) {
+            options.splice(j, 1)
+        }
+        if (r > -1) {
+            options.splice(r, 1)
         }
         return (options)
     }
@@ -385,39 +403,19 @@ export default class Poem extends React.Component {
             <table>
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        {/* <th>Waley Page</th> */}
+                        <th>Chapter</th>
+                        <th>Poem Number</th>
                         <th className='spkrCol'>Speaker</th>
                         <th className='addrCol'>Addressee</th>
                         <th>
-                            <select className='ptheader1' onChange={this.setColumnOptions}>
-                                <option>Select:</option>
-                                <option>Japanese</option>
-                                <option>Romaji</option>
-                                <option>Cranston</option>
-                                <option>Seidensticker</option>
-                                <option>Tyler</option>
-                                <option>Waley</option>
-                                <option>Washburn</option>
-                            </select>
+                            Japanese
                         </th>
                         <th>
-                            <select className='ptheader2' onChange={this.setColumnOptions}>
-                                <option>Select:</option>
-                                <option>Japanese</option>
-                                <option>Romaji</option>
-                                <option>Cranston</option>
-                                <option>Seidensticker</option>
-                                <option>Tyler</option>
-                                <option>Waley</option>
-                                <option>Washburn</option>
-                            </select>
+                            Romaji
                         </th>
                         <th>
                             <select className='ptheader3' onChange={this.setColumnOptions}>
-                                <option>Select:</option>
-                                <option>Japanese</option>
-                                <option>Romaji</option>
+                                <option>Translation A</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
                                 <option>Tyler</option>
@@ -427,9 +425,7 @@ export default class Poem extends React.Component {
                         </th>
                         <th>
                             <select className='ptheader4' onChange={this.setColumnOptions}>
-                                <option>Select:</option>
-                                <option>Japanese</option>
-                                <option>Romaji</option>
+                                <option>Translation B</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
                                 <option>Tyler</option>
@@ -441,7 +437,8 @@ export default class Poem extends React.Component {
                 <tbody>
                     {this.state.ptHeader.map((row) => 
                         <tr key={row[0]}>
-                            <td>{this.parsePnum(row[0])}</td>
+                            <td>{this.parseChp(row[0])}</td>
+                            <td className='pg'>{this.parseOrder(row[0])}</td>
                             {/* <td>
                                 {this.state.info[row[0]]['WaleyPageNum']}
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={row[0]} changeKey={this.props.changeKey}/>}
@@ -455,7 +452,7 @@ export default class Poem extends React.Component {
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[2]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol1'>
-                                <select onChange={this.updateSelection}>
+                                {/* <select onChange={this.updateSelection}>
                                     <option>select:</option>
                                     {this.getOptions(row[0]).map((item) => {
                                         if (item === 'Japanese') {
@@ -463,14 +460,14 @@ export default class Poem extends React.Component {
                                         } else {
                                             return <option key={this.state.info[row[0]][item]}>{item}</option>
                                         }})}
-                                </select>
+                                </select> */}
                                 <p type='JP' className={row[0]}>
                                     {this.state.info[row[0]]['Japanese']}
                                 </p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][0]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol2'>
-                                <select onChange={this.updateSelection}>
+                                {/* <select onChange={this.updateSelection}>
                                     <option>select:</option>
                                     {this.getOptions(row[0]).map((item) => {
                                         if (item === 'Romaji') {
@@ -478,7 +475,7 @@ export default class Poem extends React.Component {
                                         } else {
                                             return <option key={this.state.info[row[0]][item]}>{item}</option>
                                         }})}
-                                </select>
+                                </select> */}
                                 <p className={row[0]}>{this.state.info[row[0]]['Romaji']}</p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][1]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
