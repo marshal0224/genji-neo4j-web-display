@@ -67,7 +67,10 @@ export default class App extends React.Component{
       addressee: this.filterRef.state.selectedAddressee,
       spkrGen: this.filterRef.state.selectedSpeakerGender,
       addrGen: this.filterRef.state.selectedAddresseeGender,
-  }, () => this.changeKey())} 
+  }, () => {
+    this.changeKey()
+    // this.changeKey()
+  })} 
 
   spkrDisplay
 
@@ -169,7 +172,7 @@ export default class App extends React.Component{
         {this.state.displayPT && <p>{this.state.count} poems quried</p>}
         <br />
         <div>
-          {this.state.displayPT && <Poem key={this.state.key} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth} updateCount={this.poemCount}/>}
+          {this.state.displayPT && <Poem ref={(ptRef) => {this.ptRef = ptRef}} key={this.state.key} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth} updateCount={this.poemCount}/>}
         </div>
       </div>
     )}}
