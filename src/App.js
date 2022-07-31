@@ -169,7 +169,7 @@ export default class App extends React.Component{
           {/* <button onClick={this.toggleAddr}>Toggle Addressee</button> */}
           <br/>
         </div>
-        {this.state.displayPT && <p>{this.state.count} poems quried</p>}
+        {this.state.displayPT && <p>{this.state.count} poems queried</p>}
         <br />
         <div>
           {this.state.displayPT && <Poem ref={(ptRef) => {this.ptRef = ptRef}} key={this.state.key} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth} updateCount={this.poemCount}/>}
