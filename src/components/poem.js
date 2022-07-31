@@ -19,7 +19,8 @@ export default class Poem extends React.Component {
         this.parseOrder = this.parseOrder.bind(this)
         this.parseChp = this.parseChp.bind(this)
         this.setCharColor = this.setCharColor.bind(this)
-        this.WaleyPageNum = this.WaleyPageNum.bind(this)
+        // this.WaleyPageNum = this.WaleyPageNum.bind(this)
+        this.col3Ref = React.createRef()
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
@@ -297,7 +298,7 @@ export default class Poem extends React.Component {
                     }
                     if (element[0].includes('WaleyPageNum')) {
                         info[pnum]['WaleyPageNum'] = element[1][element[0].indexOf('WaleyPageNum')]
-                    } else {
+                    } else if (typeof(info[pnum]['WaleyPageNum']) !== 'number') {
                         info[pnum]['WaleyPageNum'] = 'N/A'
                     }
                 } 
@@ -422,14 +423,14 @@ export default class Poem extends React.Component {
         }
     }
 
-    WaleyPageNum(pnum) {
-        return( 
-            <div>
-                <p>{this.state.info[pnum]['WaleyPageNum']}</p>
-                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={pnum} changeKey={this.props.changeKey}/>}
-            </div> 
-        )
-    }
+    // WaleyPageNum(pnum) {
+    //     return( 
+    //         <div>
+    //             <p>{this.state.info[pnum]['WaleyPageNum']}</p>
+    //             {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={pnum} changeKey={this.props.changeKey}/>}
+    //         </div> 
+    //     )
+    // }
 
     render() {
         return (
@@ -492,12 +493,13 @@ export default class Poem extends React.Component {
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][1]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol3'>
-                                <select onChange={this.updateSelection}>
+                                <select onChange={this.updateSelection} ref={(col3Ref) => {this.col3Ref = col3Ref}}>
                                     <option>select:</option>
                                     {this.getOptions(row[0]).map((item) => <option key={this.state.info[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][2]} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {/* {this.props.auth &&<Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={row[0]} changeKey={this.props.changeKey}/>} */}
                             </td>
                             <td className='ptcol4'>
                                 <select onChange={this.updateSelection}>
