@@ -455,10 +455,6 @@ export default class Poem extends React.Component {
                         <tr key={row[0]}>
                             <td>{this.parseChp(row[0])}</td>
                             <td className='pg'>{this.parseOrder(row[0])}</td>
-                            {/* <td>
-                                {this.state.info[row[0]]['WaleyPageNum']}
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={row[0]} changeKey={this.props.changeKey}/>}
-                            </td> */}
                             <td className='spkrCol'>
                                 {this.setCharColor(row[1])}
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[1]} changeKey={this.props.changeKey}/>}
@@ -468,30 +464,12 @@ export default class Poem extends React.Component {
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[2]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol1'>
-                                {/* <select onChange={this.updateSelection}>
-                                    <option>select:</option>
-                                    {this.getOptions(row[0]).map((item) => {
-                                        if (item === 'Japanese') {
-                                            return <option selected key={this.state.info[row[0]][item]}>{item}</option>
-                                        } else {
-                                            return <option key={this.state.info[row[0]][item]}>{item}</option>
-                                        }})}
-                                </select> */}
                                 <p type='JP' className={row[0]}>
                                     {this.state.info[row[0]]['Japanese']}
                                 </p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][0]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol2'>
-                                {/* <select onChange={this.updateSelection}>
-                                    <option>select:</option>
-                                    {this.getOptions(row[0]).map((item) => {
-                                        if (item === 'Romaji') {
-                                            return <option selected key={this.state.info[row[0]][item]}>{item}</option>
-                                        } else {
-                                            return <option key={this.state.info[row[0]][item]}>{item}</option>
-                                        }})}
-                                </select> */}
                                 <p className={row[0]}>{this.state.info[row[0]]['Romaji']}</p>
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][1]} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>

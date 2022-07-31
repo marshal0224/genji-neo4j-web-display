@@ -16,7 +16,7 @@ export default class App extends React.Component{
     // Init all filter states to be false (unchanged)
     this.state = {
       displayPT: false,
-      key: false,
+      key: 'odd',
       chapter: "",
       speaker: "",
       addressee: "",
@@ -47,9 +47,15 @@ export default class App extends React.Component{
   }
   
   changeKey() {
-    this.setState({
-      key: !this.state.key
-    })
+    if (this.state.key === 'odd') {
+      this.setState({
+        key: 'even'
+      })
+    } else {
+      this.setState({
+        key: 'odd'
+      })
+    }
   }
 
   query = (event) => {
