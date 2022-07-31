@@ -1,4 +1,5 @@
 import React from 'react'
+import { omitHideDisabledProps } from 'rsuite/esm/utils/dateUtils'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes } from '../utils'
 import Edit from './edit'
@@ -15,6 +16,7 @@ export default class Poem extends React.Component {
             user: this.props.user,
             password: this.props.password,
             propname: [], // a matrix of Edit propertyNames
+            key: this.props.key,
         }
         this.parseOrder = this.parseOrder.bind(this)
         this.parseChp = this.parseChp.bind(this)
