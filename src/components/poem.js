@@ -19,6 +19,7 @@ export default class Poem extends React.Component {
         this.parseOrder = this.parseOrder.bind(this)
         this.parseChp = this.parseChp.bind(this)
         this.setCharColor = this.setCharColor.bind(this)
+        this.WaleyPageNum = this.WaleyPageNum.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
@@ -337,7 +338,11 @@ export default class Poem extends React.Component {
         if (type === 'select:') {
             target.innerHTML = ''
         } else {
-            target.innerHTML = this.state.info[pnum][type]
+            if (type === 'Waley') {
+                target.innerHTML = this.state.info[pnum][type]+'\n'+'Waley Page: '+this.state.info[pnum]['WaleyPageNum']
+            } else {
+                target.innerHTML = this.state.info[pnum][type]
+            }
             if (type === 'Japanese') {
                 target.setAttribute('type', 'JP')
             } else {
@@ -382,7 +387,11 @@ export default class Poem extends React.Component {
                         e.value = type
                         let p = e.parentElement.querySelector('p')
                         let pnum = p.className
-                        p.innerHTML = this.state.info[pnum][type]
+                        if (type === 'Waley') {
+                            p.innerHTML = this.state.info[pnum][type]+'\n'+'Waley Page: '+this.state.info[pnum]['WaleyPageNum']
+                        } else {
+                            p.innerHTML = this.state.info[pnum][type]
+                        }
                         if (type === 'Japanese') {
                             p.setAttribute('type', 'JP')
                         } else {
@@ -411,6 +420,15 @@ export default class Poem extends React.Component {
                 <p className='female-char'>{name}</p>
             )
         }
+    }
+
+    WaleyPageNum(pnum) {
+        return( 
+            <div>
+                <p>{this.state.info[pnum]['WaleyPageNum']}</p>
+                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={pnum} changeKey={this.props.changeKey}/>}
+            </div> 
+        )
     }
 
     render() {
