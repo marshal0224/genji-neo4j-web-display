@@ -53,6 +53,12 @@ table, th, td {
   color: white;
 }
 
-/* .login > button { */
-  /* float: right; */
-/* } */
+.male-char {
+  text-align: center;
+  color: blue;
+}
+
+.female-char {
+  text-align: center;
+  color: pink;
+}

@@ -24,10 +24,13 @@ export default class App extends React.Component{
       addrGen: "Any",
       spkrOn: true,
       addrOn: true,
+      count: 0,
       app_username: '',
       app_password: '',
       auth: false,
     }
+    this.characters = []
+    this.genders = []
     this.changeKey = this.changeKey.bind(this)
     this.updateUsername = this.updateUsername.bind(this)
     this.updatePassword = this.updatePassword.bind(this)
@@ -35,6 +38,12 @@ export default class App extends React.Component{
     this.logout = this.logout.bind(this)
     this.filterRef = React.createRef()
     this.ptRef = React.createRef() // poem table ref
+    this.poemCount = this.poemCount.bind(this)
+  }
+
+  componentDidUpdate() {
+    this.characters = this.filterRef.state.characters
+    this.genders = this.filterRef.state.genders
   }
   
   changeKey() {
@@ -44,6 +53,7 @@ export default class App extends React.Component{
   }
 
   query = (event) => {
+    this.poemCount()
     this.setState({ 
       displayPT: true,
       chapter: this.filterRef.state.selectedChapter,
@@ -51,7 +61,7 @@ export default class App extends React.Component{
       addressee: this.filterRef.state.selectedAddressee,
       spkrGen: this.filterRef.state.selectedSpeakerGender,
       addrGen: this.filterRef.state.selectedAddresseeGender,
-  }, () => this.changeKey())}
+  }, () => this.changeKey())} 
 
   spkrDisplay
 
@@ -118,6 +128,12 @@ export default class App extends React.Component{
     }, () => alert('Professor Vincent, you are now logged out.'))
   }
 
+  poemCount(count) {
+    this.setState({
+      count: count,
+    })
+  }
+
   render() {
     return (
       <div className="App">
@@ -139,13 +155,15 @@ export default class App extends React.Component{
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
           <button onClick={this.query}>Query</button>
+          <button onClick={this.filterRef.resetFilters}>Reset Filters</button>
           {/* <button onClick={this.toggleSpkr}>Toggle Speaker</button> */}
           {/* <button onClick={this.toggleAddr}>Toggle Addressee</button> */}
           <br/>
         </div>
+        {this.state.displayPT && <p>{this.state.count} poems quried</p>}
         <br />
         <div>
-          {this.state.displayPT && <Poem key={this.state.key} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} speaker={this.state.speaker} addressee={this.state.addressee} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth}/>}
+          {this.state.displayPT && <Poem key={this.state.key} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} changeKey={this.changeKey} auth={this.state.auth} updateCount={this.poemCount}/>}
         </div>
       </div>
     )}}

@@ -18,6 +18,7 @@ export default class Poem extends React.Component {
         }
         this.parseOrder = this.parseOrder.bind(this)
         this.parseChp = this.parseChp.bind(this)
+        this.setCharColor = this.setCharColor.bind(this)
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
@@ -263,7 +264,6 @@ export default class Poem extends React.Component {
                     }
                 }
             }
-            console.log(plist)
             // make Japanese non-repetitive
             let jsonObject = Japanese.map(JSON.stringify);
             let uniqueSet = new Set(jsonObject);
@@ -324,6 +324,8 @@ export default class Poem extends React.Component {
                 ptHeader: plist,
                 info: info,
                 propname: propname,
+            }, () => {
+                this.props.updateCount(plist.length)
             })
             closeDriver()
     }
@@ -397,6 +399,20 @@ export default class Poem extends React.Component {
         }
     }
 
+    setCharColor(name) {
+        let index = this.props.characters.indexOf(name)
+        let gender = this.props.genders[index]
+        if (gender === 'male'){
+            return (
+                <p className='male-char'>{name}</p>
+            )
+        } else {
+            return (
+                <p className='female-char'>{name}</p>
+            )
+        }
+    }
+
     render() {
         return (
         <div>
@@ -444,11 +460,11 @@ export default class Poem extends React.Component {
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td> */}
                             <td className='spkrCol'>
-                                {row[1]}
+                                {this.setCharColor(row[1])}
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[1]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='addrCol'>
-                                {row[2]}
+                                {this.setCharColor(row[2])}
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[2]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol1'>

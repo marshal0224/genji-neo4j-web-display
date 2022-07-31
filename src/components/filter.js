@@ -154,28 +154,21 @@ export default class Filter extends React.Component {
     resetFilters = (event) => {
         let backup = this.state.backup
         this.setState({
-            // original data pulled from Neo4j
             chapters: backup[0],
             characters: backup[1],
             charNum: backup[2],
             speakers: backup[4],
             addressees: backup[5],
             genders: backup[3], 
-            // value for the filters
             selectedChapter: "Any",
             selectedSpeaker: "Any",
             selectedAddressee: "Any",
             selectedSpeakerGender: "Any",
             selectedAddresseeGender: "Any",
-            // adjmat_SA[speaker index][addressee index] = 0 for no, 1 for yes, where index is index of character in the list of characters. Direction sensitive.
             adjmat_SA: backup[9], 
-            // chp_SA[0][0] = ['Kiritsubo Consort', 'Kiritsubo Emperor'], i.e. 01KR01 is spoken by K.C. to K.E.
             chp_SA: backup[10],
-            // lists of filter options. Note that the last element in each unit cell is EXCLUSIVELY for display toggle based on the gender filters, and should not be used for any other purposes. 
             chapterList: backup[6], 
-            // [['Hikaru Genji', 'male', 1] ... ] where 1 is used in the gender filter as a flag for display
             speakerList: backup[7], 
-            // [['Murasaki', 'female', 1] ... ]
             addresseeList: backup[8],
             speakerGenderList: ['male', 'female'],
             addresseeGenderList: ['male', 'female', 'nonhuman'],
@@ -680,7 +673,6 @@ export default class Filter extends React.Component {
         }
         return (
             <div>
-                <button onClick={this.resetFilters}>Try reset</button>
                 <form>
                     <label htmlFor="chapter">Chapter</label>
                     <br />
