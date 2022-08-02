@@ -1,7 +1,6 @@
 import React from 'react'
-import { omitHideDisabledProps } from 'rsuite/esm/utils/dateUtils'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes } from '../utils'
+import { toNativeTypes, getPoemTableContent } from '../utils'
 import Edit from './edit'
 
 export default class Poem extends React.Component { 
@@ -15,13 +14,18 @@ export default class Poem extends React.Component {
             uri: this.props.uri,
             user: this.props.user,
             password: this.props.password,
+            chapter: this.props.chapter,
+            speaker: this.props.speaker,
+            addressee: this.props.addressee,
+            spkrGen: this.props.spkrGen,
+            addrGen: this.props.addrGen,
             propname: [], // a matrix of Edit propertyNames
-            key: this.props.key,
+            key: true,
         }
         this.parseOrder = this.parseOrder.bind(this)
         this.parseChp = this.parseChp.bind(this)
         this.setCharColor = this.setCharColor.bind(this)
-        // this.WaleyPageNum = this.WaleyPageNum.bind(this)
+        this.changePTKey = this.changePTKey.bind(this)
         this.col3Ref = React.createRef()
         initDriver(this.state.uri, this.state.user, this.state.password)
     }
@@ -210,120 +214,93 @@ export default class Poem extends React.Component {
 
     async componentDidMount() {
         const session = this.driver.session()
+        const chapter = this.state.chapter
+        const speaker = this.state.speaker
+        const addressee = this.state.addressee
+        const spkrGen = this.state.spkrGen
+        const addrGen = this.state.addrGen
+        let getSpeaker, getAddressee, getChapter
+        if (speaker === 'Any' && spkrGen === 'Any') {
+            getSpeaker = '(:Character)'
+        } else if (speaker === 'Any' && spkrGen !== 'Any') {
+            getSpeaker = '(:Character {gender: "'+spkrGen+'"})'
+        } else{
+            getSpeaker = '(:Character {name: "'+speaker+'"})'
+        } 
+        if (addressee === 'Any' && addrGen === 'Any') {
+            getAddressee = '(:Character)'
+        } else if (addressee === 'Any' && addrGen !== 'Any') {
+            getAddressee = '(:Character {gender: "'+addrGen+'"})'
+        } else {
+            getAddressee = '(:Character {name: "'+addressee+'"})'
+        }
+        if (chapter === 'Any') {
+            getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter), '
+        } else {
+            //as of Apirl 2022, the chapter numbers are in string
+            getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "'+chapter+'"}), '
+        }
+        let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
+                        +'[:ADDRESSEE_OF]-'+getAddressee 
+                        +getChapter
+                        +'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
+                        +' return exchange, trans'
+        const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
+        let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
+        let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
+        console.log(poemRes)
+        let [plist, info, propname] = getPoemTableContent(poemRes, transTemp)
+        // if (JSON.stringify(this.state.ptHeader) !== JSON.stringify(plist) && JSON.stringify(this.state.info) !== JSON.stringify(info) && JSON.stringify(this.state.propname) !== JSON.stringify(propname)) {
+            this.setState({
+                ptHeader: plist,
+                info: info,
+                propname: propname,
+            }, () => {
+                this.props.updateCount(plist.length)
+                console.log(this.state.ptHeader)
+            })
+        // }
+        closeDriver()
+    }
+
+    async componentDidUpdate() {
+        const session = this.driver.session()
         const chapter = this.props.chapter
         const speaker = this.props.speaker
         const addressee = this.props.addressee
         const spkrGen = this.props.spkrGen
         const addrGen = this.props.addrGen
-        
-        // try {
-            let getSpeaker, getAddressee, getChapter
-            if (speaker === 'Any' && spkrGen === 'Any') {
-                getSpeaker = '(:Character)'
-            } else if (speaker === 'Any' && spkrGen !== 'Any') {
-                getSpeaker = '(:Character {gender: "'+spkrGen+'"})'
-            } else{
-                getSpeaker = '(:Character {name: "'+speaker+'"})'
-            } 
-            if (addressee === 'Any' && addrGen === 'Any') {
-                getAddressee = '(:Character)'
-            } else if (addressee === 'Any' && addrGen !== 'Any') {
-                getAddressee = '(:Character {gender: "'+addrGen+'"})'
-            } else {
-                getAddressee = '(:Character {name: "'+addressee+'"})'
-            }
-            if (chapter === 'Any') {
-                getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter), '
-            } else {
-                //as of Apirl 2022, the chapter numbers are in string
-                getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "'+chapter+'"}), '
-            }
-            let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
-                            +'[:ADDRESSEE_OF]-'+getAddressee 
-                            +getChapter
-                            +'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
-                            +' return exchange, trans'
-            const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
-            let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
-            let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
-            // let waley_pages = res.records.map(row => {return toNativeTypes(row.get('waley'))})
-            let speakers = poemRes.map(row => row.segments[0].start.properties.name)
-            let addressees = poemRes.map(row => row.segments[1].end.properties.name)
-            let Japanese = poemRes.map(row => row.segments[1].start.properties)
-            let info = {}
-            let plist = new Set()
-            for (let i = 0; i < Japanese.length; i++) {
-                plist.add(JSON.stringify([Japanese[i].pnum, speakers[i], addressees[i]]))
-            }
-            plist = Array.from(plist).map(item => JSON.parse(item))
-            // sorting the list of poems
-            for (let i = 0; i < plist.length-1; i++) {
-                for (let j = 0; j < plist.length-i-1; j++) {
-                    if ((parseInt(plist[j][0].substring(0, 2)) > parseInt(plist[j+1][0].substring(0, 2))) 
-                    || (parseInt(plist[j][0].substring(0, 2)) >= parseInt(plist[j+1][0].substring(0, 2)) 
-                    && parseInt(plist[j][0].substring(4, 6)) > parseInt(plist[j+1][0].substring(4, 6)))) {
-                        let temp = plist[j+1]
-                        plist[j+1] = plist[j]
-                        plist[j] = temp
-                    }
-                }
-            }
-            // make Japanese non-repetitive
-            let jsonObject = Japanese.map(JSON.stringify);
-            let uniqueSet = new Set(jsonObject);
-            Japanese = Array.from(uniqueSet).map(JSON.parse);
-            // prepares translations, notes, Waley#, etc., in info
-            transTemp.forEach(element => {
-                // element: [keys, properties]
-                if (element[0].length !== 0 && element[0].includes('id')) {
-                    let auth, pnum
-                    pnum = element[1][element[0].indexOf('id')].substring(0, 6)
-                    auth = element[1][element[0].indexOf('id')].substring(6, 7)
-                    if (info[pnum] === undefined) {
-                        info[pnum] = {}
-                    }
-                    if (auth === 'A') {
-                        auth = 'Waley'
-                    } else if (auth === 'C') {
-                        auth = 'Cranston'
-                    } else if (auth === 'S') {
-                        auth = 'Seidensticker'
-                    } else if (auth === 'T') {
-                        auth = 'Tyler'
-                    } else {
-                        auth = 'Washburn'
-                    }
-                    if (element[0].includes('translation')) {
-                        info[pnum][auth] = element[1][element[0].indexOf('translation')]
-                    } else {
-                        info[pnum][auth] = 'N/A'
-                    }
-                    if (element[0].includes('WaleyPageNum')) {
-                        info[pnum]['WaleyPageNum'] = element[1][element[0].indexOf('WaleyPageNum')]
-                    } else if (typeof(info[pnum]['WaleyPageNum']) !== 'number') {
-                        info[pnum]['WaleyPageNum'] = 'N/A'
-                    }
-                } 
-                if (element[0].length === 1 ) {
-                    console.log('DB entry issue at: '+element)
-                }
-            });
-            Japanese.forEach(e => {
-                let n = e.pnum
-                if (info[n] === undefined) {
-                    info[n] = {}
-                    info[n]['WaleyPageNum'] = 'N/A'
-                    console.log('manually creating info object for '+n)
-                }
-                info[n].Japanese = e.Japanese
-                info[n].Romaji = e.Romaji
-            })
-            // preparing a matrix of edit propertyNames
-            let propname = Array.from(Array(plist.length), () => new Array(4))
-            propname.forEach(row => {
-                row[0] = 'Japanese'
-                row[1] = 'Romaji'
-            })
+        let getSpeaker, getAddressee, getChapter
+        if (speaker === 'Any' && spkrGen === 'Any') {
+            getSpeaker = '(:Character)'
+        } else if (speaker === 'Any' && spkrGen !== 'Any') {
+            getSpeaker = '(:Character {gender: "'+spkrGen+'"})'
+        } else{
+            getSpeaker = '(:Character {name: "'+speaker+'"})'
+        } 
+        if (addressee === 'Any' && addrGen === 'Any') {
+            getAddressee = '(:Character)'
+        } else if (addressee === 'Any' && addrGen !== 'Any') {
+            getAddressee = '(:Character {gender: "'+addrGen+'"})'
+        } else {
+            getAddressee = '(:Character {name: "'+addressee+'"})'
+        }
+        if (chapter === 'Any') {
+            getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter), '
+        } else {
+            //as of Apirl 2022, the chapter numbers are in string
+            getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "'+chapter+'"}), '
+        }
+        let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
+                        +'[:ADDRESSEE_OF]-'+getAddressee 
+                        +getChapter
+                        +'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
+                        +' return exchange, trans'
+        const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
+        let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
+        let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
+        let [plist, info, propname] = await getPoemTableContent(poemRes, transTemp)
+        if (JSON.stringify(this.state.ptHeader) !== JSON.stringify(plist) && JSON.stringify(this.state.info) !== JSON.stringify(info) && JSON.stringify(this.state.propname) !== JSON.stringify(propname)) {
             this.setState({
                 ptHeader: plist,
                 info: info,
@@ -331,7 +308,8 @@ export default class Poem extends React.Component {
             }, () => {
                 this.props.updateCount(plist.length)
             })
-            closeDriver()
+        }
+        closeDriver()
     }
 
     updateSelection = (event) => {
@@ -425,14 +403,11 @@ export default class Poem extends React.Component {
         }
     }
 
-    // WaleyPageNum(pnum) {
-    //     return( 
-    //         <div>
-    //             <p>{this.state.info[pnum]['WaleyPageNum']}</p>
-    //             {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={pnum} changeKey={this.props.changeKey}/>}
-    //         </div> 
-    //     )
-    // }
+    changePTKey() {
+        this.setState({
+            key: !this.state.key,
+        })
+    }
 
     render() {
         return (
