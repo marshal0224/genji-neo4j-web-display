@@ -60,7 +60,6 @@ export default class Filter extends React.Component {
             let tempSpeakers = []
             let tempAddressees = []
             let chapters = []
-
             //tempSpeakers: [{start, relationship, end}...]    
             tempExchange.forEach(([s, a]) => {
                 tempSpeakers.push(s)
