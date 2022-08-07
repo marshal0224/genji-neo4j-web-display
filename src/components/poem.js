@@ -7,7 +7,6 @@ export default class Poem extends React.Component {
 
     constructor(props) {
         super(props)
-        this.driver = getDriver()
         this.state = {
             ptHeader: [], // pnum, Waley#, speaker, addressee
             info: {}, 
@@ -27,7 +26,6 @@ export default class Poem extends React.Component {
         this.setCharColor = this.setCharColor.bind(this)
         this.changePTKey = this.changePTKey.bind(this)
         this.col3Ref = React.createRef()
-        initDriver(this.state.uri, this.state.user, this.state.password)
     }
 
     parseChp(pnum) {
@@ -213,7 +211,9 @@ export default class Poem extends React.Component {
     }
 
     async componentDidMount() {
-        const session = this.driver.session()
+        initDriver(this.state.uri, this.state.user, this.state.password)
+        const driver = getDriver()
+        const session = driver.session()
         const chapter = this.state.chapter
         const speaker = this.state.speaker
         const addressee = this.state.addressee
@@ -259,12 +259,15 @@ export default class Poem extends React.Component {
                 this.props.updateCount(plist.length)
                 console.log(this.state.ptHeader)
             })
-        // }
+        session.close()
         closeDriver()
     }
 
     async componentDidUpdate() {
-        const session = this.driver.session()
+        console.log('in PT component did update')
+        initDriver(this.state.uri, this.state.user, this.state.password)
+        const driver = getDriver()
+        const session = driver.session()
         const chapter = this.props.chapter
         const speaker = this.props.speaker
         const addressee = this.props.addressee
@@ -288,7 +291,7 @@ export default class Poem extends React.Component {
         if (chapter === 'Any') {
             getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter), '
         } else {
-            //as of Apirl 2022, the chapter numbers are in string
+            //as of April 2022, the chapter numbers are in string
             getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "'+chapter+'"}), '
         }
         let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
@@ -299,8 +302,9 @@ export default class Poem extends React.Component {
         const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
         let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
         let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
-        let [plist, info, propname] = await getPoemTableContent(poemRes, transTemp)
-        if (JSON.stringify(this.state.ptHeader) !== JSON.stringify(plist) && JSON.stringify(this.state.info) !== JSON.stringify(info) && JSON.stringify(this.state.propname) !== JSON.stringify(propname)) {
+        let [plist, info, propname] = getPoemTableContent(poemRes, transTemp)
+        if (JSON.stringify(this.state.info) !== JSON.stringify(info) || (JSON.stringify(this.state.ptHeader) !== JSON.stringify(plist) && JSON.stringify(this.state.propname) !== JSON.stringify(propname))) {
+            console.log('before set state')
             this.setState({
                 ptHeader: plist,
                 info: info,
@@ -309,6 +313,7 @@ export default class Poem extends React.Component {
                 this.props.updateCount(plist.length)
             })
         }
+        session.close()
         closeDriver()
     }
 
@@ -410,6 +415,7 @@ export default class Poem extends React.Component {
     }
 
     render() {
+        {console.log('pt rerendering')}
         return (
         <div>
             <table>
@@ -426,24 +432,31 @@ export default class Poem extends React.Component {
                             Romaji
                         </th>
                         <th>
-                            <select className='ptheader3' onChange={this.setColumnOptions}>
+                            {this.props.auth 
+                            ? 'Cranston'
+                            : <select onChange={this.setColumnOptions}>
                                 <option>Translation A</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
                                 <option>Tyler</option>
                                 <option>Waley</option>
                                 <option>Washburn</option>
-                            </select>
+                            </select> }
                         </th>
-                        <th>
-                            <select className='ptheader4' onChange={this.setColumnOptions}>
+                        <th>{this.props.auth
+                            ? 'Seidensticker'
+                            : <select onChange={this.setColumnOptions}>
                                 <option>Translation B</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
                                 <option>Tyler</option>
                                 <option>Waley</option>
                                 <option>Washburn</option>
-                            </select></th>
+                            </select>}
+                        </th>
+                        {this.props.auth ? <th>Tyler</th> : null}
+                        {this.props.auth ? <th>Waley</th> : null}
+                        {this.props.auth ? <th>Washburn</th> : null}
                     </tr>
                 </thead>
                 <tbody>
@@ -463,29 +476,54 @@ export default class Poem extends React.Component {
                                 <p type='JP' className={row[0]}>
                                     {this.state.info[row[0]]['Japanese']}
                                 </p>
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][0]} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol2'>
                                 <p className={row[0]}>{this.state.info[row[0]]['Romaji']}</p>
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][1]} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Romaji'} pnum={row[0]} changeKey={this.props.changeKey}/>}
                             </td>
-                            <td className='ptcol3'>
-                                <select onChange={this.updateSelection} ref={(col3Ref) => {this.col3Ref = col3Ref}}>
-                                    <option>select:</option>
-                                    {this.getOptions(row[0]).map((item) => <option key={this.state.info[row[0]][item]}>{item}</option>)}
-                                </select>
-                                <p className={row[0]}></p>
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][2]} pnum={row[0]} changeKey={this.props.changeKey}/>}
-                                {/* {this.props.auth &&<Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} pnum={row[0]} changeKey={this.props.changeKey}/>} */}
-                            </td>
-                            <td className='ptcol4'>
+                            {this.props.auth 
+                            ? <td className='ptcol3'>
+                                {/* <p className={row[0]}>{this.state.info[row[0]]['Cranston']}</p> */}
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Cranston'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                            </td> 
+                            : <td  className='ptcol3'>
                                 <select onChange={this.updateSelection}>
                                     <option>select:</option>
                                     {this.getOptions(row[0]).map((item) => <option key={this.state.info[row[0]][item]}>{item}</option>)}
                                 </select>
                                 <p className={row[0]}></p>
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={this.state.propname[parseInt(row[0].substring(4,6))-1][3]} pnum={row[0]} changeKey={this.props.changeKey}/>}
-                            </td>
+                            </td>}
+                            {this.props.auth 
+                            ? <td className='ptcol4'>
+                                {/* <p className={row[0]}>{this.state.info[row[0]]['Seidensticker']}</p> */}
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Seidensticker'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                            </td>  
+                            : <td className='ptcol4'>
+                                <select onChange={this.updateSelection}>
+                                    <option>select:</option>
+                                    {this.getOptions(row[0]).map((item) => <option key={this.state.info[row[0]][item]}>{item}</option>)}
+                                </select>
+                                <p className={row[0]}></p>
+                            </td>}
+                            {this.props.auth 
+                            ? <td className='ptcol5'>
+                                {/* <p className={row[0]}>{this.state.info[row[0]]['Tyler']}</p> */}
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Tyler'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                            </td> 
+                            : null}
+                            {this.props.auth 
+                            ? <td className='ptcol6'>
+                                {/* <p className={row[0]}>{this.state.info[row[0]]['Waley']}</p> */}
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Waley'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                            </td> 
+                            : null}
+                            {this.props.auth 
+                            ? <td className='ptcol7'>
+                                {/* <p className={row[0]}>{this.state.info[row[0]]['Washburn']}</p> */}
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Washburn'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                            </td> 
+                            : null}
                         </tr>)}
                 </tbody>
             </table>

@@ -107,6 +107,12 @@ export default class Edit extends React.Component {
         const session = driver.session()
         let propertyName = this.props.propertyName
         let propertyVal = this.state.propertyVal
+        // if (propertyVal.includes('"') || propertyVal.includes("'")){
+        //     console.log(propertyVal)
+        //     propertyVal.replace('"', '\\'+'"')
+        //     propertyVal.replace("'", "\\"+"'")
+        //     console.log(propertyVal)
+        // }
         let pnum = this.state.pnum
         let write
         if (window.confirm('About to update a DB property')) {
@@ -132,12 +138,12 @@ export default class Edit extends React.Component {
             } else {
                 write = await session.writeTransaction(tx => {
                     return tx.run(
-                        'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"'+propertyName+'"}) SET t.translation="'+propertyVal+'"'
+                        'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"'+propertyName+'"}) SET t.translation="'+propertyVal+'" return t.translation'
                         , {pnum, propertyName})
                 })
             }
-            console.log('updated')
-            this.props.changeKey()
+            // console.log(write)
+            // this.props.changeKey()
         } else {
             alert('DB update canceled')
         }
@@ -154,6 +160,7 @@ export default class Edit extends React.Component {
     render() {
         return(
             <div>
+                <p className={this.props.pnum}>{this.state.propertyVal}</p>
                 <label>
                     <textarea value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></textarea>
                     <br/>
