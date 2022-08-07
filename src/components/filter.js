@@ -34,7 +34,7 @@ export default class Filter extends React.Component {
             // [['Murasaki', 'female', 1] ... ]
             addresseeList: [],
             speakerGenderList: ['male', 'female'],
-            addresseeGenderList: ['male', 'female', 'nonhuman'],
+            addresseeGenderList: ['male', 'female', 'multiple', 'nonhuman'],
             backup: [],
         }
         this.resetFilters = this.resetFilters.bind(this)
@@ -202,7 +202,7 @@ export default class Filter extends React.Component {
             let validAddressees = this.state.addresseeList
             let validChapters = this.state.chapterList
             let validSpeakerGenders = ['male','female']
-            let validAddresseeGenders = ['male','female','nonhuman']
+            let validAddresseeGenders = ['male','female','multiple', 'nonhuman']
             let selectedSpeakerGender = this.state.selectedSpeakerGender
             let selectedAddresseeGender = this.state.selectedAddresseeGender
             if (type === 'chapter') {
