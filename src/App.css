@@ -37,8 +37,35 @@
   }
 }
 
+.Title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.PT {
+  margin-left: 7%;
+  float: left;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background-color: white;
+}
+
 table, th, td {
+  margin-left: 0;
+  margin-right: auto;
   border: 1px solid lightgray ;
+}
+
+.filter {
+  position: sticky;
+  top: 0;
+  border: 1px solid lightgray ;
+  float: left;
+  width: 20%;
 }
 
 .login {
@@ -46,6 +73,7 @@ table, th, td {
   position: absolute;
   right: 0;
   background-color: rgba(0,0,0,0.2);
+  z-index: 1;
 }
 
 .login > label {
@@ -61,4 +89,9 @@ table, th, td {
 .female-char {
   text-align: center;
   color: palevioletred;
+}
+
+.nonhuman-char {
+  text-align: center;
+  color: green;
 }

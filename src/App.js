@@ -150,21 +150,23 @@ export default class App extends React.Component{
   render() {
     return (
       <div className="App">
-        <Title />
-        <div className='login'>
-          <label>
-            Username:
-            <input onChange={this.updateUsername}></input>
-          </label>
-          <button disabled={this.state.auth} onClick={this.login}>Log in</button>
-          <br/>
-          <label>
-            Password:
-            <input onChange={this.updatePassword}></input>
-          </label>
-          <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
-        </div>
-        <div>
+        {/* <div className='head'> */}
+          <Title />
+          <div className='login'>
+            <label>
+              Username:
+              <input onChange={this.updateUsername}></input>
+            </label>
+            <button disabled={this.state.auth} onClick={this.login}>Log in</button>
+            <br/>
+            <label>
+              Password:
+              <input onChange={this.updatePassword}></input>
+            </label>
+            <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
+          </div>
+        {/* </div> */}
+        <div className='filter'>
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
           <button onClick={this.query}>Query</button>
@@ -172,10 +174,10 @@ export default class App extends React.Component{
           {/* <button onClick={this.toggleSpkr}>Toggle Speaker</button> */}
           {/* <button onClick={this.toggleAddr}>Toggle Addressee</button> */}
           <br/>
+          {this.state.displayPT && <p>{this.state.count} poems queried</p>}
         </div>
-        {this.state.displayPT && <p>{this.state.count} poems queried</p>}
         <br />
-        <div>
+        <div className='PT'>
           {<Poem ref={(ptRef) => {this.ptRef = ptRef}} key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
         </div>
       </div>

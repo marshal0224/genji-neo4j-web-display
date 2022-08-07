@@ -6,12 +6,12 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from "react-router-dom";
 // import 'rsuite/dist/rsuite.min.css';
 
-let password = prompt("Please enter the password for visiting this site", "Password");
-let auth = false
-if (password === process.env.REACT_APP_PASSWORD) {
-  auth = true
-}
-if (auth) {
+// let password = prompt("Please enter the password for visiting this site", "Password");
+// let auth = false
+// if (password === process.env.REACT_APP_PASSWORD) {
+//   auth = true
+// }
+// if (auth) {
   const container = document.getElementById('root');
 
   // Create a root.
@@ -27,4 +27,4 @@ if (auth) {
   // to log results (for example: reportWebVitals(console.log))
   // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
   reportWebVitals();
-  }
+  // }
