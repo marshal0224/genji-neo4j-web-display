@@ -248,7 +248,6 @@ export default class Poem extends React.Component {
         const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
         let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
         let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
-        console.log(poemRes)
         let [plist, info, propname] = getPoemTableContent(poemRes, transTemp)
         // if (JSON.stringify(this.state.ptHeader) !== JSON.stringify(plist) && JSON.stringify(this.state.info) !== JSON.stringify(info) && JSON.stringify(this.state.propname) !== JSON.stringify(propname)) {
             this.setState({
@@ -256,8 +255,8 @@ export default class Poem extends React.Component {
                 info: info,
                 propname: propname,
             }, () => {
-                this.props.updateCount(plist.length)
-                console.log(this.state.ptHeader)
+                console.log(plist)
+                this.props.updateCount(new Set(plist.map(e => e[0])).size)
             })
         session.close()
         closeDriver()
@@ -310,7 +309,8 @@ export default class Poem extends React.Component {
                 info: info,
                 propname: propname,
             }, () => {
-                this.props.updateCount(plist.length)
+                console.log(plist)
+                this.props.updateCount(new Set(plist.map(e => e[0])).size)
             })
         }
         session.close()
@@ -348,15 +348,15 @@ export default class Poem extends React.Component {
     getOptions(pnum) {
         let options = Object.keys(this.state.info[pnum]).sort();
         let w = options.indexOf('WaleyPageNum')
-        let j = options.indexOf('Japanese')
-        let r = options.indexOf('Romaji')
         if (w > -1) {
             options.splice(w, 1)
         }
         // notice that one can improve this by taking care of the below two while preparing for info
+        let j = options.indexOf('Japanese')
         if (j > -1) {
             options.splice(j, 1)
         }
+        let r = options.indexOf('Romaji')
         if (r > -1) {
             options.splice(r, 1)
         }
@@ -401,6 +401,10 @@ export default class Poem extends React.Component {
             return (
                 <p className='male-char'>{name}</p>
             )
+        } else if (gender === 'nonhuman') {
+            return (
+                <p className='nonhuman-char'>{name}</p>
+            )
         } else {
             return (
                 <p className='female-char'>{name}</p>
@@ -434,7 +438,7 @@ export default class Poem extends React.Component {
                         <th>
                             {this.props.auth 
                             ? 'Cranston'
-                            : <select onChange={this.setColumnOptions}>
+                            : <select className={'ptcol3'} onChange={this.setColumnOptions}>
                                 <option>Translation A</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
@@ -445,7 +449,7 @@ export default class Poem extends React.Component {
                         </th>
                         <th>{this.props.auth
                             ? 'Seidensticker'
-                            : <select onChange={this.setColumnOptions}>
+                            : <select className={'ptcol4'} onChange={this.setColumnOptions}>
                                 <option>Translation B</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>

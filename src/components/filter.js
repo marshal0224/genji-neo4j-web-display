@@ -675,64 +675,43 @@ export default class Filter extends React.Component {
                 <form>
                     <label htmlFor="chapter">Chapter</label>
                     <br />
-                    <select 
-                        id="chapter"
-                        value={this.state.selectedChapter}
-                        onChange={updateSelection}
-                        name="chapter"
-                    >
+                    <select id="chapter" value={this.state.selectedChapter} onChange={updateSelection} name="chapter">
                         <option value="Any">Any</option>
                         {this.state.chapterList.filter(row => row[row.length-1]).map((row) => <option key={row[0]} value={row[0]}>{row[0]+' '+row[1]+' '+row[2]}</option>)}
                     </select>
                 </form>
+                <br />
                 <form>
                     <label htmlFor="speakerGender">Speaker Gender</label>
                     <br />
-                    <select 
-                        id="speakerGender"
-                        value={this.state.selectedSpeakerGender}
-                        onChange={updateSelection}
-                        name="speakerGender"
-                    >
+                    <select id="speakerGender" value={this.state.selectedSpeakerGender} onChange={updateSelection} name="speakerGender">
                         <option value="Any">Any</option>
                         {this.state.speakerGenderList.map(row => <option key={row+'_sg'} value={row}>{row}</option>)}
                     </select>
                 </form>
+                <br />
                 <form>
                     <label htmlFor="speaker">Speaker</label>
                     <br />
-                    <select 
-                        id="speaker"
-                        value={this.state.selectedSpeaker}
-                        onChange={updateSelection}
-                        name="speaker"
-                    >
+                    <select id="speaker" value={this.state.selectedSpeaker} onChange={updateSelection} name="speaker">
                         <option value="Any">Any</option>
                         {this.state.speakerList.filter(row => row[2]).map(row => <option key={row[0]+'_s'} value={row[0]}>{row[0]}</option>)}
                     </select>
                 </form>
+                <br />
                 <form>
                     <label htmlFor="addresseeGender">Addressee Gender</label>
                     <br />
-                    <select 
-                        id="addresseeGender"
-                        value={this.state.selectedAddresseeGender}
-                        onChange={updateSelection}
-                        name="addresseeGender"
-                    >
+                    <select id="addresseeGender" value={this.state.selectedAddresseeGender} onChange={updateSelection} name="addresseeGender">
                         <option value="Any">Any</option>
                         {this.state.addresseeGenderList.map(row => <option key={row+'_ag'} value={row}>{row}</option>)}
                     </select>
                 </form>
+                <br />
                 <form>
                 <label htmlFor="addressee">Addressee</label>
                 <br />
-                <select 
-                    id="addressee"
-                    //value={formData.speaker}
-                    onChange={updateSelection}
-                    name="addressee"
-                >
+                <select id="addressee" onChange={updateSelection} name="addressee">
                     <option value="Any">Any</option>
                     {this.state.addresseeList.filter(row => row[2]).map((row) => <option key={row[0]+'_a'}>{row[0]}</option>)}
                 </select>

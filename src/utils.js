@@ -101,7 +101,7 @@ export function getPoemTableContent(poemRes, transTemp) {
             }
             if (element[0].includes('WaleyPageNum')) {
                 info[pnum]['WaleyPageNum'] = element[1][element[0].indexOf('WaleyPageNum')]
-            } else if (typeof(info[pnum]['WaleyPageNum']) !== 'number') {
+            } else if (auth === 'Waley' && typeof(info[pnum]['WaleyPageNum']) !== 'number') {
                 info[pnum]['WaleyPageNum'] = 'N/A'
             }
         } 
