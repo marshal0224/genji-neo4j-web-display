@@ -156,7 +156,7 @@ export default class Poem extends React.Component {
                 chp_name = "Maboroshi 幻"
                 break
             case '42': 
-                chp_name = "Niō Miya 匂宮"
+                chp_name = "Niou Miya 匂宮"
                 break
             case '43': 
                 chp_name = "Kōbai 紅梅"
@@ -255,7 +255,6 @@ export default class Poem extends React.Component {
                 info: info,
                 propname: propname,
             }, () => {
-                console.log(plist)
                 this.props.updateCount(new Set(plist.map(e => e[0])).size)
             })
         session.close()
@@ -309,7 +308,6 @@ export default class Poem extends React.Component {
                 info: info,
                 propname: propname,
             }, () => {
-                console.log(plist)
                 this.props.updateCount(new Set(plist.map(e => e[0])).size)
             })
         }
@@ -325,7 +323,7 @@ export default class Poem extends React.Component {
             target.innerHTML = ''
         } else {
             if (type === 'Waley') {
-                target.innerHTML = this.state.info[pnum][type]+'\n'+'Waley Page: '+this.state.info[pnum]['WaleyPageNum']
+                target.innerHTML = this.state.info[pnum][type]+'\n'+this.state.info[pnum]['WaleyPageNum']
             } else {
                 target.innerHTML = this.state.info[pnum][type]
             }
@@ -374,7 +372,7 @@ export default class Poem extends React.Component {
                         let p = e.parentElement.querySelector('p')
                         let pnum = p.className
                         if (type === 'Waley') {
-                            p.innerHTML = this.state.info[pnum][type]+'\n'+'Waley Page: '+this.state.info[pnum]['WaleyPageNum']
+                            p.innerHTML = this.state.info[pnum][type]+'\n'+this.state.info[pnum]['WaleyPageNum']
                         } else {
                             p.innerHTML = this.state.info[pnum][type]
                         }
@@ -477,19 +475,18 @@ export default class Poem extends React.Component {
                                 {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'name'} name={row[2]} changeKey={this.props.changeKey}/>}
                             </td>
                             <td className='ptcol1'>
-                                <p type='JP' className={row[0]}>
-                                    {this.state.info[row[0]]['Japanese']}
-                                </p>
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth 
+                                ? <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Japanese'} currVal={this.state.info[row[0]]['Japanese']} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                : <p type='JP' className={row[0]}>{this.state.info[row[0]]['Japanese']}</p>}
                             </td>
                             <td className='ptcol2'>
-                                <p className={row[0]}>{this.state.info[row[0]]['Romaji']}</p>
-                                {this.props.auth && <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Romaji'} pnum={row[0]} changeKey={this.props.changeKey}/>}
+                                {this.props.auth 
+                                ? <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Romaji'} currVal={this.state.info[row[0]]['Romaji']} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                : <p className={row[0]}>{this.state.info[row[0]]['Romaji']}</p>}
                             </td>
                             {this.props.auth 
                             ? <td className='ptcol3'>
-                                {/* <p className={row[0]}>{this.state.info[row[0]]['Cranston']}</p> */}
-                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Cranston'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Cranston'} currVal={this.state.info[row[0]]['Cranston']} pnum={row[0]} changeKey={this.props.changeKey}/>
                             </td> 
                             : <td  className='ptcol3'>
                                 <select onChange={this.updateSelection}>
@@ -501,7 +498,7 @@ export default class Poem extends React.Component {
                             {this.props.auth 
                             ? <td className='ptcol4'>
                                 {/* <p className={row[0]}>{this.state.info[row[0]]['Seidensticker']}</p> */}
-                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Seidensticker'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Seidensticker'} currVal={this.state.info[row[0]]['Seidensticker']} pnum={row[0]} changeKey={this.props.changeKey}/>
                             </td>  
                             : <td className='ptcol4'>
                                 <select onChange={this.updateSelection}>
@@ -513,19 +510,20 @@ export default class Poem extends React.Component {
                             {this.props.auth 
                             ? <td className='ptcol5'>
                                 {/* <p className={row[0]}>{this.state.info[row[0]]['Tyler']}</p> */}
-                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Tyler'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Tyler'} currVal={this.state.info[row[0]]['Tyler']} pnum={row[0]} changeKey={this.props.changeKey}/>
                             </td> 
                             : null}
                             {this.props.auth 
                             ? <td className='ptcol6'>
                                 {/* <p className={row[0]}>{this.state.info[row[0]]['Waley']}</p> */}
-                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Waley'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Waley'} currVal={this.state.info[row[0]]['Waley']} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'page'} currVal={this.state.info[row[0]]['WaleyPageNum']} pnum={row[0]} changeKey={this.props.changeKey}/>
                             </td> 
                             : null}
                             {this.props.auth 
                             ? <td className='ptcol7'>
                                 {/* <p className={row[0]}>{this.state.info[row[0]]['Washburn']}</p> */}
-                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Washburn'} pnum={row[0]} changeKey={this.props.changeKey}/>
+                                <Edit uri={this.state.uri} user={this.state.user} password={this.state.password} propertyName={'Washburn'} currVal={this.state.info[row[0]]['Washburn']} pnum={row[0]} changeKey={this.props.changeKey}/>
                             </td> 
                             : null}
                         </tr>)}
