@@ -16,7 +16,7 @@ export default class Edit extends React.Component {
             uri: this.props.uri, 
             user: this.props.user,
             password: this.props.password,
-            propertyVal: '',
+            propertyVal: this.props.currVal,
             pnum: this.props.pnum,
             name: '',
         }
@@ -24,6 +24,15 @@ export default class Edit extends React.Component {
         this.updateStatePropertyVal = this.updateStatePropertyVal.bind(this)
         this.updateDBPropertyVal = this.updateDBPropertyVal.bind(this)
     }
+
+    // componentDidMount() {
+    // //     this.setState({
+    // //         propertyVal: this.props.currVal
+    // //     }, () => {
+    // //         console.log('edit did mount')
+    // //     })
+    //     console.log(this.props.currVal)
+    // }
 
     async getDBPropertyVal() {
         initDriver(this.state.uri, this.state.user, this.state.password)
