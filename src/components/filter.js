@@ -132,7 +132,6 @@ export default class Filter extends React.Component {
                             }
                         }
                     })
-                    // console.log(mat.map(row => row.reduce((partialSum, a) => partialSum + a, 0)))
                 })
                 this.setState({
                     adjmat_SA: mat, 
