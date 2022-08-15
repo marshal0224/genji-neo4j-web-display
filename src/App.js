@@ -4,6 +4,7 @@ import Filter from './components/filter'
 import Poem from './components/poem'
 import Title from './components/title';
 import $ from 'jquery';
+import KeywordSearch from './components/keywordsearch';
 
 export default class App extends React.Component{
   constructor() {
@@ -16,6 +17,7 @@ export default class App extends React.Component{
     // Init all filter states to be false (unchanged)
     this.state = {
       displayPT: false,
+      displayST: false,
       key: 'odd',
       chapter: "",
       speaker: "",
@@ -37,8 +39,9 @@ export default class App extends React.Component{
     this.login = this.login.bind(this)
     this.logout = this.logout.bind(this)
     this.filterRef = React.createRef()
-    this.ptRef = React.createRef() // poem table ref
     this.poemCount = this.poemCount.bind(this)
+    this.searchRef = React.createRef()
+    this.search = this.search.bind(this)
   }
 
   componentDidUpdate() {
@@ -62,15 +65,21 @@ export default class App extends React.Component{
     this.poemCount()
     this.setState({ 
       displayPT: true,
+      displayST: false,
       chapter: this.filterRef.state.selectedChapter,
       speaker: this.filterRef.state.selectedSpeaker,
       addressee: this.filterRef.state.selectedAddressee,
       spkrGen: this.filterRef.state.selectedSpeakerGender,
       addrGen: this.filterRef.state.selectedAddresseeGender,
-  }, () => {
-    this.ptRef.changePTKey()
-    // this.changeKey()
-  })} 
+    }, () => console.log('queried'))} 
+
+  search = (event) => {
+    this.setState({
+      displayPT: false, 
+      displayST: true, 
+      keyword: this.searchRef.value,
+    }, () => console.log('searched'))
+  }
 
   spkrDisplay
 
@@ -175,10 +184,16 @@ export default class App extends React.Component{
           {/* <button onClick={this.toggleAddr}>Toggle Addressee</button> */}
           <br/>
           {this.state.displayPT && <p>{this.state.count} poems queried</p>}
+          <br />
+          <div>
+                <input ref={(searchRef) => {this.searchRef = searchRef}}></input>
+                <button onClick={this.search}>Search</button>
+          </div>
         </div>
         <br />
         <div className='PT'>
-          {<Poem ref={(ptRef) => {this.ptRef = ptRef}} key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
+          {this.state.displayPT && <Poem key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
         </div>
+        {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>}
       </div>
     )}}
