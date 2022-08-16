@@ -4,7 +4,6 @@ import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../uti
 import _ from 'lodash'
 
 export default class KeywordSearch extends React.Component {
-
     constructor(props) {
         super(props)
         this.state = {
@@ -30,6 +29,9 @@ export default class KeywordSearch extends React.Component {
         const keyword = this.state.keyword
         let get 
         if (keyword.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/) !== null) {
+            if (keyword.includes(' ')){
+                keyword = keyword.replaceAll(' ', "' and g.Japanese contains '")
+            }
             get = "match exchange=(:Character)-[:SPEAKER_OF]->(g:Genji_Poem)<-[:ADDRESSEE_OF]-(:Character), chp=(g)-[:INCLUDED_IN]->(:Chapter), trans = (g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.Japanese contains '"+keyword+"' return exchange, chp, trans"
         } else {
             get = "match exchange=(:Character)-[:SPEAKER_OF]->(g:Genji_Poem)<-[:ADDRESSEE_OF]-(:Character), chp=(g)-[:INCLUDED_IN]->(:Chapter), trans = (g)-[:TRANSLATION_OF]-(t:Translation)-[:TRANSLATOR_OF]-(:People) where t.translation contains '"+keyword+"' return exchange, chp, trans"
@@ -83,13 +85,18 @@ export default class KeywordSearch extends React.Component {
         initDriver(this.state.uri, this.state.user, this.state.password)
         const driver = getDriver()
         const session = driver.session()
-        const keyword = this.props.keyword
+        let keyword = this.props.keyword
+        // keyword = keyword.replace(' ', "' and '")
         let get 
         if (keyword.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/) !== null) {
+            if (keyword.includes(' ')){
+                keyword = keyword.replaceAll(' ', "' and g.Japanese contains '")
+            }
             get = "match exchange=(:Character)-[:SPEAKER_OF]->(g:Genji_Poem)<-[:ADDRESSEE_OF]-(:Character), chp=(g)-[:INCLUDED_IN]->(:Chapter), trans = (g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.Japanese contains '"+keyword+"' return exchange, chp, trans"
         } else {
             get = "match exchange=(:Character)-[:SPEAKER_OF]->(g:Genji_Poem)<-[:ADDRESSEE_OF]-(:Character), chp=(g)-[:INCLUDED_IN]->(:Chapter), trans = (g)-[:TRANSLATION_OF]-(t:Translation)-[:TRANSLATOR_OF]-(:People) where t.translation contains '"+keyword+"' return exchange, chp, trans"
         }
+        console.log(get)
         const res = await session.readTransaction(tx => tx.run(get, { keyword }))
         let exchange = res.records.map(row => {return toNativeTypes(row.get('exchange'))}).map(row => row.segments)
         let unique_exchange = []
