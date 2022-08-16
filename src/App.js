@@ -5,6 +5,8 @@ import Poem from './components/poem'
 import Title from './components/title';
 import $ from 'jquery';
 import KeywordSearch from './components/keywordsearch';
+import {BrowserRouter, Route, Routes, NavLink, Link, Navigate } from 'react-router-dom';
+import Search from './components/Search';
 
 export default class App extends React.Component{
   constructor() {
@@ -160,21 +162,25 @@ export default class App extends React.Component{
     return (
       <div className="App">
         {/* <div className='head'> */}
-          <Title />
-          <div className='login'>
-            <label>
-              Username:
-              <input onChange={this.updateUsername}></input>
-            </label>
-            <button disabled={this.state.auth} onClick={this.login}>Log in</button>
-            <br/>
-            <label>
-              Password:
-              <input onChange={this.updatePassword}></input>
-            </label>
-            <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
-          </div>
-        {/* </div> */}
+        <Title />
+        <div className='login'>
+          <label>
+            Username:
+            <input onChange={this.updateUsername}></input>
+          </label>
+          <button disabled={this.state.auth} onClick={this.login}>Log in</button>
+          <br/>
+          <label>
+            Password:
+            <input onChange={this.updatePassword}></input>
+          </label>
+          <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
+        </div>
+        <NavLink to="/search">Search Link</NavLink>
+        <Routes>
+            <Route path="/search" element={<Search />} />
+            {/* <Route path="/" element={<Navigate to="/"/>} /> */}
+        </Routes>
         <div className='filter'>
           <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
           <br/>
