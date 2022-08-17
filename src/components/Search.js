@@ -4,7 +4,7 @@ import { toNativeTypes, getChpList } from '../utils'
 import { Select } from 'antd';
 import 'antd/dist/antd.css';
 import _ from 'lodash'
-// const { Option } = Select;
+const { Option, OptGroup } = Select;
 
 export default class Search extends React.Component {
     Graph = require("graph-data-structure")
@@ -15,8 +15,12 @@ export default class Search extends React.Component {
             chapters: Array.from(Array(54), (_,i)=> i),
             characters: [],
             // charNum: 0,
-            speakers: [],
-            addressees: [],
+            male_speakers: [],
+            female_speakers: [],
+            male_addressees: [],
+            female_addressees: [],
+            nonhuman_addressees: [],
+            multiple_addressees: [],
             genders: [], 
             // values of the filters
             selectedChapter: "Any",
@@ -53,8 +57,13 @@ export default class Search extends React.Component {
         let exchange = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
         let graph = this.Graph()
         let characters = []
-        let speakers = []
-        let addressees = []
+        let male_speakers = []
+        let female_speakers = []
+        let male_addressees = []
+        let female_addressees = []
+        let nonhuman_addressees = []
+        let multiple_addressees = []
+        console.log(exchange)
         this.state.addresseeGenderList.forEach(gender => graph.addNode(gender))
         for (let i = 0; i < exchange.length; i++) {
             let pnum = exchange[i].segments[0].end.properties.pnum
@@ -62,34 +71,62 @@ export default class Search extends React.Component {
             let spkr_gen = exchange[i].start.properties.gender
             let addr = exchange[i].end.properties.name
             let addr_gen = exchange[i].end.properties.gender
+            if (addr === 'Attendees of the Moon Viewing Party at Katsura') {
+                console.log(addr_gen)
+                console.log(this.hasNode(graph, 'Attendees of the Moon Viewing Party at Katsura'))
+            }
             if (!this.hasNode(graph, spkr)) {
                 characters.push(spkr)
                 graph.addEdge(spkr_gen, spkr)
             }
             if (!this.hasNode(graph, addr)) {
                 characters.push(addr)
-                graph.addEdge(addr_gen, spkr)
+                graph.addEdge(addr_gen, addr)
             }
             if (!graph.hasEdge(pnum, pnum.substring(0,2))) {
                 graph.addEdge(pnum, pnum.substring(0,2))
             }
-            // w=2 for speaker, w=1 for addressee
-            if (!graph.hasEdge(spkr, pnum, 2)) {
-                graph.addEdge(spkr, pnum, 2)
+            // w=3 for speaker, w=2 for addressee
+            if (!graph.hasEdge(spkr, pnum, 3)) {
+                graph.addEdge(spkr, pnum, 3)
             }
-            graph.addEdge(addr, pnum, 1)
+            graph.addEdge(addr, pnum, 2)
         }
         for (let i = 0; i < characters.length; i++) {
-            let add_list = graph.adjacent(characters[i]).filter(n => graph.getEdgeWeight(characters[i], n) === 1)
+            let add_list = graph.adjacent(characters[i]).filter(n => graph.getEdgeWeight(characters[i], n) === 2)
             if (add_list.length > 0) {
-                addressees.push(characters[i])
+                if (graph.hasEdge('male', characters[i])) {
+                    male_addressees.push(characters[i])
+                } else if (graph.hasEdge('female', characters[i])) {
+                    female_addressees.push(characters[i])
+                } else if (graph.hasEdge('multiple', characters[i])) {
+                    multiple_addressees.push(characters[i])
+                } else if (graph.hasEdge('nonhuman', characters[i])) {
+                    nonhuman_addressees.push(characters[i])
+                }
+                // if (characters[i] === 'Cat') {
+                //     console.log(graph.adjacent('nonhuman'))
+                // }
             }
-            let spk_list = graph.adjacent(characters[i]).filter(n => graph.getEdgeWeight(characters[i], n) === 2)
+            let spk_list = graph.adjacent(characters[i]).filter(n => graph.getEdgeWeight(characters[i], n) === 3)
             if (spk_list.length > 0) {
-                speakers.push(characters[i])
+                if (graph.hasEdge('male', characters[i])) {
+                    male_speakers.push(characters[i])
+                } else if (graph.hasEdge('female', characters[i])) {
+                    female_speakers.push(characters[i])
+                }
             }
         }
-        // console.log(addressees.sort())
+        // console.log(graph.adjacent('nonhuman'))
+        this.setState({
+            characters:characters.sort(),
+            male_speakers: male_speakers.sort(), 
+            female_speakers: female_speakers.sort(), 
+            male_addressees: male_addressees.sort(),
+            female_addressees: female_addressees.sort(),
+            multiple_addressees: multiple_addressees.sort(),
+            nonhuman_addressees: nonhuman_addressees.sort(),
+        })
         session.close()
         closeDriver()
     }
@@ -135,57 +172,64 @@ export default class Search extends React.Component {
     render() {
         return (
             <div>
-                {/* <p>Hello world</p> */}
                 <form>
-                    <label htmlFor="chapter">Chapter</label>
+                    <label>Chapter</label>
                     <br />
                     <Select 
-                        style={{ width:220 }}
+                        open={true}
                         showSearch
-                        placeholder="Select a person"
+                        placeholder="Select chapter(s)"
                         optionFilterProp="children"
                         filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
                     >
-                        {this.state.chapters.map(chp => <option value={chp}>{chp+1 + ' '+getChpList()[chp]}</option>)}
-                        {/* <option value="tom">Tom</option> */}
+                        {this.state.chapters.map(chp => <Option value={chp}>{chp+1 + ' '+getChpList()[chp]}</Option>)}
                     </Select>
                 </form>
-                {/* <br />
                 <form>
-                    <label htmlFor="speakerGender">Speaker Gender</label>
+                    <label>Speaker</label>
                     <br />
-                    <select id="speakerGender" value={this.state.selectedSpeakerGender} onChange={updateSelection} name="speakerGender">
-                        <option value="Any">Any</option>
-                        {this.state.speakerGenderList.map(row => <option key={row+'_sg'} value={row}>{row}</option>)}
-                    </select>
+                    <Select 
+                        open={true}
+                        showSearch
+                        placeholder="Select speaker(s)"
+                        optionFilterProp="children"
+                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+                        // filterSort={(optionA, optionB) =>
+                        //     optionA.children.toLowerCase().localeCompare(optionB.children.toLowerCase())
+                        // }
+                    >
+                        <OptGroup label='male'>
+                        {this.state.male_speakers.map(spkr => <Option value={spkr}>{spkr}</Option>)}
+                        </OptGroup>
+                        <OptGroup label='female'>
+                        {this.state.female_speakers.map(spkr => <Option value={spkr}>{spkr}</Option>)}
+                        </OptGroup>
+                    </Select>
                 </form>
-                <br />
                 <form>
-                    <label htmlFor="speaker">Speaker</label>
+                    <label>Addressee</label>
                     <br />
-                    <select id="speaker" value={this.state.selectedSpeaker} onChange={updateSelection} name="speaker">
-                        <option value="Any">Any</option>
-                        {this.state.speakerList.filter(row => row[2]).map(row => <option key={row[0]+'_s'} value={row[0]}>{row[0]}</option>)}
-                    </select>
+                    <Select 
+                        open={true}                        
+                        showSearch
+                        placeholder="Select addressee(s)"
+                        optionFilterProp="children"
+                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+                    >
+                        <OptGroup label='male'>
+                        {this.state.male_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        </OptGroup>
+                        <OptGroup label='female'>
+                        {this.state.female_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        </OptGroup>
+                        <OptGroup label='nonhuman'>
+                        {this.state.nonhuman_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        </OptGroup>
+                        <OptGroup label='multiple'>
+                        {this.state.multiple_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        </OptGroup>
+                    </Select>
                 </form>
-                <br />
-                <form>
-                    <label htmlFor="addresseeGender">Addressee Gender</label>
-                    <br />
-                    <select id="addresseeGender" value={this.state.selectedAddresseeGender} onChange={updateSelection} name="addresseeGender">
-                        <option value="Any">Any</option>
-                        {this.state.addresseeGenderList.map(row => <option key={row+'_ag'} value={row}>{row}</option>)}
-                    </select>
-                </form>
-                <br />
-                <form>
-                <label htmlFor="addressee">Addressee</label>
-                <br />
-                <select id="addressee" onChange={updateSelection} name="addressee">
-                    <option value="Any">Any</option>
-                    {this.state.addresseeList.filter(row => row[2]).map((row) => <option key={row[0]+'_a'}>{row[0]}</option>)}
-                </select>
-            </form> */}
         </div>
         )
     }
