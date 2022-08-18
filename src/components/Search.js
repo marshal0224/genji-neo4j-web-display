@@ -2,7 +2,7 @@ import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select } from 'antd';
-import 'antd/dist/antd.css';
+import 'antd/dist/antd.min.css';
 import _ from 'lodash'
 const { Option, OptGroup } = Select;
 
@@ -39,6 +39,8 @@ export default class Search extends React.Component {
         this.password = process.env.REACT_APP_NEO4J_PASSWORD
         this.resetFilters = this.resetFilters.bind(this)
         this.hasNode = this.hasNode.bind(this)
+        this.selected = this.selected.bind(this)
+        this.deselected = this.deselected.bind(this)
     }
 
     hasNode(graph, node) {
@@ -47,11 +49,19 @@ export default class Search extends React.Component {
         return prev === after
     }
 
+    selected(value, Option){
+        let cls = Option.className
+        if (cls === 'chp_opt') {
+            
+        }
+    }
+
+    deselected(){}
+
     async componentDidMount() {
         initDriver(this.uri, this.user, this.password)
         const driver = getDriver()
         const session = driver.session()
-        console.log('40')
         let query = 'match exchange=(s:Character)-[:SPEAKER_OF]-(g:Genji_Poem)-[:ADDRESSEE_OF]-(a:Character) return exchange'
         let res = await session.readTransaction(tx => tx.run(query))
         let exchange = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
@@ -63,18 +73,17 @@ export default class Search extends React.Component {
         let female_addressees = []
         let nonhuman_addressees = []
         let multiple_addressees = []
-        console.log(exchange)
         this.state.addresseeGenderList.forEach(gender => graph.addNode(gender))
+        graph.addNode('soliloquies')
         for (let i = 0; i < exchange.length; i++) {
             let pnum = exchange[i].segments[0].end.properties.pnum
-            let spkr = exchange[i].start.properties.name
-            let spkr_gen = exchange[i].start.properties.gender
-            let addr = exchange[i].end.properties.name
-            let addr_gen = exchange[i].end.properties.gender
-            if (addr === 'Attendees of the Moon Viewing Party at Katsura') {
-                console.log(addr_gen)
-                console.log(this.hasNode(graph, 'Attendees of the Moon Viewing Party at Katsura'))
-            }
+            let spkr = exchange[i].segments[0].start.properties.name
+            let spkr_gen = exchange[i].segments[0].start.properties.gender
+            let addr = exchange[i].segments[1].end.properties.name
+            let addr_gen = exchange[i].segments[1].end.properties.gender
+            // if (pnum === '44TA09') {
+            //     console.log(pnum, spkr, addr)
+            // }
             if (!this.hasNode(graph, spkr)) {
                 characters.push(spkr)
                 graph.addEdge(spkr_gen, spkr)
@@ -91,9 +100,15 @@ export default class Search extends React.Component {
                 graph.addEdge(spkr, pnum, 3)
             }
             graph.addEdge(addr, pnum, 2)
+            if (spkr === addr) {
+                graph.addEdge(spkr, 'soliloquies')
+            }
         }
         for (let i = 0; i < characters.length; i++) {
             let add_list = graph.adjacent(characters[i]).filter(n => graph.getEdgeWeight(characters[i], n) === 2)
+            if (add_list.length === 0 && graph.hasEdge(characters[i], 'soliloquies')) {
+                add_list.push(['1'])
+            }
             if (add_list.length > 0) {
                 if (graph.hasEdge('male', characters[i])) {
                     male_addressees.push(characters[i])
@@ -104,11 +119,11 @@ export default class Search extends React.Component {
                 } else if (graph.hasEdge('nonhuman', characters[i])) {
                     nonhuman_addressees.push(characters[i])
                 }
-                // if (characters[i] === 'Cat') {
-                //     console.log(graph.adjacent('nonhuman'))
-                // }
             }
             let spk_list = graph.adjacent(characters[i]).filter(n => graph.getEdgeWeight(characters[i], n) === 3)
+            if (spk_list.length === 0 && graph.hasEdge(characters[i], 'soliloquies')) {
+                spk_list.push(['1'])
+            }
             if (spk_list.length > 0) {
                 if (graph.hasEdge('male', characters[i])) {
                     male_speakers.push(characters[i])
@@ -117,7 +132,6 @@ export default class Search extends React.Component {
                 }
             }
         }
-        // console.log(graph.adjacent('nonhuman'))
         this.setState({
             characters:characters.sort(),
             male_speakers: male_speakers.sort(), 
@@ -175,34 +189,36 @@ export default class Search extends React.Component {
                 <form>
                     <label>Chapter</label>
                     <br />
-                    <Select 
+                    <Select
+                        style={{ width:200 }}
+                        mode={'tags'}
                         open={true}
                         showSearch
                         placeholder="Select chapter(s)"
-                        optionFilterProp="children"
-                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+                        onSelect={this.selected}
                     >
-                        {this.state.chapters.map(chp => <Option value={chp}>{chp+1 + ' '+getChpList()[chp]}</Option>)}
+                        {this.state.chapters.map(chp => <Option className={'chp_opt'} value={chp}>{chp+1 + ' '+getChpList()[chp]}</Option>)}
                     </Select>
                 </form>
                 <form>
                     <label>Speaker</label>
                     <br />
                     <Select 
+                        style={{ width:200 }}
+                        mode={'tags'}
                         open={true}
                         showSearch
                         placeholder="Select speaker(s)"
-                        optionFilterProp="children"
-                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
-                        // filterSort={(optionA, optionB) =>
-                        //     optionA.children.toLowerCase().localeCompare(optionB.children.toLowerCase())
-                        // }
+                        defaultValue={this.state.speakerGenderList}
                     >
-                        <OptGroup label='male'>
-                        {this.state.male_speakers.map(spkr => <Option value={spkr}>{spkr}</Option>)}
+                        <OptGroup label='gender'>
+                            {this.state.speakerGenderList.map(gen => <Option className={'spkr_opt'} value={gen}>{gen}</Option>)}
+                        </OptGroup>
+                        <OptGroup label='male'>value
+                        {this.state.male_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr}>{spkr}</Option>)}
                         </OptGroup>
                         <OptGroup label='female'>
-                        {this.state.female_speakers.map(spkr => <Option value={spkr}>{spkr}</Option>)}
+                        {this.state.female_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr}>{spkr}</Option>)}
                         </OptGroup>
                     </Select>
                 </form>
@@ -210,23 +226,27 @@ export default class Search extends React.Component {
                     <label>Addressee</label>
                     <br />
                     <Select 
+                        style={{ width:200 }}
+                        mode={'tags'}
                         open={true}                        
                         showSearch
                         placeholder="Select addressee(s)"
-                        optionFilterProp="children"
-                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+                        defaultValue={this.state.addresseeGenderList}
                     >
+                        <OptGroup label='gender'>
+                            {this.state.addresseeGenderList.map(gen => <Option className={'addr_opt'} value={gen}>{gen}</Option>)}
+                        </OptGroup>
                         <OptGroup label='male'>
-                        {this.state.male_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        {this.state.male_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
                         </OptGroup>
                         <OptGroup label='female'>
-                        {this.state.female_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        {this.state.female_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
                         </OptGroup>
                         <OptGroup label='nonhuman'>
-                        {this.state.nonhuman_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        {this.state.nonhuman_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
                         </OptGroup>
                         <OptGroup label='multiple'>
-                        {this.state.multiple_addressees.map(addr => <option value={addr}>{addr}</option>)}
+                        {this.state.multiple_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
                         </OptGroup>
                     </Select>
                 </form>
