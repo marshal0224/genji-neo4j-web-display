@@ -41,6 +41,7 @@ export default class Search extends React.Component {
         this.hasNode = this.hasNode.bind(this)
         this.selected = this.selected.bind(this)
         this.deselected = this.deselected.bind(this)
+        this.spkrGenRef = React.createRef()
     }
 
     hasNode(graph, node) {
@@ -51,8 +52,26 @@ export default class Search extends React.Component {
 
     selected(value, Option){
         let cls = Option.className
+        let graph = this.state.graph
+        let male_speakers = this.state.male_speakers
+        let female_speakers = this.state.female_speakers
+        let male_addressees = this.state.male_addressees
+        let female_addressees = this.state.female_addressees
+        let nonhuman_addressees = this.state.nonhuman_addressees
+        let multiple_addressees = this.state.multiple_addressees
+        // if a new chapter is added, make its spkr/addr with the right gender(s) available
         if (cls === 'chp_opt') {
-            
+            let chp = value+1
+            male_speakers.forEach(spkr => {
+                try {
+                    graph.shortestPath(spkr[0], chp)
+                } catch (e) {
+                    spkr[1] = 0
+                }
+            })
+            this.setState({
+                male_speakers: male_speakers
+            })
         }
     }
 
@@ -92,8 +111,8 @@ export default class Search extends React.Component {
                 characters.push(addr)
                 graph.addEdge(addr_gen, addr)
             }
-            if (!graph.hasEdge(pnum, pnum.substring(0,2))) {
-                graph.addEdge(pnum, pnum.substring(0,2))
+            if (!graph.hasEdge(pnum, parseInt(pnum.substring(0,2)))) {
+                graph.addEdge(pnum, parseInt(pnum.substring(0,2)))
             }
             // w=3 for speaker, w=2 for addressee
             if (!graph.hasEdge(spkr, pnum, 3)) {
@@ -133,13 +152,14 @@ export default class Search extends React.Component {
             }
         }
         this.setState({
-            characters:characters.sort(),
-            male_speakers: male_speakers.sort(), 
-            female_speakers: female_speakers.sort(), 
-            male_addressees: male_addressees.sort(),
-            female_addressees: female_addressees.sort(),
-            multiple_addressees: multiple_addressees.sort(),
-            nonhuman_addressees: nonhuman_addressees.sort(),
+            characters:characters.sort().map(e => [e, 1]),
+            male_speakers: male_speakers.sort().map(e => [e, 1]), 
+            female_speakers: female_speakers.sort().map(e => [e, 1]), 
+            male_addressees: male_addressees.sort().map(e => [e, 1]),
+            female_addressees: female_addressees.sort().map(e => [e, 1]),
+            multiple_addressees: multiple_addressees.sort().map(e => [e, 1]),
+            nonhuman_addressees: nonhuman_addressees.sort().map(e => [e, 1]),
+            graph: graph,
         })
         session.close()
         closeDriver()
@@ -196,7 +216,9 @@ export default class Search extends React.Component {
                         showSearch
                         placeholder="Select chapter(s)"
                         onSelect={this.selected}
+                        defaultValue={'any'}
                     >
+                        <Option className={'chp_opt'} value='any'>Any</Option>
                         {this.state.chapters.map(chp => <Option className={'chp_opt'} value={chp}>{chp+1 + ' '+getChpList()[chp]}</Option>)}
                     </Select>
                 </form>
@@ -209,16 +231,17 @@ export default class Search extends React.Component {
                         open={true}
                         showSearch
                         placeholder="Select speaker(s)"
-                        defaultValue={this.state.speakerGenderList}
+                        defaultValue={'anygen'}
                     >
                         <OptGroup label='gender'>
+                            <Option className={'spkr_opt'} value='anygen'>Any gender</Option>
                             {this.state.speakerGenderList.map(gen => <Option className={'spkr_opt'} value={gen}>{gen}</Option>)}
                         </OptGroup>
                         <OptGroup label='male'>value
-                        {this.state.male_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr}>{spkr}</Option>)}
+                        {this.state.male_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr[0]} disabled={!spkr[1]}>{spkr[0]}</Option>)}
                         </OptGroup>
                         <OptGroup label='female'>
-                        {this.state.female_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr}>{spkr}</Option>)}
+                        {this.state.female_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr[0]} disabled={!spkr[1]}>{spkr[0]}</Option>)}
                         </OptGroup>
                     </Select>
                 </form>
@@ -231,22 +254,23 @@ export default class Search extends React.Component {
                         open={true}                        
                         showSearch
                         placeholder="Select addressee(s)"
-                        defaultValue={this.state.addresseeGenderList}
+                        defaultValue={'anygen'}
                     >
                         <OptGroup label='gender'>
+                            <Option className={'addr_opt'} value='anygen'>Any gender</Option>
                             {this.state.addresseeGenderList.map(gen => <Option className={'addr_opt'} value={gen}>{gen}</Option>)}
                         </OptGroup>
                         <OptGroup label='male'>
-                        {this.state.male_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
+                        {this.state.male_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                         <OptGroup label='female'>
-                        {this.state.female_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
+                        {this.state.female_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[1]}</Option>)}
                         </OptGroup>
                         <OptGroup label='nonhuman'>
-                        {this.state.nonhuman_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
+                        {this.state.nonhuman_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                         <OptGroup label='multiple'>
-                        {this.state.multiple_addressees.map(addr => <Option className={'addr_opt'} value={addr}>{addr}</Option>)}
+                        {this.state.multiple_addressees.map(addr => <Option className={'addr_opt'} value={addr} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                     </Select>
                 </form>
