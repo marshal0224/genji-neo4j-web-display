@@ -1,10 +1,11 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Select } from 'antd';
+import { Select, Checkbox, Col, Row } from 'antd';
 import 'antd/dist/antd.min.css';
 // import _ from 'lodash'
 const { Option, OptGroup } = Select;
+const CheckboxGroup = Checkbox.Group;
 
 export default class Search extends React.Component {
     Graph = require("graph-data-structure")
@@ -40,6 +41,7 @@ export default class Search extends React.Component {
         this.selected = this.selected.bind(this)
         this.deselected = this.deselected.bind(this)
         this.handleChpChange = this.handleChpChange.bind(this)
+        this.updateCharacters = this.updateCharacters.bind(this)
     }
 
     hasNode(graph, node) {
@@ -54,6 +56,22 @@ export default class Search extends React.Component {
         })
     }
 
+    updateCharacters(chars, graph, flag, chp) {
+        // flag should be false for select, true for deselect
+        chars.filter(e => e[1] == flag).forEach(char => {
+            let selectedChp = this.state.selectedChapter
+            selectedChp.splice(this.state.selectedChapter.indexOf(chp), 1)
+            try {
+                graph.shortestPath(char[0], chp)
+                selectedChp = selectedChp.map(sc => graph.lowestCommonAncestors(char[0], sc)[0] === sc)
+                if (!selectedChp.includes(true)) {
+                    char[1] = !flag
+                }
+            } catch(e) {}
+        })
+        return chars
+    }
+
     selected(value, Option){
         let cls = Option.className
         let graph = this.state.graph
@@ -65,43 +83,13 @@ export default class Search extends React.Component {
         let multiple_addressees = this.state.multiple_addressees
         // if a new chapter is added, make its spkr/addr with the right gender(s) available
         if (cls === 'chp_opt') {
-            let chp = value+1
-            male_speakers.forEach(spkr => {
-                try {
-                    graph.shortestPath(spkr[0], chp)
-                    spkr[1] = 1
-                } catch (e) {}
-            })
-            female_speakers.forEach(spkr => {
-                try {
-                    graph.shortestPath(spkr[0], chp)
-                    spkr[1] = 1
-                } catch (e) {}
-            })
-            male_addressees.forEach(addr => {
-                try {
-                    graph.shortestPath(addr[0], chp)
-                    addr[1] = 1
-                } catch (e) {}
-            })
-            female_addressees.forEach(addr => {
-                try {
-                    graph.shortestPath(addr[0], chp)
-                    addr[1] = 1
-                } catch (e) {}
-            })
-            nonhuman_addressees.forEach(addr => {
-                try {
-                    graph.shortestPath(addr[0], chp)
-                    addr[1] = 1
-                } catch (e) {}
-            })
-            multiple_addressees.forEach(addr => {
-                try {
-                    graph.shortestPath(addr[0], chp)
-                    addr[1] = 1
-                } catch (e) {}
-            })
+            let chp = value
+            male_speakers = this.updateCharacters(male_speakers, graph, false, chp)
+            female_speakers = this.updateCharacters(female_speakers, graph, false, chp)
+            male_addressees = this.updateCharacters(male_addressees, graph, false, chp)
+            female_addressees = this.updateCharacters(female_addressees, graph, false, chp)
+            nonhuman_addressees = this.updateCharacters(nonhuman_addressees, graph, false, chp)
+            multiple_addressees = this.updateCharacters(multiple_addressees, graph, false, chp)
             this.setState({
                 male_speakers: male_speakers,
                 female_speakers: female_speakers,
@@ -134,48 +122,12 @@ export default class Search extends React.Component {
                 multiple_addressees = multiple_addressees.map(e => [e[0], 0])
             } else {
                 let chp = value
-                let selectedChp = this.state.selectedChapter.splice(this.state.selectedChapter.indexOf(chp), 1)
-                console.log(selectedChp)
-                male_speakers.filter(e => e[1]).forEach(spkr => {
-                    try {
-                        graph.shortestPath(spkr[0], chp)
-                        selectedChp = selectedChp.map(chp => graph.lowestCommonAncestors(spkr[0], chp))
-                        console.log(selectedChp)
-                        if (!selectedChp.includes(true)) {
-                            spkr[1] = 0
-                        }
-                    } catch (e) {}
-                })
-                female_speakers.filter(e => e[1]).forEach(spkr => {
-                    try {
-                        graph.shortestPath(spkr[0], chp)
-                        spkr[1] = 0
-                    } catch (e) {}
-                })
-                male_addressees.filter(e => e[1]).forEach(addr => {
-                    try {
-                        graph.shortestPath(addr[0], chp)
-                        addr[1] = 0
-                    } catch (e) {}
-                })
-                female_addressees.filter(e => e[1]).forEach(addr => {
-                    try {
-                        graph.shortestPath(addr[0], chp)
-                        addr[1] = 0
-                    } catch (e) {}
-                })
-                nonhuman_addressees.filter(e => e[1]).forEach(addr => {
-                    try {
-                        graph.shortestPath(addr[0], chp)
-                        addr[1] = 0
-                    } catch (e) {}
-                })
-                multiple_addressees.filter(e => e[1]).forEach(addr => {
-                    try {
-                        graph.shortestPath(addr[0], chp)
-                        addr[1] = 0
-                    } catch (e) {}
-                })
+                male_speakers = this.updateCharacters(male_speakers, graph, true, chp)
+                female_speakers = this.updateCharacters(female_speakers, graph, true, chp)
+                male_addressees = this.updateCharacters(male_addressees, graph, true, chp)
+                female_addressees = this.updateCharacters(female_addressees, graph, true, chp)
+                nonhuman_addressees = this.updateCharacters(nonhuman_addressees, graph, true, chp)
+                multiple_addressees = this.updateCharacters(multiple_addressees, graph, true, chp)
             }
             this.setState({
                 male_speakers: male_speakers,
@@ -322,7 +274,9 @@ export default class Search extends React.Component {
                     </Select>
                 </form>
                 <form>
-                    <label>Speaker</label>
+                    {/* <Checkbox checked={true}>Male</Checkbox>
+                    <Checkbox checked={true}>Female</Checkbox> */}
+                    <CheckboxGroup options={this.state.speakerGenderList} defaultValue={this.state.speakerGenderList}/>
                     <br />
                     <Select 
                         style={{ width:200 }}
@@ -330,12 +284,7 @@ export default class Search extends React.Component {
                         open={true}
                         showSearch
                         placeholder="Select speaker(s)"
-                        defaultValue={'anygen'}
                     >
-                        <OptGroup label='gender'>
-                            <Option className={'spkr_opt'} value='anygen'>Any gender</Option>
-                            {this.state.speakerGenderList.map(gen => <Option className={'spkr_opt'} value={gen}>{gen}</Option>)}
-                        </OptGroup>
                         <OptGroup label='male'>value
                         {this.state.male_speakers.map(spkr => <Option className={'spkr_opt'} value={spkr[0]} disabled={!spkr[1]}>{spkr[0]}</Option>)}
                         </OptGroup>
@@ -345,7 +294,24 @@ export default class Search extends React.Component {
                     </Select>
                 </form>
                 <form>
-                    <label>Addressee</label>
+                    <CheckboxGroup defaultValue={this.state.addresseeGenderList}>
+                        <Row justify="space-between">
+                            <Col>
+                                <Checkbox value={'male'}>male</Checkbox>
+                            </Col>
+                            <Col>
+                                <Checkbox value={'female'}>female</Checkbox>
+                            </Col>
+                        </Row>
+                        <Row justify="space-between">
+                            <Col>
+                                <Checkbox value={'nonhuman'}>nonhuman</Checkbox>
+                            </Col>
+                            <Col>
+                                <Checkbox value={'multiple'}>multiple</Checkbox>
+                            </Col>
+                        </Row>
+                    </CheckboxGroup>
                     <br />
                     <Select 
                         style={{ width:200 }}
@@ -353,12 +319,7 @@ export default class Search extends React.Component {
                         open={true}                        
                         showSearch
                         placeholder="Select addressee(s)"
-                        defaultValue={'anygen'}
                     >
-                        <OptGroup label='gender'>
-                            <Option className={'addr_opt'} value='anygen'>Any gender</Option>
-                            {this.state.addresseeGenderList.map(gen => <Option className={'addr_opt'} value={gen}>{gen}</Option>)}
-                        </OptGroup>
                         <OptGroup label='male'>
                         {this.state.male_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
