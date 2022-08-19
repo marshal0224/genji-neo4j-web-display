@@ -3,7 +3,7 @@ import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select } from 'antd';
 import 'antd/dist/antd.min.css';
-import _ from 'lodash'
+// import _ from 'lodash'
 const { Option, OptGroup } = Select;
 
 export default class Search extends React.Component {
@@ -12,7 +12,7 @@ export default class Search extends React.Component {
         super(props)
         this.state = {
             // original data pulled from Neo4j
-            chapters: Array.from(Array(54), (_,i)=> i),
+            chapters: Array.from(Array(54), (_,i)=> i).map(e => e+1),
             characters: [],
             // charNum: 0,
             male_speakers: [],
@@ -23,11 +23,9 @@ export default class Search extends React.Component {
             multiple_addressees: [],
             genders: [], 
             // values of the filters
-            selectedChapter: "Any",
-            selectedSpeaker: "Any",
-            selectedAddressee: "Any",
-            selectedSpeakerGender: "Any",
-            selectedAddresseeGender: "Any",
+            selectedChapter: [],
+            selectedSpeaker: [],
+            selectedAddressee: [],
             // A Graph of all options
             graph: this.Graph(),
             speakerGenderList: ['male', 'female'],
@@ -41,13 +39,19 @@ export default class Search extends React.Component {
         this.hasNode = this.hasNode.bind(this)
         this.selected = this.selected.bind(this)
         this.deselected = this.deselected.bind(this)
-        this.spkrGenRef = React.createRef()
+        this.handleChpChange = this.handleChpChange.bind(this)
     }
 
     hasNode(graph, node) {
         let prev = JSON.stringify(graph.nodes())
         let after = JSON.stringify(graph.addNode(node).nodes())
         return prev === after
+    }
+
+    handleChpChange(value) {
+        this.setState({
+            selectedChapter: value,
+        })
     }
 
     selected(value, Option){
@@ -65,17 +69,124 @@ export default class Search extends React.Component {
             male_speakers.forEach(spkr => {
                 try {
                     graph.shortestPath(spkr[0], chp)
-                } catch (e) {
-                    spkr[1] = 0
-                }
+                    spkr[1] = 1
+                } catch (e) {}
+            })
+            female_speakers.forEach(spkr => {
+                try {
+                    graph.shortestPath(spkr[0], chp)
+                    spkr[1] = 1
+                } catch (e) {}
+            })
+            male_addressees.forEach(addr => {
+                try {
+                    graph.shortestPath(addr[0], chp)
+                    addr[1] = 1
+                } catch (e) {}
+            })
+            female_addressees.forEach(addr => {
+                try {
+                    graph.shortestPath(addr[0], chp)
+                    addr[1] = 1
+                } catch (e) {}
+            })
+            nonhuman_addressees.forEach(addr => {
+                try {
+                    graph.shortestPath(addr[0], chp)
+                    addr[1] = 1
+                } catch (e) {}
+            })
+            multiple_addressees.forEach(addr => {
+                try {
+                    graph.shortestPath(addr[0], chp)
+                    addr[1] = 1
+                } catch (e) {}
             })
             this.setState({
-                male_speakers: male_speakers
+                male_speakers: male_speakers,
+                female_speakers: female_speakers,
+                male_addressees: male_addressees,
+                female_addressees: female_addressees,
+                nonhuman_addressees: nonhuman_addressees,
+                multiple_addressees: multiple_addressees,
             })
         }
     }
 
-    deselected(){}
+    deselected(value, Option){
+        let cls = Option.className
+        let graph = this.state.graph
+        let male_speakers = this.state.male_speakers
+        let female_speakers = this.state.female_speakers
+        let male_addressees = this.state.male_addressees
+        let female_addressees = this.state.female_addressees
+        let nonhuman_addressees = this.state.nonhuman_addressees
+        let multiple_addressees = this.state.multiple_addressees
+        // console.log(selectedChp)
+        // if a chapter is removed, make its spkr/addr unavailable
+        if (cls === 'chp_opt') {
+            if (value === 'anychp') {
+                male_speakers = male_speakers.map(e => [e[0], 0])
+                female_speakers = female_speakers.map(e => [e[0], 0])
+                male_addressees = male_addressees.map(e => [e[0], 0])
+                female_addressees = female_addressees.map(e => [e[0], 0])
+                nonhuman_addressees = nonhuman_addressees.map(e => [e[0], 0])
+                multiple_addressees = multiple_addressees.map(e => [e[0], 0])
+            } else {
+                let chp = value
+                let selectedChp = this.state.selectedChapter.splice(this.state.selectedChapter.indexOf(chp), 1)
+                console.log(selectedChp)
+                male_speakers.filter(e => e[1]).forEach(spkr => {
+                    try {
+                        graph.shortestPath(spkr[0], chp)
+                        selectedChp = selectedChp.map(chp => graph.lowestCommonAncestors(spkr[0], chp))
+                        console.log(selectedChp)
+                        if (!selectedChp.includes(true)) {
+                            spkr[1] = 0
+                        }
+                    } catch (e) {}
+                })
+                female_speakers.filter(e => e[1]).forEach(spkr => {
+                    try {
+                        graph.shortestPath(spkr[0], chp)
+                        spkr[1] = 0
+                    } catch (e) {}
+                })
+                male_addressees.filter(e => e[1]).forEach(addr => {
+                    try {
+                        graph.shortestPath(addr[0], chp)
+                        addr[1] = 0
+                    } catch (e) {}
+                })
+                female_addressees.filter(e => e[1]).forEach(addr => {
+                    try {
+                        graph.shortestPath(addr[0], chp)
+                        addr[1] = 0
+                    } catch (e) {}
+                })
+                nonhuman_addressees.filter(e => e[1]).forEach(addr => {
+                    try {
+                        graph.shortestPath(addr[0], chp)
+                        addr[1] = 0
+                    } catch (e) {}
+                })
+                multiple_addressees.filter(e => e[1]).forEach(addr => {
+                    try {
+                        graph.shortestPath(addr[0], chp)
+                        addr[1] = 0
+                    } catch (e) {}
+                })
+            }
+            this.setState({
+                male_speakers: male_speakers,
+                female_speakers: female_speakers,
+                male_addressees: male_addressees,
+                female_addressees: female_addressees,
+                nonhuman_addressees: nonhuman_addressees,
+                multiple_addressees: multiple_addressees,
+            })
+        }
+    }
 
     async componentDidMount() {
         initDriver(this.uri, this.user, this.password)
@@ -165,20 +276,6 @@ export default class Search extends React.Component {
         closeDriver()
     }
 
-    // async componentDidUpdate() {
-    //     initDriver(this.uri, this.user, this.password)
-    //     const driver = getDriver()
-    //     const session = driver.session()
-    //     console.log('53')
-    //     let query = 'match chp_poem=(:Chapter)-[:INCLUDED_IN]-(:Genji_Poem), exchange=(:Character)-[:SPEAKER_OF]-(:Genji_Poem)-[:ADDRESSEE_OF]-(:Character) return chp_poem, exchange'
-    //     let res = await session.readTransaction(tx => tx.run(query))
-    //     let chp_poem = res.records.map(row => {return toNativeTypes(row.get('chp_poem'))})
-    //     let exchange = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
-    //     console.log(chp_poem)
-    //     session.close()
-    //     closeDriver()
-    // }
-
     resetFilters = (event) => {
         let backup = this.state.backup
         this.setState({
@@ -216,10 +313,12 @@ export default class Search extends React.Component {
                         showSearch
                         placeholder="Select chapter(s)"
                         onSelect={this.selected}
-                        defaultValue={'any'}
+                        onDeselect={this.deselected}
+                        onChange={this.handleChpChange}
+                        defaultValue={'anychp'}
                     >
-                        <Option className={'chp_opt'} value='any'>Any</Option>
-                        {this.state.chapters.map(chp => <Option className={'chp_opt'} value={chp}>{chp+1 + ' '+getChpList()[chp]}</Option>)}
+                        <Option className={'chp_opt'} value='anychp'>Any</Option>
+                        {this.state.chapters.map(chp => <Option className={'chp_opt'} value={chp}>{chp + ' '+getChpList()[chp-1]}</Option>)}
                     </Select>
                 </form>
                 <form>
@@ -264,13 +363,13 @@ export default class Search extends React.Component {
                         {this.state.male_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                         <OptGroup label='female'>
-                        {this.state.female_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[1]}</Option>)}
+                        {this.state.female_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                         <OptGroup label='nonhuman'>
                         {this.state.nonhuman_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                         <OptGroup label='multiple'>
-                        {this.state.multiple_addressees.map(addr => <Option className={'addr_opt'} value={addr} disabled={!addr[1]}>{addr[0]}</Option>)}
+                        {this.state.multiple_addressees.map(addr => <Option className={'addr_opt'} value={addr[0]} disabled={!addr[1]}>{addr[0]}</Option>)}
                         </OptGroup>
                     </Select>
                 </form>
