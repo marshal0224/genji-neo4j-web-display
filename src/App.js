@@ -1,4 +1,5 @@
 import './App.css';
+import Genji_emaki_azumaya from "./assets/Genji_emaki_azumaya.jpg"
 import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
@@ -6,7 +7,10 @@ import Title from './components/title';
 import $ from 'jquery';
 import KeywordSearch from './components/keywordsearch';
 import {BrowserRouter, Route, Routes, NavLink, Link, Navigate } from 'react-router-dom';
+import { Breadcrumb, Col, Image, Layout, Menu, Row } from 'antd';
 import Search from './components/Search';
+
+const { Header, Content, Footer } = Layout;
 
 export default class App extends React.Component{
   constructor() {
@@ -161,23 +165,82 @@ export default class App extends React.Component{
   render() {
     return (
       <div className="App">
-        {/* <div className='head'> */}
-        <Title />
-        <div className='login'>
-          <label>
-            Username:
-            <input onChange={this.updateUsername}></input>
-          </label>
-          <button disabled={this.state.auth} onClick={this.login}>Log in</button>
-          <br/>
-          <label>
-            Password:
-            <input onChange={this.updatePassword}></input>
-          </label>
-          <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
-        </div>
-        <NavLink to="/search">Search Link</NavLink>
+      <Layout>
+      <Header
+        style={{
+          position: 'fixed',
+          zIndex: 1,
+          width: '100%',
+        }}
+      >
+      {/* <Title /> */}
+      {/* <div className='login'>
+        <label>
+          Username:
+          <input onChange={this.updateUsername}></input>
+        </label>
+        <button disabled={this.state.auth} onClick={this.login}>Log in</button>
+        <br/>
+        <label>
+          Password:
+          <input onChange={this.updatePassword}></input>
+        </label>
+        <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
+      </div> */}
+      {/* <Image
+        src={Genji_emaki_azumaya} 
+        style={{height: null,
+                flex: 1,
+                width: null,
+                zIndex: -2,
+              }}
+        preview={false}
+      /> */}
+      <div className="logo" />
+      <Menu
+        // theme="dark"
+        mode="horizontal"
+        // defaultSelectedKeys={['2']}
+        items={new Array(3).fill(null).map((_, index) => ({
+          key: String(index + 1),
+          label: `nav ${index + 1}`,
+        }))}
+      />
+      </Header> 
+      <Content
+        className="site-layout"
+        style={{
+          padding: '0 50px',
+          marginTop: 64,
+        }}
+      >
+      <Breadcrumb
+        style={{
+          margin: '16px 0',
+        }}
+      >
+        <Breadcrumb.Item>
+          <NavLink to="/">Home</NavLink>        
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          <NavLink to="/search">Search Link</NavLink>      
+        </Breadcrumb.Item>
+      </Breadcrumb>
+      <div
+        // className="site-layout-background"
+        // style={{
+        //   padding: 24,
+        //   minHeight: 380,
+        // }}
+      >
+        {/* <Row justify={'space-between'}>
+          <Col>
+          </Col>
+          <Col>
+          </Col>
+        </Row> */}
         <Routes>
+            <Route path="/" />
             <Route path="/search" element={<Search />} />
             {/* <Route path="/" element={<Navigate to="/"/>} /> */}
         </Routes>
@@ -201,5 +264,15 @@ export default class App extends React.Component{
           {this.state.displayPT && <Poem key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
         </div>
         {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>}
+      </div>
+      </Content>
+      <Footer
+        style={{
+          textAlign: 'center',
+        }}
+      >
+        J. Keith Vincent ©2022 Created by Marshal Dong
+      </Footer>
+      </Layout>
       </div>
     )}}
