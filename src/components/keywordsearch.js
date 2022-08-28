@@ -75,7 +75,7 @@ export default class KeywordSearch extends React.Component {
         this.setState({
             exchange: exchange,
             trans_mat: trans_mat,
-        })
+        }, () => console.log(trans_mat))
         session.close()
         closeDriver()
     }
@@ -96,7 +96,6 @@ export default class KeywordSearch extends React.Component {
         } else {
             get = "match exchange=(:Character)-[:SPEAKER_OF]->(g:Genji_Poem)<-[:ADDRESSEE_OF]-(:Character), chp=(g)-[:INCLUDED_IN]->(:Chapter), trans = (g)-[:TRANSLATION_OF]-(t:Translation)-[:TRANSLATOR_OF]-(:People) where t.translation contains '"+keyword+"' return exchange, chp, trans"
         }
-        console.log(get)
         const res = await session.readTransaction(tx => tx.run(get, { keyword }))
         let exchange = res.records.map(row => {return toNativeTypes(row.get('exchange'))}).map(row => row.segments)
         let unique_exchange = []
@@ -171,22 +170,17 @@ export default class KeywordSearch extends React.Component {
         })
     }
 
-    getOptions(pnum) {
-        let options = Object.keys(this.state.info[pnum]).sort();
-        let w = options.indexOf('WaleyPageNum')
-        if (w > -1) {
-            options.splice(w, 1)
-        }
-        // notice that one can improve this by taking care of the below two while preparing for info
-        let j = options.indexOf('Japanese')
-        if (j > -1) {
-            options.splice(j, 1)
-        }
-        let r = options.indexOf('Romaji')
-        if (r > -1) {
-            options.splice(r, 1)
-        }
-        return (options)
+    getOptions(pnum, trans) {
+        let options = trans.filter(trans => trans[0] === pnum).sort((a, b) => {
+            if (a[2] < b[2]) {
+                return -1
+            } else {
+                return 1
+            }
+        });
+        return (
+            <options key={pnum+trans[2]}>{trans[2]}</options>
+        )
     }
 
     setColumnOptions = (event) => {
@@ -261,7 +255,7 @@ export default class KeywordSearch extends React.Component {
                             Romaji
                         </th>
                         <th>
-                            <select className={'ptcol3'} onChange={this.setColumnOptions}>
+                            <select className={'ptcol3'}>
                                 <option>Translation A</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
@@ -271,7 +265,7 @@ export default class KeywordSearch extends React.Component {
                             </select>
                         </th>
                         <th>
-                            <select className={'ptcol4'} onChange={this.setColumnOptions}>
+                            <select className={'ptcol4'}>
                                 <option>Translation B</option>
                                 <option>Cranston</option>
                                 <option>Seidensticker</option>
@@ -290,6 +284,12 @@ export default class KeywordSearch extends React.Component {
                                 <td className='addrCol'>{row[1].end.properties.name}</td>
                                 <td type='JP'>{row[0].end.properties.Japanese}</td>
                                 <td>{row[0].end.properties.Romaji}</td>
+                                <td>
+                                    <select>
+                                        {/* {this.state.trans_mat.map(trans => this.getOptions(row[0], trans))} */}
+                                    </select>
+                                    <p className={row[0]}></p>
+                                </td>
                             </tr>)}
                     </tbody>
                 </table>
