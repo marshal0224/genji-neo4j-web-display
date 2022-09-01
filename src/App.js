@@ -1,5 +1,4 @@
 import './App.css';
-import Genji_emaki_azumaya from "./assets/Genji_emaki_azumaya.jpg"
 import React from 'react'
 import Filter from './components/filter'
 import Poem from './components/poem'
@@ -9,6 +8,9 @@ import KeywordSearch from './components/keywordsearch';
 import {BrowserRouter, Route, Routes, NavLink, Link, Navigate } from 'react-router-dom';
 import { Breadcrumb, Col, Image, Layout, Menu, Row } from 'antd';
 import Search from './components/Search';
+import { HeaderImg } from './components/Header';
+import { LoremIpsum, Avatar } from 'react-lorem-ipsum';
+
 
 const { Header, Content, Footer } = Layout;
 
@@ -165,15 +167,21 @@ export default class App extends React.Component{
   render() {
     return (
       <div className="App">
-      <Layout>
-      <Header
+      <HeaderImg title="The Tale of Genji Poem Database" subTitle="Beta Version"/>
+      <Layout
         style={{
-          position: 'fixed',
-          zIndex: 1,
-          width: '100%',
+          minHeight: "90vh"
         }}
       >
-      {/* <Title /> */}
+      <Header
+        style={{
+          position: 'relative',
+          // zIndex: 1,
+          width: '100%',
+          padding: '0',
+          background: 'white',
+        }}
+      >
       {/* <div className='login'>
         <label>
           Username:
@@ -187,20 +195,11 @@ export default class App extends React.Component{
         </label>
         <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
       </div> */}
-      {/* <Image
-        src={Genji_emaki_azumaya} 
-        style={{height: null,
-                flex: 1,
-                width: null,
-                zIndex: -2,
-              }}
-        preview={false}
-      /> */}
-      <div className="logo" />
       <Menu
-        // theme="dark"
+        style={{
+          position: 'relative'
+        }}
         mode="horizontal"
-        // defaultSelectedKeys={['2']}
         items={new Array(3).fill(null).map((_, index) => ({
           key: String(index + 1),
           label: `nav ${index + 1}`,
@@ -210,60 +209,40 @@ export default class App extends React.Component{
       <Content
         className="site-layout"
         style={{
+          position: 'relative',
           padding: '0 50px',
-          marginTop: 64,
+          height: "calc(90vh - 134px)",
+          backgroundColor: 'white'
         }}
       >
-      <Breadcrumb
-        style={{
-          margin: '16px 0',
-        }}
-      >
-        <Breadcrumb.Item>
-          <NavLink to="/">Home</NavLink>        
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <NavLink to="/search">Search Link</NavLink>      
-        </Breadcrumb.Item>
-      </Breadcrumb>
-      <div
-        // className="site-layout-background"
-        // style={{
-        //   padding: 24,
-        //   minHeight: 380,
-        // }}
-      >
-        {/* <Row justify={'space-between'}>
-          <Col>
-          </Col>
-          <Col>
-          </Col>
-        </Row> */}
-        <Routes>
-            <Route path="/" />
-            <Route path="/search" element={<Search />} />
-            {/* <Route path="/" element={<Navigate to="/"/>} /> */}
-        </Routes>
-        <div className='filter'>
-          <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
-          <br/>
-          <button onClick={this.query}>Query</button>
-          <button onClick={this.filterRef.resetFilters}>Reset Filters</button>
-          {/* <button onClick={this.toggleSpkr}>Toggle Speaker</button> */}
-          {/* <button onClick={this.toggleAddr}>Toggle Addressee</button> */}
-          <br/>
-          {this.state.displayPT && <p>{this.state.count} poems queried</p>}
-          <br />
-          <div>
-                <input ref={(searchRef) => {this.searchRef = searchRef}}></input>
-                <button onClick={this.search}>Search</button>
-          </div>
-        </div>
+      <Routes>
+          <Route path="/" />
+          <Route path="/search" element={<Search />} />
+          {/* <Route path="/" element={<Navigate to="/"/>} /> */}
+      </Routes>
+      {/* ######
+      REMEMBER TO DEAL WITH THE FILTER & PT
+      ######*/}
+      {/* <div className='filter'>
+        <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
+        <br/>
+        <button onClick={this.query}>Query</button>
+        <button onClick={this.filterRef.resetFilters}>Reset Filters</button>
+        <br/>
+        {this.state.displayPT && <p>{this.state.count} poems queried</p>}
         <br />
-        <div className='PT'>
-          {this.state.displayPT && <Poem key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
+        <div>
+              <input ref={(searchRef) => {this.searchRef = searchRef}}></input>
+              <button onClick={this.search}>Search</button>
         </div>
-        {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>}
+      </div> */}
+      <br />
+      <div className='PT'>
+        {this.state.displayPT && <Poem key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
+      </div>
+      {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>}
+      <div className="site-layout-content">
+        <LoremIpsum p={6} />
       </div>
       </Content>
       <Footer
