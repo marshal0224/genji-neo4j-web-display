@@ -166,7 +166,7 @@ export default class App extends React.Component{
   render() {
     return (
       <div className="App">
-      <HeaderImg title="The Tale of Genji Poem Database" subTitle="Beta Version"/>
+      <HeaderImg title="The Tale of Genji Poem Database" subTitle="Gamma Version"/>
       <Layout
         style={{
           height: "90vh"
@@ -267,7 +267,7 @@ export default class App extends React.Component{
       <Routes>
           <Route path="/" element={<Home />}/>
           <Route path="/search" element={<Search />}>
-            <Route path="/search/poem_table" element={<Poem />}></Route>
+            <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee" element={<Poem />}></Route>
           </Route>
           <Route path="/" element={<Navigate to="/"/>} />
       </Routes>

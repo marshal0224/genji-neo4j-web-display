@@ -26,8 +26,8 @@ export default class Search extends React.Component {
             multiple_addressees: [],
             // values of the filters
             selectedChapters: ['anychp'],
-            selectedSpeaker: [],
-            selectedAddressee: [],
+            selectedSpeaker: ['Any'],
+            selectedAddressee: ['Any'],
             selectedSpkrGen: ['male', 'female'],
             selectedAddrGen: ['male', 'female', 'multiple', 'nonhuman'],
             // A Graph of all options
@@ -720,14 +720,14 @@ export default class Search extends React.Component {
                     </Select>
                 </form>
                 <Link 
-                    to="/search/poem_table"
-                    state={{
-                        chapter: this.state.selectedChapters,
-                        speaker: this.state.selectedSpeaker,
-                        addressee: this.state.selectedAddressee,
-                        spkrGen: this.state.selectedSpkrGen,
-                        addrGen: this.state.selectedAddrGen
-                    }}
+                    to={`/search/${this.state.selectedChapters}/${this.state.selectedSpkrGen}/${this.state.selectedSpeaker}/${this.state.selectedAddrGen}/${this.state.selectedAddressee}`}
+                    // state={{
+                    //     chapter: this.state.selectedChapters,
+                    //     speaker: this.state.selectedSpeaker,
+                    //     addressee: this.state.selectedAddressee,
+                    //     spkrGen: this.state.selectedSpkrGen,
+                    //     addrGen: this.state.selectedAddrGen
+                    // }}
                 >
                     <Button>Click me</Button>
                 </Link>
