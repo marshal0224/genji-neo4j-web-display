@@ -2,17 +2,19 @@ import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../utils'
 import Edit from './edit'
+// import { useLocation } from 'react-router-dom'
 
 export default class Poem extends React.Component { 
 
     constructor(props) {
         super(props)
+        console.log(props)
         this.state = {
             ptHeader: [], // pnum, Waley#, speaker, addressee
             info: {}, 
-            uri: this.props.uri,
-            user: this.props.user,
-            password: this.props.password,
+            uri: process.env.REACT_APP_NEO4J_URI,
+            user: process.env.REACT_APP_NEO4J_USERNAME,
+            password: process.env.REACT_APP_NEO4J_PASSWORD,
             chapter: this.props.chapter,
             speaker: this.props.speaker,
             addressee: this.props.addressee,
