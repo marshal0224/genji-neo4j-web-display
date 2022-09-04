@@ -1,7 +1,7 @@
 import './App.css';
 import React from 'react'
 import Filter from './components/filter'
-import Poem from './components/poem'
+import Poem from './components/PoemTable'
 import Title from './components/title';
 import $ from 'jquery';
 import KeywordSearch from './components/keywordsearch';
@@ -9,8 +9,7 @@ import {BrowserRouter, Route, Routes, NavLink, Link, Navigate } from 'react-rout
 import { Breadcrumb, Col, Image, Layout, Menu, Row } from 'antd';
 import Search from './components/Search';
 import { HeaderImg } from './components/Header';
-import { LoremIpsum, Avatar } from 'react-lorem-ipsum';
-
+import { Home } from './components/Home';
 
 const { Header, Content, Footer } = Layout;
 
@@ -170,7 +169,7 @@ export default class App extends React.Component{
       <HeaderImg title="The Tale of Genji Poem Database" subTitle="Beta Version"/>
       <Layout
         style={{
-          minHeight: "90vh"
+          height: "90vh"
         }}
       >
       <Header
@@ -197,13 +196,42 @@ export default class App extends React.Component{
       </div> */}
       <Menu
         style={{
-          position: 'relative'
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          textAlign: 'center',
         }}
         mode="horizontal"
-        items={new Array(3).fill(null).map((_, index) => ({
-          key: String(index + 1),
-          label: `nav ${index + 1}`,
-        }))}
+        items={[
+          {
+            key: 'Home',
+            label: (
+              <Link to="/">Home</Link>
+            )
+          }, 
+          {
+            key: 'Chapters',
+            label: 'Chapters'
+          }, 
+          {
+            key: 'Characters',
+            label: 'Characters'
+          }, 
+          {
+            key: 'Poems',
+            label: 'Poems'
+          }, 
+          {
+            key: 'Search',
+            label: (
+              <Link to="/search">Search</Link>
+            )
+          }, 
+          {
+            key: 'Edit',
+            label: 'Edit'
+          }
+        ]}
       />
       </Header> 
       <Content
@@ -212,14 +240,9 @@ export default class App extends React.Component{
           position: 'relative',
           padding: '0 50px',
           height: "calc(90vh - 134px)",
-          backgroundColor: 'white'
+          backgroundColor: 'white', 
         }}
       >
-      <Routes>
-          <Route path="/" />
-          <Route path="/search" element={<Search />} />
-          {/* <Route path="/" element={<Navigate to="/"/>} /> */}
-      </Routes>
       {/* ######
       REMEMBER TO DEAL WITH THE FILTER & PT
       ######*/}
@@ -236,21 +259,25 @@ export default class App extends React.Component{
               <button onClick={this.search}>Search</button>
         </div>
       </div> */}
-      <br />
+      {/* <br />
       <div className='PT'>
         {this.state.displayPT && <Poem key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
       </div>
-      {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>}
-      <div className="site-layout-content">
-        <LoremIpsum p={6} />
-      </div>
+      {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>} */}
+      <Routes>
+          <Route path="/" element={<Home />}/>
+          <Route path="/search" element={<Search />}>
+            <Route path="/search/poem_table" element={<Poem />}></Route>
+          </Route>
+          <Route path="/" element={<Navigate to="/"/>} />
+      </Routes>
       </Content>
       <Footer
         style={{
           textAlign: 'center',
         }}
       >
-        J. Keith Vincent ©2022 Created by Marshal Dong
+        J. Keith Vincent © 2022
       </Footer>
       </Layout>
       </div>
