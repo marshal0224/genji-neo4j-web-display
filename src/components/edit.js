@@ -25,15 +25,6 @@ export default class Edit extends React.Component {
         this.updateDBPropertyVal = this.updateDBPropertyVal.bind(this)
     }
 
-    // componentDidMount() {
-    // //     this.setState({
-    // //         propertyVal: this.props.currVal
-    // //     }, () => {
-    // //         console.log('edit did mount')
-    // //     })
-    //     console.log(this.props.currVal)
-    // }
-
     async getDBPropertyVal() {
         initDriver(this.state.uri, this.state.user, this.state.password)
         const driver = getDriver()
@@ -116,12 +107,6 @@ export default class Edit extends React.Component {
         const session = driver.session()
         let propertyName = this.props.propertyName
         let propertyVal = this.state.propertyVal
-        // if (propertyVal.includes('"') || propertyVal.includes("'")){
-        //     console.log(propertyVal)
-        //     propertyVal.replace('"', '\\'+'"')
-        //     propertyVal.replace("'", "\\"+"'")
-        //     console.log(propertyVal)
-        // }
         let pnum = this.state.pnum
         let write
         if (window.confirm('About to update a DB property')) {

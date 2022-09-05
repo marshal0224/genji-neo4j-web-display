@@ -169,7 +169,7 @@ export default class App extends React.Component{
       <HeaderImg title="The Tale of Genji Poem Database" subTitle="Gamma Version"/>
       <Layout
         style={{
-          height: "90vh"
+          minHeight: "90vh"
         }}
       >
       <Header
@@ -181,19 +181,6 @@ export default class App extends React.Component{
           background: 'white',
         }}
       >
-      {/* <div className='login'>
-        <label>
-          Username:
-          <input onChange={this.updateUsername}></input>
-        </label>
-        <button disabled={this.state.auth} onClick={this.login}>Log in</button>
-        <br/>
-        <label>
-          Password:
-          <input onChange={this.updatePassword}></input>
-        </label>
-        <button disabled={!this.state.auth} onClick={this.logout}>Log out</button>
-      </div> */}
       <Menu
         style={{
           position: 'relative',
@@ -209,28 +196,28 @@ export default class App extends React.Component{
               <Link to="/">Home</Link>
             )
           }, 
-          {
-            key: 'Chapters',
-            label: 'Chapters'
-          }, 
-          {
-            key: 'Characters',
-            label: 'Characters'
-          }, 
-          {
-            key: 'Poems',
-            label: 'Poems'
-          }, 
+          // {
+          //   key: 'Chapters',
+          //   label: 'Chapters'
+          // }, 
+          // {
+          //   key: 'Characters',
+          //   label: 'Characters'
+          // }, 
+          // {
+          //   key: 'Poems',
+          //   label: 'Poems'
+          // }, 
           {
             key: 'Search',
             label: (
               <Link to="/search">Search</Link>
             )
           }, 
-          {
-            key: 'Edit',
-            label: 'Edit'
-          }
+          // {
+          //   key: 'Edit',
+          //   label: 'Edit'
+          // }
         ]}
       />
       </Header> 
@@ -243,42 +230,21 @@ export default class App extends React.Component{
           backgroundColor: 'white', 
         }}
       >
-      {/* ######
-      REMEMBER TO DEAL WITH THE FILTER & PT
-      ######*/}
-      {/* <div className='filter'>
-        <Filter ref={(filterRef) => {this.filterRef = filterRef}} uri={this.uri} user={this.user} password={this.password}/>
-        <br/>
-        <button onClick={this.query}>Query</button>
-        <button onClick={this.filterRef.resetFilters}>Reset Filters</button>
-        <br/>
-        {this.state.displayPT && <p>{this.state.count} poems queried</p>}
-        <br />
-        <div>
-              <input ref={(searchRef) => {this.searchRef = searchRef}}></input>
-              <button onClick={this.search}>Search</button>
-        </div>
-      </div> */}
-      {/* <br />
-      <div className='PT'>
-        {this.state.displayPT && <Poem key={this.state.key} changeKey={this.changeKey} uri={this.uri} user={this.user} password={this.password} chapter={this.state.chapter} characters={this.characters} speaker={this.state.speaker} addressee={this.state.addressee} genders={this.genders} spkrGen={this.state.spkrGen} addrGen={this.state.addrGen} auth={this.state.auth} updateCount={this.poemCount}/>}
-      </div>
-      {this.state.displayST && <KeywordSearch uri={this.uri} user={this.user} password={this.password} keyword={this.state.keyword}/>} */}
       <Routes>
           <Route path="/" element={<Home />}/>
           <Route path="/search" element={<Search />}>
-            <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee" element={<Poem />}></Route>
+            <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password" element={<Poem />}></Route>
           </Route>
           <Route path="/" element={<Navigate to="/"/>} />
       </Routes>
       </Content>
-      <Footer
+      {/* <Footer
         style={{
           textAlign: 'center',
         }}
       >
         J. Keith Vincent © 2022
-      </Footer>
+      </Footer> */}
       </Layout>
       </div>
     )}}
