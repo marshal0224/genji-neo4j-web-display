@@ -1,7 +1,7 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Select, Checkbox, Col, Row, Collapse, Spin, Button } from 'antd';
+import { Input, Select, Checkbox, Col, Row, Collapse, Spin, Button, Space, Statistic } from 'antd';
 import 'antd/dist/antd.min.css';
 import { Link, Routes, Route, Outlet } from 'react-router-dom';
 import { Home } from './Home';
@@ -36,7 +36,12 @@ export default class Search extends React.Component {
             addresseeGenderList: ['male', 'female', 'multiple', 'nonhuman'],
             filterActiveKey: ['panel1'],
             openOptions: true,
-            backup: [],
+            username: 'default',
+            password: 'default',
+            auth: false,
+            numOfPoems: 0,
+            newCountNeeded: false,
+            // backup: [],
         }
         this.uri = process.env.REACT_APP_NEO4J_URI
         this.user = process.env.REACT_APP_NEO4J_USERNAME
@@ -58,6 +63,9 @@ export default class Search extends React.Component {
         this.checkHasExchangeInChp = this.checkHasExchangeInChp.bind(this)
         this.getIntersection = this.getIntersection.bind(this)
         this.togglePanel = this.togglePanel.bind(this)
+        this.updateUsername = this.updateUsername.bind(this)
+        this.updatePassword = this.updatePassword.bind(this)
+        this.updateCount = this.updateCount.bind(this)
     }
 
     // returns true if node is in graph, false otherwise
@@ -115,8 +123,8 @@ export default class Search extends React.Component {
                 curr_ls = this.state.selectedAddressee
             }
             for (let i = 0; i < chars.length; i++) {
-                for (let j = 0; j < this.state.curr_ls.length; j++) {
-                    let char = this.checkHasExchange(chars[i], this.state.curr_ls[j], this.state.graph)
+                for (let j = 0; j < curr_ls.length; j++) {
+                    let char = this.checkHasExchange(chars[i], curr_ls[j], this.state.graph)
                     if (char[1]) {
                         charFiltered.push(char)
                         break
@@ -492,6 +500,24 @@ export default class Search extends React.Component {
         })
     }
 
+    updateUsername(event) {
+        this.setState({
+            username: event.target.value
+        })
+    }
+
+    updatePassword(event) {
+        this.setState({
+            password: event.target.value
+        })
+    }
+
+    updateCount(event) {
+        this.setState({
+            newCountNeeded: true
+        })
+    }
+
     async componentDidMount() {
         initDriver(this.uri, this.user, this.password)
         const driver = getDriver()
@@ -515,9 +541,6 @@ export default class Search extends React.Component {
             let spkr_gen = exchange[i].segments[0].start.properties.gender
             let addr = exchange[i].segments[1].end.properties.name
             let addr_gen = exchange[i].segments[1].end.properties.gender
-            // if (pnum === '44TA09') {
-            //     console.log(pnum, spkr, addr)
-            // }
             if (!this.hasNode(graph, spkr)) {
                 characters.push(spkr)
                 graph.addEdge(spkr_gen, spkr)
@@ -582,161 +605,203 @@ export default class Search extends React.Component {
         closeDriver()
     }
 
+    async componentDidUpdate() {
+        const delay = ms => new Promise(
+            resolve => setTimeout(resolve, ms)
+        );
+        await delay(2000)
+        if (this.state.newCountNeeded) {
+            this.setState({
+                numOfPoems: document.getElementsByTagName('tr').length-1,
+                newCountNeeded: false,
+            })
+        }
+    }
+
     render() {
         return (
             <div>
-                <Collapse 
-                    ghost={true} 
-                    activeKey={this.state.filterActiveKey} 
-                    onChange={() => this.togglePanel()}  
-                >
-                <Panel 
-                    className='collapse-panel-custom'
-                    key='panel1' 
-                    header={'Toggle Filters'} 
-                >
-                <form>
-                    <Select
-                        ref={this.chpFilterRef}
-                        style={{ width:200 }}
-                        mode={'multiple'}
-                        open={true}
-                        showSearch
-                        placeholder="Select chapter(s)"
-                        value={this.state.selectedChapters}
-                        onChange={this.handleChpChange}
-                        allowClear={true}
-                        dropdownRender={(menu) => (
-                            <div>
-                                {menu}
-                            </div>
-                        )}
-                        getPopupContainer={triggerNode => triggerNode.parentNode}
-                    >
-                        <Option className={'chp_opt'} value='anychp'>Any</Option>
-                        {this.state.chapters.map(chp => <Option className={'chp_opt'} key={chp} value={chp}>{chp + ' '+getChpList()[chp-1]}</Option>)}
-                    </Select>
-                </form>
-                <form>
-                    <CheckboxGroup defaultValue={this.state.speakerGenderList} onChange={this.handleSpkrGenChange}>
-                        <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)'}}>male</Checkbox>
-                        <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)'}}>female</Checkbox>
-                    </CheckboxGroup>
-                    <br />
-                    <Select 
-                        style={{ width:200 }}
-                        mode={'multiple'}
-                        open={true}
-                        showSearch
-                        placeholder="Select speaker(s)"
-                        onChange={this.handleSpkrChange}
-                        value={this.state.selectedSpeaker}
-                        allowClear={true}
-                        // optionFilterProp={'children'}
-                        filterSort={
-                            (optionA, optionB) => {
-                                if (optionA.disabled === true && optionB.disabled === false) {
-                                    return 1
-                                } 
-                                else if (optionA.disabled === false && optionB.disabled === true) {
-                                    return -1
-                                } else {
-                                    return 0
-                                }
-                            }
-                        }
-                        notFoundContent={<Spin />}
-                        getPopupContainer={triggerNode => triggerNode.parentNode}
-                    >
-                        {[...this.state.male_speakers, ...this.state.female_speakers].sort((a, b) => a[0].localeCompare(b[0])).map(spkr => 
-                            <Option 
-                                key={'spkr_'+spkr[0]} 
-                                value={spkr[0]} 
-                                disabled={!spkr[1]} 
-                                style={{
-                                    backgroundColor: this.state.male_speakers.some(e => spkr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' : 'rgba(255, 182, 193, 0.3)',
-                            }}>
-                                {spkr[0]}
-                            </Option>)}
-                    </Select>
-                </form>
-                <form>
-                    <CheckboxGroup defaultValue={this.state.addresseeGenderList} onChange={this.handleAddrGenChange}>
-                        <Row justify="space-between">
-                            <Col>
+                <Row>
+                    <Col span={3}>
+                        <Statistic title={'Queried Poems'} value={this.state.numOfPoems}/>
+                    </Col>
+                    <Col span={18}>
+                        <Collapse 
+                            ghost={true} 
+                            activeKey={this.state.filterActiveKey} 
+                            onChange={() => this.togglePanel()}  
+                        >
+                        <Panel 
+                            className='collapse-panel-custom'
+                            key='panel1' 
+                            header={'Toggle Filters'} 
+                        >
+                        <form>
+                            <Select
+                                ref={this.chpFilterRef}
+                                style={{ width:200 }}
+                                mode={'multiple'}
+                                open={true}
+                                showSearch
+                                placeholder="Select chapter(s)"
+                                value={this.state.selectedChapters}
+                                onChange={this.handleChpChange}
+                                allowClear={true}
+                                dropdownRender={(menu) => (
+                                    <div>
+                                        {menu}
+                                    </div>
+                                )}
+                                getPopupContainer={triggerNode => triggerNode.parentNode}
+                            >
+                                <Option className={'chp_opt'} value='anychp'>Any</Option>
+                                {this.state.chapters.map(chp => <Option className={'chp_opt'} key={chp} value={chp}>{chp + ' '+getChpList()[chp-1]}</Option>)}
+                            </Select>
+                        </form>
+                        <form>
+                            <CheckboxGroup defaultValue={this.state.speakerGenderList} onChange={this.handleSpkrGenChange}>
                                 <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)'}}>male</Checkbox>
-                            </Col>
-                            <Col>
                                 <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)'}}>female</Checkbox>
-                            </Col>
-                        </Row>
-                        <Row justify="space-between">
-                            <Col>
-                                <Checkbox value={'nonhuman'} style={{ backgroundColor: 'rgba(144, 238, 144, 0.3)'}}>nonhuman</Checkbox>
-                            </Col>
-                            <Col>
-                                <Checkbox value={'multiple'} style={{ backgroundColor: 'rgba(255, 250, 205, 0.3)'}}>multiple</Checkbox>
-                            </Col>
-                        </Row>
-                    </CheckboxGroup>
-                    <br />
-                    <Select 
-                        style={{ width:200 }}
-                        mode={'multiple'}
-                        open={true}
-                        showSearch
-                        placeholder="Select addressee(s)"
-                        onChange={this.handleAddrChange}
-                        allowClear={true}
-                        filterSort={
-                            (optionA, optionB) => {
-                                if (optionA.disabled === true && optionB.disabled === false) {
-                                    return 1
-                                } 
-                                else if (optionA.disabled === false && optionB.disabled === true) {
-                                    return -1
-                                } else {
-                                    return 0
+                            </CheckboxGroup>
+                            <br />
+                            <Select 
+                                style={{ width:200 }}
+                                mode={'multiple'}
+                                open={true}
+                                showSearch
+                                placeholder="Select speaker(s)"
+                                onChange={this.handleSpkrChange}
+                                value={this.state.selectedSpeaker}
+                                allowClear={true}
+                                // optionFilterProp={'children'}
+                                filterSort={
+                                    (optionA, optionB) => {
+                                        if (optionA.disabled === true && optionB.disabled === false) {
+                                            return 1
+                                        } 
+                                        else if (optionA.disabled === false && optionB.disabled === true) {
+                                            return -1
+                                        } else {
+                                            return 0
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                        notFoundContent={<Spin />}
-                        value={this.state.selectedAddressee}
-                        getPopupContainer={triggerNode => triggerNode.parentNode}
-                    >
-                        {[...this.state.male_addressees, ...this.state.female_addressees, ...this.state.nonhuman_addressees, ...this.state.multiple_addressees].sort((a, b) => a[0].localeCompare(b[0])).map(addr => 
-                        <Option 
-                            key={'addr_'+addr[0]} 
-                            value={addr[0]} 
-                            disabled={!addr[1]} 
-                            style={{
-                                backgroundColor: this.state.male_addressees.some(e => addr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' : 
-                                this.state.female_addressees.some(e => addr[0] === e[0]) ? 'rgba(255, 182, 193, 0.3)' : 
-                                this.state.nonhuman_addressees.some(e => addr[0] === e[0]) ? 'rgba(144, 238, 144, 0.3)' : 'rgba(255, 250, 205, 0.3)'
-                            }
-                        }>
-                            {addr[0]}
-                        </Option>)}
-                    </Select>
-                </form>
-                <Link 
-                    to={`/search/${this.state.selectedChapters}/${this.state.selectedSpkrGen}/${this.state.selectedSpeaker}/${this.state.selectedAddrGen}/${this.state.selectedAddressee}`}
-                    // state={{
-                    //     chapter: this.state.selectedChapters,
-                    //     speaker: this.state.selectedSpeaker,
-                    //     addressee: this.state.selectedAddressee,
-                    //     spkrGen: this.state.selectedSpkrGen,
-                    //     addrGen: this.state.selectedAddrGen
-                    // }}
-                >
-                    <Button>Click me</Button>
-                </Link>
-                </Panel>
-                </Collapse>
-                <Outlet />
-                {/* <Routes>
-                    <Route path="/search/home" element={<Home />} />
-                </Routes> */}
+                                notFoundContent={<Spin />}
+                                getPopupContainer={triggerNode => triggerNode.parentNode}
+                            >
+                                {[...this.state.male_speakers, ...this.state.female_speakers].sort((a, b) => a[0].localeCompare(b[0])).map(spkr => 
+                                    <Option 
+                                        key={'spkr_'+spkr[0]} 
+                                        value={spkr[0]} 
+                                        disabled={!spkr[1]} 
+                                        style={{
+                                            backgroundColor: this.state.male_speakers.some(e => spkr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' : 'rgba(255, 182, 193, 0.3)',
+                                    }}>
+                                        {spkr[0]}
+                                    </Option>)}
+                            </Select>
+                        </form>
+                        <form>
+                            <CheckboxGroup defaultValue={this.state.addresseeGenderList} onChange={this.handleAddrGenChange}>
+                                <Row justify="space-between">
+                                    <Col>
+                                        <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)'}}>male</Checkbox>
+                                    </Col>
+                                    <Col>
+                                        <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)'}}>female</Checkbox>
+                                    </Col>
+                                </Row>
+                                <Row justify="space-between">
+                                    <Col>
+                                        <Checkbox value={'nonhuman'} style={{ backgroundColor: 'rgba(144, 238, 144, 0.3)'}}>nonhuman</Checkbox>
+                                    </Col>
+                                    <Col>
+                                        <Checkbox value={'multiple'} style={{ backgroundColor: 'rgba(255, 250, 205, 0.3)'}}>multiple</Checkbox>
+                                    </Col>
+                                </Row>
+                            </CheckboxGroup>
+                            <br />
+                            <Select 
+                                style={{ width:200 }}
+                                mode={'multiple'}
+                                open={true}
+                                showSearch
+                                placeholder="Select addressee(s)"
+                                onChange={this.handleAddrChange}
+                                allowClear={true}
+                                filterSort={
+                                    (optionA, optionB) => {
+                                        if (optionA.disabled === true && optionB.disabled === false) {
+                                            return 1
+                                        } 
+                                        else if (optionA.disabled === false && optionB.disabled === true) {
+                                            return -1
+                                        } else {
+                                            return 0
+                                        }
+                                    }
+                                }
+                                notFoundContent={<Spin />}
+                                value={this.state.selectedAddressee}
+                                getPopupContainer={triggerNode => triggerNode.parentNode}
+                            >
+                                {[...this.state.male_addressees, ...this.state.female_addressees, ...this.state.nonhuman_addressees, ...this.state.multiple_addressees].sort((a, b) => a[0].localeCompare(b[0])).map(addr => 
+                                <Option 
+                                    key={'addr_'+addr[0]} 
+                                    value={addr[0]} 
+                                    disabled={!addr[1]} 
+                                    style={{
+                                        backgroundColor: this.state.male_addressees.some(e => addr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' : 
+                                        this.state.female_addressees.some(e => addr[0] === e[0]) ? 'rgba(255, 182, 193, 0.3)' : 
+                                        this.state.nonhuman_addressees.some(e => addr[0] === e[0]) ? 'rgba(144, 238, 144, 0.3)' : 'rgba(255, 250, 205, 0.3)'
+                                    }
+                                }>
+                                    {addr[0]}
+                                </Option>)}
+                            </Select>
+                        </form>
+                        {/* <form>
+                            <Select
+                                placeholder="Enter Japanese keyword(s)"
+                            >
+                                <Option>JPKeyword</Option>
+                            </Select>
+                        </form>
+                        <form>
+                            <Select
+                                placeholder="Enter English keyword(s)"
+                            >
+                                <Option>ENKeyword</Option>
+                            </Select>
+                        </form> */}
+                        <Link 
+                            to={`/search/${this.state.selectedChapters}/${this.state.selectedSpkrGen}/${this.state.selectedSpeaker}/${this.state.selectedAddrGen}/${this.state.selectedAddressee}/${this.state.auth}/${this.state.username}/${this.state.password}`}
+                        >
+                            <Button onClick={this.updateCount}>Query</Button>
+                        </Link>
+                        </Panel>
+                    </Collapse>
+                    <Outlet />
+                    </Col>
+                    <Col span={3}>
+                        <Collapse ghost={true}>
+                        <Panel showArrow={false}>
+                            <Space direction='vertical'>
+                                <Input 
+                                    placeholder="input username" 
+                                    onChange={this.updateUsername}
+                                />
+                                <Input.Password 
+                                    placeholder="input password" 
+                                    onChange={this.updatePassword}
+                                />
+                            </Space>
+                            <Button disabled={this.state.auth} onClick={() => this.setState({ auth: true })}>Login</Button>
+                            <Button disabled={!this.state.auth} onClick={() => this.setState({ auth: false })}>Logout</Button>
+                        </Panel>
+                        </Collapse>
+                    </Col>
+                </Row>
             </div>
         )
     }
