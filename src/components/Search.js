@@ -3,8 +3,7 @@ import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Input, Select, Checkbox, Col, Row, Collapse, Spin, Button, Space, Statistic } from 'antd';
 import 'antd/dist/antd.min.css';
-import { Link, Routes, Route, Outlet } from 'react-router-dom';
-import { Home } from './Home';
+import { Link, Outlet } from 'react-router-dom';
 const { Option } = Select;
 const CheckboxGroup = Checkbox.Group;
 const { Panel } = Collapse;
@@ -258,7 +257,7 @@ export default class Search extends React.Component {
         let nonhuman_addressees = this.state.nonhuman_addressees
         let multiple_addressees = this.state.multiple_addressees
         // if user selects 'any' for chapter, resets the char filters based on their local values
-        if ((value[value.length - 1] === 'anychp' || value.length === 0) && this.state.selectedSpeaker.length === 0 && this.state.selectedAddressee.length === 0){
+        if ((value[value.length - 1] === 'anychp' || value.length === 0) && this.state.selectedSpeaker[0] === 'Any' && this.state.selectedAddressee[0] === 'Any'){
             value = ['anychp']
             male_speakers = male_speakers.map(char => [char[0], 1])
             female_speakers = female_speakers.map(char => [char[0], 1])
@@ -266,7 +265,6 @@ export default class Search extends React.Component {
             female_addressees = female_addressees.map(char => [char[0], 1])
             nonhuman_addressees = nonhuman_addressees.map(char => [char[0], 1])
             nonhuman_addressees = multiple_addressees.map(char => [char[0], 1])
-            // console.log(male_speakers)
         } else {
             // if replacing 'any' with a chapter, first undisplay everything
             if (value[0] === 'anychp') {
@@ -357,8 +355,11 @@ export default class Search extends React.Component {
                 chars.push([])
             }
         }
+        if (value.length === 0) {
+            value = ['Any']
+        }
         // if chp is any and a select is empty, display all chars
-        if (value.length === 0 && this.state.selectedChapters[0] === 'anychp') {
+        if (value.length === 1 && value[0] === 'Any' && this.state.selectedChapters[0] === 'anychp') {
             for (let i = 0; i < chars.length; i++) {
                 if (chars[i].length) {
                     for (let j = 0; j < chars[i].length; j++) {
@@ -471,9 +472,15 @@ export default class Search extends React.Component {
                 multiple_addressees: chars[3],
             })
         }
-        this.setState({
-            selectedSpeaker: value,
-        })
+        if (value.length !== 0) {
+            this.setState({
+                selectedSpeaker: value,
+            })
+        } else {
+            this.setState({
+                selectedSpeaker: 'Any'
+            })
+        }
     }
 
     handleAddrChange(value) {
@@ -488,9 +495,15 @@ export default class Search extends React.Component {
                 female_speakers: chars[1],
             })
         }
-        this.setState({
-            selectedAddressee: value
-        })
+        if (value.length !== 0) {
+            this.setState({
+                selectedAddressee: value,
+            })
+        } else {
+            this.setState({
+                selectedAddressee: 'Any'
+            })
+        }
     }
 
     togglePanel() {
@@ -609,7 +622,7 @@ export default class Search extends React.Component {
         const delay = ms => new Promise(
             resolve => setTimeout(resolve, ms)
         );
-        await delay(2000)
+        await delay(3000)
         if (this.state.newCountNeeded) {
             this.setState({
                 numOfPoems: document.getElementsByTagName('tr').length-1,
@@ -624,6 +637,12 @@ export default class Search extends React.Component {
                 <Row>
                     <Col span={3}>
                         <Statistic title={'Queried Poems'} value={this.state.numOfPoems}/>
+                        <p>
+                            If the count is wrong, click "query" again.
+                        </p>
+                        <p>
+                            Querying multiple options from one dropdown will become possible in the near future. For now, please have one option selected in each field to ensure a successful query. 
+                        </p>
                     </Col>
                     <Col span={18}>
                         <Collapse 
@@ -637,13 +656,13 @@ export default class Search extends React.Component {
                             header={'Toggle Filters'} 
                         >
                         <form>
+                            <p>Select chapter</p>
                             <Select
                                 ref={this.chpFilterRef}
                                 style={{ width:200 }}
                                 mode={'multiple'}
                                 open={true}
                                 showSearch
-                                placeholder="Select chapter(s)"
                                 value={this.state.selectedChapters}
                                 onChange={this.handleChpChange}
                                 allowClear={true}
@@ -664,16 +683,16 @@ export default class Search extends React.Component {
                                 <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)'}}>female</Checkbox>
                             </CheckboxGroup>
                             <br />
+                            <br />
+                            <p>Select speaker</p>
                             <Select 
                                 style={{ width:200 }}
                                 mode={'multiple'}
                                 open={true}
                                 showSearch
-                                placeholder="Select speaker(s)"
                                 onChange={this.handleSpkrChange}
                                 value={this.state.selectedSpeaker}
                                 allowClear={true}
-                                // optionFilterProp={'children'}
                                 filterSort={
                                     (optionA, optionB) => {
                                         if (optionA.disabled === true && optionB.disabled === false) {
@@ -689,6 +708,7 @@ export default class Search extends React.Component {
                                 notFoundContent={<Spin />}
                                 getPopupContainer={triggerNode => triggerNode.parentNode}
                             >
+                                {<Option value='Any'>Any</Option>}
                                 {[...this.state.male_speakers, ...this.state.female_speakers].sort((a, b) => a[0].localeCompare(b[0])).map(spkr => 
                                     <Option 
                                         key={'spkr_'+spkr[0]} 
@@ -721,12 +741,13 @@ export default class Search extends React.Component {
                                 </Row>
                             </CheckboxGroup>
                             <br />
+                            <br />
+                            <p>Select addressee</p>
                             <Select 
                                 style={{ width:200 }}
                                 mode={'multiple'}
                                 open={true}
                                 showSearch
-                                placeholder="Select addressee(s)"
                                 onChange={this.handleAddrChange}
                                 allowClear={true}
                                 filterSort={
@@ -745,6 +766,7 @@ export default class Search extends React.Component {
                                 value={this.state.selectedAddressee}
                                 getPopupContainer={triggerNode => triggerNode.parentNode}
                             >
+                                {<Option value='Any'>Any</Option>}
                                 {[...this.state.male_addressees, ...this.state.female_addressees, ...this.state.nonhuman_addressees, ...this.state.multiple_addressees].sort((a, b) => a[0].localeCompare(b[0])).map(addr => 
                                 <Option 
                                     key={'addr_'+addr[0]} 

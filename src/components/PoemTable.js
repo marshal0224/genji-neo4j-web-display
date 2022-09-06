@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../utils'
 import { useParams } from 'react-router-dom'
@@ -12,8 +12,9 @@ export default function Poem() {
     const [metadata, setMetadata] = useState([])
     const [entries, setEntries] = useState([])
     const [editProp, setEditProp] = useState([])
-    const [characters, setCharacters] = useState([])
-    const [genders, setGenders] = useState([])
+    const [charAndGen, setCharAndGen] = useState([[],[]])
+    // const [characters, setCharacters] = useState([])
+    // const [genders, setGenders] = useState([])
     // console.log( chapter, spkrGen, speaker, addrGen, addressee, auth, username, password )
     const getChar = 'match (c:Character) return c.name as char, c.gender as gender order by c.name'
 
@@ -34,33 +35,7 @@ export default function Poem() {
         addrGen = 'Any'
     }
 
-    useEffect(() => {
-        initDriver( process.env.REACT_APP_NEO4J_URI, 
-            process.env.REACT_APP_NEO4J_USERNAME, 
-            process.env.REACT_APP_NEO4J_PASSWORD )
-        const driver = getDriver()
-        const session = driver.session()
-        const _ = async () => {
-            const res = await session.readTransaction(tx => tx.run(getChar))
-            setCharacters(res.records.map(row => {
-                return toNativeTypes(row.get('char'))
-            })).map(e => Object.values(e).join(''))
-            setGenders(res.records.map(row => {
-                return toNativeTypes(row.get('gender'))
-            })).map(e => Object.values(e).join(''))
-            session.close()
-            closeDriver()
-        }
-        _().catch(console.error)
-    }, [])
-
-    useShallowCompareEffect(() => {
-        initDriver( process.env.REACT_APP_NEO4J_URI, 
-                    process.env.REACT_APP_NEO4J_USERNAME, 
-                    process.env.REACT_APP_NEO4J_PASSWORD )
-        const driver = getDriver()
-        const session = driver.session()
-
+    useMemo(() => {
         let getSpeaker, getAddressee, getChapter, getJPKeyword, getENKeyword
         if (speaker === 'Any' && spkrGen === 'Any') {
             getSpeaker = '(:Character)'
@@ -91,9 +66,22 @@ export default function Poem() {
                         +'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
                         +' return exchange, trans'
         const _ = async () => { 
-            const res = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
-            let poemRes = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
-            let transTemp = res.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
+            initDriver( process.env.REACT_APP_NEO4J_URI, 
+                process.env.REACT_APP_NEO4J_USERNAME, 
+                process.env.REACT_APP_NEO4J_PASSWORD )
+            const driver = getDriver()
+            const session = driver.session()
+            const res1 = await session.readTransaction(tx => tx.run(getChar))
+            setCharAndGen([
+                res1.records.map(row => {
+                    return toNativeTypes(row.get('char'))
+                    }).map(e => Object.values(e).join('')), 
+                res1.records.map(row => {
+                    return toNativeTypes(row.get('gender'))
+                    }).map(e => Object.values(e).join(''))])
+            const res2 = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
+            let poemRes = res2.records.map(row => {return toNativeTypes(row.get('exchange'))})
+            let transTemp = res2.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
             let [plist, info, propname] = getPoemTableContent(poemRes, transTemp)
             setMetadata(plist)
             // [
@@ -179,6 +167,8 @@ export default function Poem() {
     }
 
     function setCharColor(name) {
+        let characters = charAndGen[0]
+        let genders =charAndGen[1]
         let index = characters.indexOf(name)
         let gender = genders[index]
         if (gender === 'male'){

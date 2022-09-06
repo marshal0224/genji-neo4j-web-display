@@ -84,7 +84,7 @@ table, th, td {
 
 .male-char {
   text-align: center;
-  color: blue;
+  color: rgb(72, 209, 204);
 }
 
 .female-char {
@@ -94,7 +94,7 @@ table, th, td {
 
 .nonhuman-char {
   text-align: center;
-  color: green;
+  color: rgb(144, 238, 144);
 }
 
 .collapse-panel-custom {
