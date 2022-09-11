@@ -1,15 +1,14 @@
 import './App.css';
 import React from 'react'
-import Filter from './components/filter'
 import Poem from './components/PoemTable'
-import Title from './components/title';
 import $ from 'jquery';
-import KeywordSearch from './components/keywordsearch';
 import {BrowserRouter, Route, Routes, NavLink, Link, Navigate } from 'react-router-dom';
 import { Breadcrumb, Col, Image, Layout, Menu, Row } from 'antd';
 import Search from './components/Search';
 import { HeaderImg } from './components/Header';
 import { Home } from './components/Home';
+import { About } from './components/About';
+import { Acknowledgements } from './components/Acknowledgements';
 
 const { Header, Content, Footer } = Layout;
 
@@ -218,6 +217,18 @@ export default class App extends React.Component{
           //   key: 'Edit',
           //   label: 'Edit'
           // }
+          {
+            key: 'About Poetry in the Tale of Genjii',
+            label: (
+              <Link to="/about">About Poetry in the Tale of Genjii</Link>
+            )
+          }, 
+          {
+            key: 'Acknowledgements',
+            label: (
+              <Link to="/acknowledgements">Acknowledgements</Link>
+            )
+          }
         ]}
       />
       </Header> 
@@ -235,6 +246,8 @@ export default class App extends React.Component{
           <Route path="/search" element={<Search />}>
             <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password" element={<Poem />}></Route>
           </Route>
+          <Route path="/about" element={<About />}/>
+          <Route path="/acknowledgements" element={<Acknowledgements />}/>
           <Route path="/" element={<Navigate to="/"/>} />
       </Routes>
       </Content>
