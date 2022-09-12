@@ -2,9 +2,8 @@ import React from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import './index.css';
 import App from './App';
-import Search from './components/Search';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter, Routes, Route} from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 // import 'rsuite/dist/rsuite.min.css';
 
 let password = prompt("Please enter the password for visiting this site", "Password");

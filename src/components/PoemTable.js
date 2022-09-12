@@ -1,11 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../utils'
 import { useParams } from 'react-router-dom'
 import Edit from './edit'
-import { useShallowCompareEffect } from 'react-use';
-import { session } from 'neo4j-driver'
-import { map } from 'jquery'
 
 export default function Poem() { 
     let { chapter, spkrGen, speaker, addrGen, addressee, auth, username, password } = useParams()

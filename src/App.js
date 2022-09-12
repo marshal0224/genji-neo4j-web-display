@@ -1,9 +1,8 @@
 import './App.css';
 import React from 'react'
 import Poem from './components/PoemTable'
-import $ from 'jquery';
-import {BrowserRouter, Route, Routes, NavLink, Link, Navigate } from 'react-router-dom';
-import { Breadcrumb, Col, Image, Layout, Menu, Row } from 'antd';
+import { Route, Routes, Link, Navigate } from 'react-router-dom';
+import { Layout, Menu } from 'antd';
 import Search from './components/Search';
 import { HeaderImg } from './components/Header';
 import { Home } from './components/Home';
@@ -13,154 +12,6 @@ import { Acknowledgements } from './components/Acknowledgements';
 const { Header, Content, Footer } = Layout;
 
 export default class App extends React.Component{
-  constructor() {
-    super()
-    this.uri = process.env.REACT_APP_NEO4J_URI
-    this.user = process.env.REACT_APP_NEO4J_USERNAME
-    this.password = process.env.REACT_APP_NEO4J_PASSWORD
-    this.app_username = process.env.REACT_APP_USERNAME
-    this.app_password = process.env.REACT_APP_PASSWORD
-    // Init all filter states to be false (unchanged)
-    this.state = {
-      displayPT: false,
-      displayST: false,
-      key: 'odd',
-      chapter: "",
-      speaker: "",
-      addressee: "",
-      spkrGen: "Any",
-      addrGen: "Any",
-      spkrOn: true,
-      addrOn: true,
-      count: 0,
-      app_username: '',
-      app_password: '',
-      auth: false,
-    }
-    this.characters = []
-    this.genders = []
-    this.changeKey = this.changeKey.bind(this)
-    this.updateUsername = this.updateUsername.bind(this)
-    this.updatePassword = this.updatePassword.bind(this)
-    this.login = this.login.bind(this)
-    this.logout = this.logout.bind(this)
-    this.filterRef = React.createRef()
-    this.poemCount = this.poemCount.bind(this)
-    this.searchRef = React.createRef()
-    this.search = this.search.bind(this)
-  }
-
-  componentDidUpdate() {
-    this.characters = this.filterRef.state.characters
-    this.genders = this.filterRef.state.genders
-  }
-  
-  changeKey() {
-    if (this.state.key === 'odd') {
-      this.setState({
-        key: 'even'
-      })
-    } else {
-      this.setState({
-        key: 'odd'
-      })
-    }
-  }
-
-  query = (event) => {
-    this.poemCount()
-    this.setState({ 
-      displayPT: true,
-      displayST: false,
-      chapter: this.filterRef.state.selectedChapter,
-      speaker: this.filterRef.state.selectedSpeaker,
-      addressee: this.filterRef.state.selectedAddressee,
-      spkrGen: this.filterRef.state.selectedSpeakerGender,
-      addrGen: this.filterRef.state.selectedAddresseeGender,
-    }, () => console.log('queried'))} 
-
-  search = (event) => {
-    this.setState({
-      displayPT: false, 
-      displayST: true, 
-      keyword: this.searchRef.value,
-    }, () => console.log('searched'))
-  }
-
-  spkrDisplay
-
-  toggleSpkr = (event) => {
-    this.setState({
-      spkrOn: !this.state.spkrOn
-    },
-      () => {
-        if (this.state.spkrOn) {
-          this.spkrDisplay = 'table-cell'
-        } else {
-          this.spkrDisplay = 'none'
-        }
-        $('.spkrCol').css('display', this.spkrDisplay)
-        console.log('speaker display is' + this.state.spkrOn)
-      }
-    )
-  }
-
-  addrDisplay
-
-  toggleAddr = (event) => {
-    this.setState({
-      addrOn: !this.state.addrOn
-    },
-      () => {
-        if (this.state.addrOn) {
-          this.addrDisplay = 'table-cell'
-        } else {
-          this.addrDisplay = 'none'
-        }
-        $('.addrCol').css('display', this.addrDisplay)
-        console.log('addressee display is' + this.state.addrOn)
-      }
-    )
-  }
-
-// login scripts
-  updateUsername(event) {
-    this.setState({
-      app_username: event.target.value
-    })
-  }
-
-  updatePassword(event) {
-    this.setState({
-      app_password: event.target.value
-    })
-  }
-
-  login() {
-    if (this.state.app_username === this.app_username && this.state.app_password === this.app_password) {
-      this.setState({
-        auth: true,
-      }, () => alert('Hi Professor Vincent, you are now logged in.'))
-    } else{
-      alert('Wrong credentials, please try again.')
-    }
-  }
-
-  logout() {
-    this.setState({
-      auth: false,
-    }, () => 
-    {
-      alert('Professor Vincent, you are now logged out.')
-      this.query()
-    })
-  }
-
-  poemCount(count) {
-    this.setState({
-      count: count,
-    })
-  }
 
   render() {
     return (
@@ -260,4 +111,4 @@ export default class App extends React.Component{
       </Footer> */}
       </Layout>
       </div>
-    )}}
+)}}
