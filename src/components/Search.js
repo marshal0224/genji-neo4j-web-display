@@ -57,7 +57,8 @@ export default class Search extends React.Component {
         this.handleGenHelper = this.handleGenHelper.bind(this)
         this.handleSpkrChange = this.handleSpkrChange.bind(this)
         this.handleAddrChange = this.handleAddrChange.bind(this)
-        this.checkCharInChp = this.checkCharInChp.bind(this)
+        this.checkCharsInChp = this.checkCharsInChp.bind(this)
+        this.checkChpHasChar = this.checkChpHasChar.bind(this)
         this.checkGender = this.checkGender.bind(this)
         this.checkHasExchangeInChp = this.checkHasExchangeInChp.bind(this)
         this.getIntersection = this.getIntersection.bind(this)
@@ -95,7 +96,7 @@ export default class Search extends React.Component {
             let chps = [...this.state.selectedChapters]
             // here we can optimize by counting disabled chars when chps are many, counting enabled chars when chps are few
             let enabled_char = new Set()
-            chps = chps.map(chp => this.checkCharInChp(chars, this.state.graph, chp, false))
+            chps = chps.map(chp => this.checkCharsInChp(chars, this.state.graph, chp, false))
             chps.forEach(chp => chp.forEach(e => {
                 if (e[1]) {
                     enabled_char.add(e)
@@ -135,7 +136,7 @@ export default class Search extends React.Component {
             // if either spkr/addr is any
             let prev = chars
             for (let j = 0; j < this.state.selectedChapters.length; j++) {
-                let curr = this.checkCharInChp(chars, this.state.graph, this.state.selectedChapters[j], false)
+                let curr = this.checkCharsInChp(chars, this.state.graph, this.state.selectedChapters[j], false)
                 chars = this.getIntersection(prev, curr)
             }
         } 
@@ -198,7 +199,7 @@ export default class Search extends React.Component {
     }
 
     // sets the characters of a chapter to flag and returns the character list. flag should be false for select, true for deselect
-    checkCharInChp(chars, graph, chp, flag) {
+    checkCharsInChp(chars, graph, chp, flag) {
         chars.forEach(char => {
             let selectedChapters = [...this.state.selectedChapters]
             selectedChapters.splice(selectedChapters.indexOf(chp), 1)
@@ -213,9 +214,22 @@ export default class Search extends React.Component {
         return chars
     }
 
-    // checkChpHasChar(chps, graph, char, flag) {
-
-    // }
+    // check if a chapter has a single character as speaker or addressee
+    checkChpHasChar(chp, char, graph, type) {
+        let temp = graph.adjacent(char)
+        let poems
+        temp.forEach(p => {if (p.substring(0,2) === chp.toString()) {
+            poems.push(p)
+        }}) 
+        poems.forEach(p => {
+            if (type === 'spkr' && graph.getEdgeWeight(char, p) === 3){
+                return true
+            } else if (type === 'addr' && graph.getEdgeWeight(char, p) === 2){
+                return true
+            }
+        })
+        return false
+    }
 
     // sets the characters of a certain gender based on selected genders and returns the character list. flag: true for select, false for deselect
     checkGender(chars, gender, selectedGenders){
@@ -228,8 +242,14 @@ export default class Search extends React.Component {
     // returns a character with their display set by the existence of their exchange with another character
     checkHasExchange(c1, c2, graph) {
         let lca = graph.lowestCommonAncestors(c1[0], c2)
-        if (lca.filter(e => typeof(e) === 'Number').length === lca.length) {
+        if (lca.filter(e => typeof(e) === 'string' && !(c1[0] !== c2 && e === "soliloquies")).length === 0) {
             return [c1[0], 0]
+        } else if (c1[0] === c2 && lca.length === 1 && lca[0] === c2) {
+            if (graph.hasEdge(c2, 'soliloquies')) {
+                return [c1[0], 1]
+            } else {
+                return [c1[0], 0]
+            }
         } else {
             return [c1[0], 1]
         }
@@ -257,14 +277,27 @@ export default class Search extends React.Component {
         let nonhuman_addressees = this.state.nonhuman_addressees
         let multiple_addressees = this.state.multiple_addressees
         // if user selects 'any' for chapter, resets the char filters based on their local values
-        if ((value[value.length - 1] === 'anychp' || value.length === 0) && this.state.selectedSpeaker[0] === 'Any' && this.state.selectedAddressee[0] === 'Any'){
+        if (value[value.length - 1] === 'anychp' || value.length === 0){
             value = ['anychp']
-            male_speakers = male_speakers.map(char => [char[0], 1])
-            female_speakers = female_speakers.map(char => [char[0], 1])
-            male_addressees = male_addressees.map(char => [char[0], 1])
-            female_addressees = female_addressees.map(char => [char[0], 1])
-            nonhuman_addressees = nonhuman_addressees.map(char => [char[0], 1])
-            nonhuman_addressees = multiple_addressees.map(char => [char[0], 1])
+            if (this.state.selectedAddressee[0] === 'Any') {
+                male_speakers = male_speakers.map(char => [char[0], 1])
+                female_speakers = female_speakers.map(char => [char[0], 1])
+            } else {
+                // this needs to be updated for multiple selections
+                male_speakers = this.checkHasExchange(male_speakers, this.state.selectedAddressee[0], this.state.graph)
+                female_speakers = this.checkHasExchange(female_speakers, this.state.selectedAddressee[0], this.state.graph)
+            }
+            if (this.state.selectedSpeaker[0] === 'Any') {
+                male_addressees = male_addressees.map(char => [char[0], 1])
+                female_addressees = female_addressees.map(char => [char[0], 1])
+                nonhuman_addressees = nonhuman_addressees.map(char => [char[0], 1])
+                multiple_addressees = multiple_addressees.map(char => [char[0], 1])
+            } else {
+                male_addressees = this.checkHasExchange(male_addressees, this.state.selectedSpeaker[0], this.state.graph)
+                female_addressees = this.checkHasExchange(female_addressees, this.state.selectedSpeaker[0], this.state.graph)
+                nonhuman_addressees = this.checkHasExchange(nonhuman_addressees, this.state.selectedSpeaker[0], this.state.graph)
+                multiple_addressees = this.checkHasExchange(multiple_addressees, this.state.selectedSpeaker[0], this.state.graph)
+            }
         } else {
             // if replacing 'any' with a chapter, first undisplay everything
             if (value[0] === 'anychp') {
@@ -279,12 +312,12 @@ export default class Search extends React.Component {
             // if deselect a chapter (and at least one non-any chapter remains), remove any characters relevant to the removed chapter but not to the others
             if (prevChps.length > value.length) {
                 difference = prevChps.filter(x => !value.includes(x))[0]
-                male_speakers = this.checkCharInChp(male_speakers, this.state.graph, difference, true)
-                female_speakers = this.checkCharInChp(female_speakers, this.state.graph, difference, true)
-                male_addressees = this.checkCharInChp(male_addressees, this.state.graph, difference, true)
-                female_addressees = this.checkCharInChp(female_addressees, this.state.graph, difference, true)
-                nonhuman_addressees = this.checkCharInChp(nonhuman_addressees, this.state.graph, difference, true)
-                multiple_addressees = this.checkCharInChp(multiple_addressees, this.state.graph, difference, true)
+                male_speakers = this.checkCharsInChp(male_speakers, this.state.graph, difference, true)
+                female_speakers = this.checkCharsInChp(female_speakers, this.state.graph, difference, true)
+                male_addressees = this.checkCharsInChp(male_addressees, this.state.graph, difference, true)
+                female_addressees = this.checkCharsInChp(female_addressees, this.state.graph, difference, true)
+                nonhuman_addressees = this.checkCharsInChp(nonhuman_addressees, this.state.graph, difference, true)
+                multiple_addressees = this.checkCharsInChp(multiple_addressees, this.state.graph, difference, true)
             } else { 
                 // if selecta a chapter, display new characters
                 if (value.length === 1) {
@@ -292,12 +325,12 @@ export default class Search extends React.Component {
                 } else {
                     difference = value.filter(x => !prevChps.includes(x))[0]
                 }
-                male_speakers = this.checkCharInChp(male_speakers, this.state.graph, difference, false)
-                female_speakers = this.checkCharInChp(female_speakers, this.state.graph, difference, false)
-                male_addressees = this.checkCharInChp(male_addressees, this.state.graph, difference, false)
-                female_addressees = this.checkCharInChp(female_addressees, this.state.graph, difference, false)
-                nonhuman_addressees = this.checkCharInChp(nonhuman_addressees, this.state.graph, difference, false)
-                multiple_addressees = this.checkCharInChp(multiple_addressees, this.state.graph, difference, false)
+                male_speakers = this.checkCharsInChp(male_speakers, this.state.graph, difference, false)
+                female_speakers = this.checkCharsInChp(female_speakers, this.state.graph, difference, false)
+                male_addressees = this.checkCharsInChp(male_addressees, this.state.graph, difference, false)
+                female_addressees = this.checkCharsInChp(female_addressees, this.state.graph, difference, false)
+                nonhuman_addressees = this.checkCharsInChp(nonhuman_addressees, this.state.graph, difference, false)
+                multiple_addressees = this.checkCharsInChp(multiple_addressees, this.state.graph, difference, false)
             }
         }    
         // filter out any characters not allowed by the gender filters
@@ -321,6 +354,7 @@ export default class Search extends React.Component {
     // when a char is updated, update the chapter and the other select
     handleCharChange(value, type) {
         // type is spkr/addr
+        // chars refers to the other character filter that will needs to be updated based on the current change 
         let chars = []
         if (type === 'addr') {
             if (this.state.selectedSpkrGen.includes('male')) {
@@ -358,6 +392,9 @@ export default class Search extends React.Component {
         if (value.length === 0) {
             value = ['Any']
         }
+        if (value.length === 2 && value[0] === 'Any') {
+            value = [value[1]]
+        }
         // if chp is any and a select is empty, display all chars
         if (value.length === 1 && value[0] === 'Any' && this.state.selectedChapters[0] === 'anychp') {
             for (let i = 0; i < chars.length; i++) {
@@ -369,12 +406,12 @@ export default class Search extends React.Component {
             }
         } else if (value.length !== 0 && this.state.selectedChapters[0] === 'anychp') {
             // if chp is any and there exists a spkr/addr, display any char in chars that has an exchange
-            value.forEach(c2 => {
+            value.forEach(c => {
                 let temp = []
                 for (let i = 0; i < chars.length; i++) {
                     if (chars[i].length) {
                         for (let j = 0; j < chars[i].length; j++) {
-                            temp.push(this.checkHasExchange(chars[i][j], c2, this.state.graph))
+                            temp.push(this.checkHasExchange(chars[i][j], c, this.state.graph))
                         }
                         chars[i] = this.getIntersection(chars[i], temp)
                     }
@@ -387,34 +424,34 @@ export default class Search extends React.Component {
             if (chars.length === 2) {
                 if (this.state.selectedSpkrGen.includes('male')) {
                     this.state.selectedChapters.forEach(chp => {
-                        chars[0] = this.checkCharInChp(chars[0], this.graph, chp, false)
+                        chars[0] = this.checkCharsInChp(chars[0], this.graph, chp, false)
                     })
                 }
                 if (this.state.selectedSpkrGen.includes('female')) {
                     this.state.selectedChapters.forEach(chp => {
-                        chars[1] = this.checkCharInChp(chars[1], this.graph, chp, false)
+                        chars[1] = this.checkCharsInChp(chars[1], this.graph, chp, false)
                     })
                 }
             } else {
                 // if chars are addressees
                 if (this.state.selectedAddrGen.includes('male')) {
                     this.state.selectedChapters.forEach(chp => {
-                        chars[0] = this.checkCharInChp(chars[0], this.graph, chp, false)
+                        chars[0] = this.checkCharsInChp(chars[0], this.graph, chp, false)
                     })
                 }
                 if (this.state.selectedAddrGen.includes('female')) {
                     this.state.selectedChapters.forEach(chp => {
-                        chars[1] = this.checkCharInChp(chars[1], this.graph, chp, false)
+                        chars[1] = this.checkCharsInChp(chars[1], this.graph, chp, false)
                     })
                 }                
                 if (this.state.selectedAddrGen.includes('nonhuman')) {
                     this.state.selectedChapters.forEach(chp => {
-                        chars[2] = this.checkCharInChp(chars[2], this.graph, chp, false)
+                        chars[2] = this.checkCharsInChp(chars[2], this.graph, chp, false)
                     })
                 }
                 if (this.state.selectedAddrGen.includes('multiple')) {
                     this.state.selectedChapters.forEach(chp => {
-                        chars[3] = this.checkCharInChp(chars[3], this.graph, chp, false)
+                        chars[3] = this.checkCharsInChp(chars[3], this.graph, chp, false)
                     })
                 }
             }
@@ -472,6 +509,11 @@ export default class Search extends React.Component {
                 multiple_addressees: chars[3],
             })
         }
+
+        if (value.length !==0 && value.includes('Any')) {
+            value.splice(value.indexOf('Any'), 1)
+        }
+
         if (value.length !== 0) {
             this.setState({
                 selectedSpeaker: value,
@@ -481,6 +523,7 @@ export default class Search extends React.Component {
                 selectedSpeaker: 'Any'
             })
         }
+        
     }
 
     handleAddrChange(value) {
@@ -495,6 +538,11 @@ export default class Search extends React.Component {
                 female_speakers: chars[1],
             })
         }
+
+        if (value.length !==0 && value.includes('Any')) {
+            value.splice(value.indexOf('Any'), 1)
+        }
+
         if (value.length !== 0) {
             this.setState({
                 selectedAddressee: value,
