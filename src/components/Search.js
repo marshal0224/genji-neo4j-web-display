@@ -1,7 +1,7 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Input, Select, Checkbox, Col, Row, Collapse, Spin, Button, Space, Statistic } from 'antd';
+import { Input, Select, Checkbox, Col, Row, Collapse, Spin, Button, Space, Statistic, BackTop } from 'antd';
 import 'antd/dist/antd.min.css';
 import { Link, Outlet } from 'react-router-dom';
 const { Option } = Select;
@@ -14,7 +14,7 @@ export default class Search extends React.Component {
         super(props)
         this.state = {
             // original data pulled from Neo4j
-            chapters: Array.from(Array(54), (_,i)=> i).map(e => e+1),
+            chapters: Array.from(Array(54), (_,i)=> i).map(e => [e+1, 1]),
             characters: [],
             // charNum: 0,
             male_speakers: [],
@@ -66,6 +66,7 @@ export default class Search extends React.Component {
         this.updateUsername = this.updateUsername.bind(this)
         this.updatePassword = this.updatePassword.bind(this)
         this.updateCount = this.updateCount.bind(this)
+        this.updateChapterDisplay = this.updateChapterDisplay.bind(this)
     }
 
     // returns true if node is in graph, false otherwise
@@ -75,7 +76,7 @@ export default class Search extends React.Component {
         return prev === after
     }
 
-    // returns the intersection of two CHARACTERS lists
+    // returns the intersection of two lists
     getIntersection(ls1, ls2) {
         return ls1.map(e => {
             if (e[1] && ls2.some(f => f[0]===e[0] && f[1])) {
@@ -216,18 +217,17 @@ export default class Search extends React.Component {
 
     // check if a chapter has a single character as speaker or addressee
     checkChpHasChar(chp, char, graph, type) {
-        let temp = graph.adjacent(char)
-        let poems
-        temp.forEach(p => {if (p.substring(0,2) === chp.toString()) {
-            poems.push(p)
-        }}) 
-        poems.forEach(p => {
-            if (type === 'spkr' && graph.getEdgeWeight(char, p) === 3){
-                return true
-            } else if (type === 'addr' && graph.getEdgeWeight(char, p) === 2){
-                return true
+        let adj = graph.adjacent(char)
+        for (let i = 0; i < adj.length; i++) {
+            let poem_chp = parseInt(adj[i].substring(0, 2))
+            if (poem_chp === chp) {
+                if (type === 'spkr' && graph.getEdgeWeight(char, adj[i]) === 3){
+                    return true
+                } else if (type === 'addr' && graph.getEdgeWeight(char, adj[i]) === 2){
+                    return true
+                }
             }
-        })
+        }
         return false
     }
 
@@ -266,6 +266,47 @@ export default class Search extends React.Component {
         return c1
     }
 
+    updateChapterDisplay(spkr, addr, graph) {
+        let chps = this.state.chapters.map(e => [e[0], 1])
+        if (spkr === 'Any' && addr !== 'Any') {
+            // for now, deal with single characters
+            chps = chps.map(e => {
+                if (this.checkChpHasChar(e[0], addr, graph, 'addr')) {
+                    return [e[0], 1]
+                } else {
+                    return [e[0], 0]
+                }
+            })
+        } else if (spkr !== 'Any' && addr === 'Any') {
+            chps = chps.map(e => {
+                if (this.checkChpHasChar(e[0], spkr, graph, 'spkr')) {
+                    return [e[0], 1]
+                } else {
+                    return [e[0], 0]
+                }
+            })
+        } else if (spkr !== 'Any' && addr !== 'Any') {
+            let second_chps = this.state.chapters.map(e => [e[0], 1])
+            chps = chps.map(e => {
+                if (this.checkChpHasChar(e[0], spkr, graph, 'spkr')) {
+                    return [e[0], 1]
+                } else {
+                    return [e[0], 0]
+                }
+            })
+            second_chps = second_chps.map(e => {
+                if (this.checkChpHasChar(e[0], addr, graph, 'addr')) {
+                    return [e[0], 1]
+                } else {
+                    return [e[0], 0]
+                }
+            })
+            chps = this.getIntersection(chps, second_chps)
+        }
+        this.setState({
+            chapters: chps,
+        })
+    }
 
     handleChpChange(value) {
         let difference
@@ -509,11 +550,9 @@ export default class Search extends React.Component {
                 multiple_addressees: chars[3],
             })
         }
-
         if (value.length !==0 && value.includes('Any')) {
             value.splice(value.indexOf('Any'), 1)
         }
-
         if (value.length !== 0) {
             this.setState({
                 selectedSpeaker: value,
@@ -522,8 +561,9 @@ export default class Search extends React.Component {
             this.setState({
                 selectedSpeaker: 'Any'
             })
+            value = ['Any']
         }
-        
+        this.updateChapterDisplay(value[0], this.state.selectedAddressee[0], this.state.graph)
     }
 
     handleAddrChange(value) {
@@ -551,7 +591,9 @@ export default class Search extends React.Component {
             this.setState({
                 selectedAddressee: 'Any'
             })
+            value = ['Any']
         }
+        this.updateChapterDisplay(this.state.selectedSpeaker[0], value[0], this.state.graph)
     }
 
     togglePanel() {
@@ -693,7 +735,7 @@ export default class Search extends React.Component {
                         </p>
                     </Col>
                     <Col span={18}>
-                        <Collapse 
+                        {/* <Collapse 
                             ghost={true} 
                             activeKey={this.state.filterActiveKey} 
                             onChange={() => this.togglePanel()}  
@@ -702,7 +744,7 @@ export default class Search extends React.Component {
                             className='collapse-panel-custom'
                             key='panel1' 
                             header={'Toggle Filters'} 
-                        >
+                        > */}
                         <form>
                             <p>Select chapter</p>
                             <Select
@@ -720,9 +762,34 @@ export default class Search extends React.Component {
                                     </div>
                                 )}
                                 getPopupContainer={triggerNode => triggerNode.parentNode}
+                                filterSort={
+                                    (optionA, optionB) => {
+                                        if (optionA.disabled === true && optionB.disabled === false) {
+                                            return 1
+                                        } 
+                                        else if (optionA.disabled === false && optionB.disabled === true) {
+                                            return -1
+                                        } else {
+                                            return 0
+                                        }
+                                    }
+                                }
                             >
-                                <Option className={'chp_opt'} value='anychp'>Any</Option>
-                                {this.state.chapters.map(chp => <Option className={'chp_opt'} key={chp} value={chp}>{chp + ' '+getChpList()[chp-1]}</Option>)}
+                                <Option 
+                                    className={'chp_opt'} 
+                                    value='anychp'
+                                >
+                                        Any
+                                </Option>
+                                {this.state.chapters.map(chp => 
+                                    <Option 
+                                        className={'chp_opt'} 
+                                        key={chp[0]} 
+                                        value={chp[0]}
+                                        disabled={!chp[1]}
+                                    >
+                                        {chp[0] + ' '+getChpList()[chp[0]-1]}
+                                    </Option>)}
                             </Select>
                         </form>
                         <form>
@@ -849,8 +916,8 @@ export default class Search extends React.Component {
                         >
                             <Button onClick={this.updateCount}>Query</Button>
                         </Link>
-                        </Panel>
-                    </Collapse>
+                        {/* </Panel> */}
+                    {/* </Collapse> */}
                     <Outlet />
                     </Col>
                     <Col span={3}>
@@ -870,6 +937,9 @@ export default class Search extends React.Component {
                             <Button disabled={!this.state.auth} onClick={() => this.setState({ auth: false })}>Logout</Button>
                         </Panel>
                         </Collapse>
+                        <BackTop>
+                            <div>Back to top</div>
+                        </BackTop>
                     </Col>
                 </Row>
             </div>
