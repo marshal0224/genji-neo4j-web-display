@@ -54,10 +54,10 @@ export default class App extends React.Component{
           //   key: 'Characters',
           //   label: 'Characters'
           // }, 
-          // {
-          //   key: 'Poems',
-          //   label: 'Poems'
-          // }, 
+          {
+            key: 'Poems',
+            label: 'Poems'
+          }, 
           {
             key: 'Search',
             label: (
