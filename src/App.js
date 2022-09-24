@@ -1,9 +1,11 @@
 import './App.css';
 import React from 'react'
-import Poem from './components/PoemTable'
+import PoemTable from './components/PoemTable'
 import { Route, Routes, Link, Navigate } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
 import Search from './components/Search';
+import PoemQuery from './components/PoemQuery';
+import PoemPage from './components/PoemPage';
 import { HeaderImg } from './components/Header';
 import { Home } from './components/Home';
 import { About } from './components/About';
@@ -55,8 +57,10 @@ export default class App extends React.Component{
           //   label: 'Characters'
           // }, 
           {
-            key: 'Poems',
-            label: 'Poems'
+            key: 'Poem',
+            label: (
+              <Link to="/poem">Poem</Link>
+            )
           }, 
           {
             key: 'Search',
@@ -94,8 +98,11 @@ export default class App extends React.Component{
       >
       <Routes>
           <Route path="/" element={<Home />}/>
+          <Route path="/poem" element={<PoemQuery />}>
+            <Route path=":chapter/:number" element={<PoemPage />}></Route>
+          </Route>
           <Route path="/search" element={<Search />}>
-            <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password" element={<Poem />}></Route>
+            <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password" element={<PoemTable />}></Route>
           </Route>
           <Route path="/about" element={<About />}/>
           <Route path="/acknowledgements" element={<Acknowledgements />}/>
