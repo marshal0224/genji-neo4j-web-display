@@ -42,7 +42,7 @@ export default function PoemQuery() {
                     showSearch
                     placeholder="Select a chapter"
                     style={{ width:220 }}
-                    onChange={(value, option) => {
+                    onSelect={(value) => {
                         setChpSelect([true, value])
                         setCount(Array.from({length: chapters[value-1].count}, (_, i) => i + 1))
                     }}
@@ -60,8 +60,8 @@ export default function PoemQuery() {
                     showSearch
                     placeholder="#"
                     disabled={!chpSelect[0]}
-                    onChange={(value, option) => {
-                        setChpSelect([...chpSelect, value])
+                    onSelect={(value) => {
+                        setChpSelect([chpSelect[0], chpSelect[1], value])
                     }}
                 >
                     {count.map(ct => 
