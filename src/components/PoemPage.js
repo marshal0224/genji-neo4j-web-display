@@ -79,7 +79,7 @@ export default function PoemPage() {
                     )}
                 </Col>
             </Row>
-            <Divider></Divider>
+            <Divider>Translations</Divider>
             <Row>
                 <Col flex={1}>
                     <b>Waley</b>
@@ -92,7 +92,9 @@ export default function PoemPage() {
                     <br/>
                     <p type='non-JP'>{trans['Seidensticker']}</p>
                 </Col>
-                <Divider type="vertical"/>
+            </Row>
+            <Divider type="vertical"/>
+            <Row>
                 <Col flex={1}>
                     <b>Tyler</b>
                     <br/>
@@ -111,40 +113,40 @@ export default function PoemPage() {
                     <p type='non-JP'>{trans['Cranston']}</p>
                 </Col>
             </Row>
-            <Divider></Divider>
+            <Divider>Allusions</Divider>
             <Row>
                 <Col flex={1}>
                     <b>Allusion</b>
                 </Col>
                 <Col flex={1}>
-                    <b>Allusion</b>
+                    <b></b>
                 </Col>
                 <Col flex={1}>
-                    <b>Allusion</b>
+                    <b></b>
                 </Col>
                 <Col flex={1}>
-                    <b>Allusion</b>
+                    <b></b>
                 </Col>
                 <Col flex={1}>
-                    <b>Allusion</b>
+                    <b></b>
                 </Col>
             </Row>
-            <Divider></Divider>
+            <Divider>Related Poems</Divider>
             <Row>
                 <Col flex={1}>
                     <b>Related Poem</b>
                 </Col>
                 <Col flex={1}>
-                    <b>Related Poem</b>
+                    <b></b>
                 </Col>
                 <Col flex={1}>
-                    <b>Related Poem</b>
+                    <b></b>
                 </Col>
                 <Col flex={1}>
-                    <b>Related Poem</b>
+                    <b></b>
                 </Col>
                 <Col flex={1}>
-                    <b>Related Poem</b>
+                    <b></b>
                 </Col>
             </Row>
             <Divider></Divider>

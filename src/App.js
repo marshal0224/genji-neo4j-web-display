@@ -59,7 +59,13 @@ export default class App extends React.Component{
           {
             key: 'Poem',
             label: (
-              <Link to="/poem">Poem</Link>
+              <Link to="/poem">Poems</Link>
+            )
+          }, 
+          {
+            key: 'Allusions',
+            label: (
+              'Allusions'
             )
           }, 
           {

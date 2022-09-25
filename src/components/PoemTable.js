@@ -331,6 +331,7 @@ export default function Poem() {
                                     <option>select:</option>
                                     {getOptions(row[0]).map((item) => <option key={entries[row[0]][item]}>{item}</option>)}
                                 </select>
+                                <br/>
                                 <p className={row[0]}></p>
                             </td>}
                             {auth === true
@@ -350,6 +351,7 @@ export default function Poem() {
                                     <option>select:</option>
                                     {getOptions(row[0]).map((item) => <option key={entries[row[0]][item]}>{item}</option>)}
                                 </select>
+                                <br/>
                                 <p className={row[0]}></p>
                             </td>}
                             {auth === true
