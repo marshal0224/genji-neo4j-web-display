@@ -8,7 +8,7 @@ const { Option } = Select;
 
 export default function PoemQuery() {
     const [chapters, setChapters] = useState([])
-    const [chpSelect, setChpSelect] = useState([false])
+    const [chpSelect, setChpSelect] = useState([false, undefined, undefined])
     const [count, setCount] = useState([])
     useMemo(() => {
         let get = 'match (:Genji_Poem)-[r:INCLUDED_IN]->(c:Chapter) return c.chapter_number as num, c.chapter_name as name, count(r) as count'
@@ -43,7 +43,7 @@ export default function PoemQuery() {
                     placeholder="Select a chapter"
                     style={{ width:220 }}
                     onSelect={(value) => {
-                        setChpSelect([true, value])
+                        setChpSelect([true, value, chpSelect[2]])
                         setCount(Array.from({length: chapters[value-1].count}, (_, i) => i + 1))
                     }}
                 >
@@ -60,6 +60,7 @@ export default function PoemQuery() {
                     showSearch
                     placeholder="#"
                     disabled={!chpSelect[0]}
+                    value={chpSelect[2]}
                     onSelect={(value) => {
                         setChpSelect([chpSelect[0], chpSelect[1], value])
                     }}
@@ -77,7 +78,7 @@ export default function PoemQuery() {
                 <Link
                     to={`/poem/${chpSelect[1]}/${chpSelect[2]}`}
                 >
-                    <Button>Query</Button>
+                    <Button disabled={typeof chpSelect[2] === 'undefined'}>Query</Button>
                 </Link>
             </Col>
             <Col span={16}>
