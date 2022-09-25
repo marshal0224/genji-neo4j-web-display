@@ -33,11 +33,21 @@ table {
 }
 
 [type=JP] {
+  display: inline-block;
+  white-space: pre-wrap;
   writing-mode: vertical-rl;
+  word-break:normal;
+  text-align: left;
+  margin: auto;
 }
 
 [type=non-JP] {
   text-align: center;
+  display: inline-block;
+  white-space: pre-wrap;
+  word-break:normal;
+  text-align: left;
+  margin: auto;
 }
 
 .pg p {
