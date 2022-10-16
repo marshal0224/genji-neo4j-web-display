@@ -3,7 +3,7 @@ import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../utils'
 import { useParams } from 'react-router-dom'
 import Edit from './edit'
-
+import { Link } from 'react-router-dom'
 export default function Poem() { 
     let { chapter, spkrGen, speaker, addrGen, addressee, auth, username, password } = useParams()
     const [metadata, setMetadata] = useState([])
@@ -269,7 +269,11 @@ export default function Poem() {
                     {metadata.map((row) => 
                         <tr key={row[0]}>
                             <td>{parseChp(row[0])}</td>
-                            <td className='pg'>{parseOrder(row[0])}</td>
+                            <td className='pg'>{
+                                <Link to={`/poem/${parseInt(row[0].substring(0, 2))}/${parseInt(row[0].match(/.{1,2}/g)[2])}`}>
+                                    {parseOrder(row[0])}
+                                </Link>
+                            }</td>
                             <td className='spkrCol'>
                                 {setCharColor(row[1])}
                                 {auth === true 

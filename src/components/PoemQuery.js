@@ -3,7 +3,7 @@ import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select, Col, Row, Button, Space, BackTop } from 'antd';
 import 'antd/dist/antd.min.css';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useParams } from 'react-router-dom';
 const { Option } = Select;
 
 export default function PoemQuery() {
@@ -36,35 +36,66 @@ export default function PoemQuery() {
             closeDriver()
         }
         _().catch(console.error)
-        
     }, [])
 
     // value: int, poem order
-    function updatePrevNext(value, buttonClick) {
+    function updatePrev(value) {
         let currChp = parseInt(chpSelect[1])
-        // console.log(chpSelect[1], value)
-        if (value < count.length) {
-            setPrevNext([[chpSelect[1], value - 1],[chpSelect[1], value+1]])
-        } else if (chpSelect[1] === '1' && value === 1) {
-            setPrevNext([['1', 1],['1', 2]])
+        let prev, next
+        console.log(chpSelect)
+        console.log(chpSelect[1] !== '1' && value === 1)
+        if (chpSelect[1] === '1' && value === 1) {
+            prev = ['1', 1]
+            next = ['1', 2]
         } else if (chpSelect[1] === '54') {
-            setPrevNext([['53', 28],['54', 1]])
-        } else if (chpSelect[1] !== '1' && value === '1') {
-            setPrevNext([[chapters[currChp - 2].num, chapters[currChp - 2].count],[chapters[currChp - 1].num, 2]])
-            // console.log("line 54")
+            prev = ['53', 28]
+            next = ['54', 1]
+        } else if (chpSelect[1] !== '1' && value === 1) {
+            console.log("Line 52")
+            prev = [chapters[currChp - 2].num, chapters[currChp - 2].count]
+            next = [chapters[currChp - 1].num, 2]
         } else if (value === count.length) {
-            setPrevNext([[chapters[currChp - 1].num, value - 1],[chapters[currChp].num, 1]])
-            // console.log("line 57")
-        }
+            prev = [chapters[currChp - 1].num, value - 1]
+            next = [chapters[currChp].num, 1]
+        } else if (value < count.length) {
+            prev = [chpSelect[1], value - 1]
+            next = [chpSelect[1], value + 1]
+        } 
+        console.log(prev)
+        setPrevNext([prev, next])
+        setChpSelect([true, prev[0], value])
+        setCount(Array.from({length: chapters[parseInt(chpSelect[1]) - 1].count}, (_, i) => i + 1))
+    }
+
+    function updateNext(value, buttonClick) {
+        let currChp = parseInt(chpSelect[1])
+        let prev, next
+        if (chpSelect[1] === '1' && value === 1) { // first poem
+            prev = ['1', 1]
+            next = ['1', 2]
+        } else if (chpSelect[1] === '54') { // last poem
+            prev = ['53', 28]
+            next = ['54', 1]
+        } else if (chpSelect[1] !== '1' && value === 1) { // for the first poem of each chapter, set the previous to be [prevChp, count] and the next to be [currChp, 2]
+            prev = [chapters[currChp - 2].num, chapters[currChp - 2].count]
+            next = [chapters[currChp - 1].num, 2]
+        } else if (value === count.length) {
+            prev = [chpSelect[1], value - 1]
+            next = [chapters[currChp - 1].num, 1]
+        } else if (value < count.length) {
+            prev = [chpSelect[1], value - 1]
+            next = [chpSelect[1], value + 1]
+        } 
+        setPrevNext([prev, next])
         if (buttonClick) {
-            setChpSelect([true, prevNext[1][0], prevNext[1][1]])
+            setChpSelect([true, next[0], value])
             setCount(Array.from({length: chapters[parseInt(chpSelect[1]) - 1].count}, (_, i) => i + 1))
         }
     }
 
     return (
         <Row>
-            <Col span={4}>
+            <Col span={6}>
                 <Select 
                     showSearch
                     placeholder="Select a chapter"
@@ -91,7 +122,7 @@ export default function PoemQuery() {
                     value={chpSelect[2]}
                     onSelect={(value) => {
                         setChpSelect([chpSelect[0], chpSelect[1], value])
-                        updatePrevNext(value, false)
+                        updateNext(value, false)
                     }}
                 >
                     {count.map(ct => 
@@ -103,28 +134,46 @@ export default function PoemQuery() {
                         </Option>
                     )}
                 </Select>
-                <br/>
                 <Link
                     to={`/poem/${chpSelect[1]}/${chpSelect[2]}`}
                 >
-                    <Button disabled={typeof chpSelect[2] === 'undefined'}>Query</Button>
+                    <Button 
+                        disabled={typeof chpSelect[2] === 'undefined'}
+                        onClick={
+                            () => {
+                                updateNext(chpSelect[2], false)
+                            }
+                        }
+                    >Query</Button>
                 </Link>
-            </Col>
-            <Col span={16}>
-                <Outlet />
-            </Col>
-            <Col span={4}>
+                <br />
+                <Link
+                    to={`/poem/${prevNext[0][0]}/${prevNext[0][1]}`}    
+                >
+                    <Button
+                        onClick={
+                            () => {
+                                updatePrev(prevNext[0][1], true)
+                            }
+                        }
+                    >Previous</Button>
+                </Link>
                 <Link
                     to={`/poem/${prevNext[1][0]}/${prevNext[1][1]}`}    
                 >
                     <Button
                         onClick={
                             () => {
-                                updatePrevNext(prevNext[1][1], true)
+                                updateNext(prevNext[1][1], true)
                             }
                         }
                     >Next</Button>
                 </Link>
+            </Col>
+            <Col span={16}>
+                <Outlet />
+            </Col>
+            <Col span={2}>
             </Col>
         </Row>
     )
