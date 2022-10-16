@@ -13,6 +13,7 @@ export default function PoemQuery() {
     const [count, setCount] = useState([])
     // prevNext: [["prevChp", "nextChp"], ["prevNum", "nextNum"]]
     const [prevNext, setPrevNext] = useState([["",""],["",""]])
+    const [buttonLock, setButtonLock] = useState(true)
     useMemo(() => {
         let get = 'match (:Genji_Poem)-[r:INCLUDED_IN]->(c:Chapter) return c.chapter_number as num, c.chapter_name as name, count(r) as count'
         const _ = async () => {
@@ -142,6 +143,7 @@ export default function PoemQuery() {
                         onClick={
                             () => {
                                 updateNext(chpSelect[2], false)
+                                setButtonLock(false)
                             }
                         }
                     >Query</Button>
@@ -151,6 +153,7 @@ export default function PoemQuery() {
                     to={`/poem/${prevNext[0][0]}/${prevNext[0][1]}`}    
                 >
                     <Button
+                        disabled={buttonLock}
                         onClick={
                             () => {
                                 updatePrev(prevNext[0][1], true)
@@ -162,6 +165,7 @@ export default function PoemQuery() {
                     to={`/poem/${prevNext[1][0]}/${prevNext[1][1]}`}    
                 >
                     <Button
+                        disabled={buttonLock}
                         onClick={
                             () => {
                                 updateNext(prevNext[1][1], true)

@@ -10,6 +10,7 @@ import { HeaderImg } from './components/Header';
 import { Home } from './components/Home';
 import { About } from './components/About';
 import { Acknowledgements } from './components/Acknowledgements';
+import AllusionTable from './components/AllusionTable';
 
 const { Header, Content, Footer } = Layout;
 
@@ -65,7 +66,7 @@ export default class App extends React.Component{
           {
             key: 'Allusions',
             label: (
-              'Allusions'
+              <Link to="/allusions">Allusions</Link>
             )
           }, 
           {
@@ -107,6 +108,7 @@ export default class App extends React.Component{
           <Route path="/poem" element={<PoemQuery />}>
             <Route path=":chapter/:number" element={<PoemPage />}></Route>
           </Route>
+          <Route path="/allusions" element={<AllusionTable />}></Route>
           <Route path="/search" element={<Search />}>
             <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password" element={<PoemTable />}></Route>
           </Route>
