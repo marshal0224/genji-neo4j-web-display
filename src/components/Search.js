@@ -921,8 +921,6 @@ export default class Search extends React.Component {
                     <Outlet />
                     </Col>
                     <Col span={3}>
-                        <Collapse ghost={true}>
-                        <Panel showArrow={false}>
                             <Space direction='vertical'>
                                 <Input 
                                     placeholder="input username" 
@@ -935,8 +933,6 @@ export default class Search extends React.Component {
                             </Space>
                             <Button disabled={this.state.auth} onClick={() => this.setState({ auth: true })}>Login</Button>
                             <Button disabled={!this.state.auth} onClick={() => this.setState({ auth: false })}>Logout</Button>
-                        </Panel>
-                        </Collapse>
                         <BackTop>
                             <div>Back to top</div>
                         </BackTop>
