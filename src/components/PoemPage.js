@@ -18,6 +18,7 @@ export default function PoemPage() {
         Cranston: 'N/A'
     })
     const [source, setSource] = useState([])
+    const [rel, setRel] = useState([])
     const [notes, setNotes] = useState("")
     if (number.length === 1) {
         number = '0' + number.toString()
@@ -25,8 +26,10 @@ export default function PoemPage() {
         number = number.toString()
     }
     useMemo(() => {
-        let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[a:ADDRESSEE_OF]-(:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "'+number+'" return poem, exchange, trans, allusions'
+        let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "'+number+'" return poem, exchange, trans'
+        let getHonka =  'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "'+number+'" return allusions'
         let getSrc = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), (g)-[:ALLUDES_TO]->(h:Honka)-[:ANTHOLOGIZED_IN]-(s:Source) where g.pnum ends with "' + number +'" return h.Honka as text, s.title as title'
+        let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number +'" return s.pnum as rel'
         const _ = async () => {
             initDriver( process.env.REACT_APP_NEO4J_URI, 
                 process.env.REACT_APP_NEO4J_USERNAME, 
@@ -34,7 +37,9 @@ export default function PoemPage() {
             const driver = getDriver()
             const session = driver.session()
             const res = await session.readTransaction(tx => tx.run(get))
+            const resHonka = await session.readTransaction(tx => tx.run(getHonka))
             const resSrc = await session.readTransaction(tx => tx.run(getSrc))
+            const resRel = await session.readTransaction(tx => tx.run(getRel))
             let exchange = new Set()
             res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
             exchange = Array.from(exchange).map(e => JSON.parse(e))
@@ -49,17 +54,20 @@ export default function PoemPage() {
                     [e[0]]: e[1]
                 })))
             let allusions = new Set()
-            res.records.map(e => toNativeTypes(e.get('allusions'))).forEach(e => allusions.add(JSON.stringify(e)))  
+            resHonka.records.map(e => toNativeTypes(e.get('allusions'))).forEach(e => allusions.add(JSON.stringify(e)))  
             allusions = Array.from(allusions).map(e => JSON.parse(e))
             allusions = allusions.map(e => e.end.properties.Honka)
             let sources = resSrc.records.map(e => [Object.values(toNativeTypes(e.get('text'))).join(''), Object.values(toNativeTypes(e.get('title'))).join('')])
             allusions.forEach(e => {
-                if (!JSON.stringify(sources).includes(e)) {
+                if (!JSON.stringify(sources).includes(JSON.stringify(e))) {
                     sources.push([e, 'N/A'])
                 }
             })
-            console.log(sources)
             setSource(sources)
+            let related = new Set()
+            resRel.records.map(e => toNativeTypes(e.get('rel'))).forEach(e => related.add([Object.values(e).join('')]))  
+            related = Array.from(related)
+            setRel(related)
             session.close()
             closeDriver()
         }
@@ -130,21 +138,6 @@ export default function PoemPage() {
             </Row>
             <Divider>Allusions</Divider>
             <Row>
-                {/* <Col flex={1}>
-                    <b>Allusion</b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col> */}
                 {source.map(e => 
                     <Col flex={1}>
                         {e[0]}
@@ -155,21 +148,11 @@ export default function PoemPage() {
             </Row>
             <Divider>Related Poems</Divider>
             <Row>
-                <Col flex={1}>
-                    <b>Related Poem</b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
-                <Col flex={1}>
-                    <b></b>
-                </Col>
+                {rel.map(e => 
+                    <Col flex={1}>
+                        {e[0]}
+                    </Col>
+                )}
             </Row>
             <Divider></Divider>
             <Row>
