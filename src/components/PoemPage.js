@@ -19,6 +19,7 @@ export default function PoemPage() {
     })
     const [source, setSource] = useState([])
     const [rel, setRel] = useState([])
+    const [tag, setTag] = useState([])
     const [notes, setNotes] = useState("")
     if (number.length === 1) {
         number = '0' + number.toString()
@@ -30,6 +31,7 @@ export default function PoemPage() {
         let getHonka =  'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "'+number+'" return allusions'
         let getSrc = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), (g)-[:ALLUDES_TO]->(h:Honka)-[:ANTHOLOGIZED_IN]-(s:Source) where g.pnum ends with "' + number +'" return h.Honka as text, s.title as title'
         let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number +'" return s.pnum as rel'
+        let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "'+chapter+'"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number +'" return t.Type as type'
         const _ = async () => {
             initDriver( process.env.REACT_APP_NEO4J_URI, 
                 process.env.REACT_APP_NEO4J_USERNAME, 
@@ -40,6 +42,7 @@ export default function PoemPage() {
             const resHonka = await session.readTransaction(tx => tx.run(getHonka))
             const resSrc = await session.readTransaction(tx => tx.run(getSrc))
             const resRel = await session.readTransaction(tx => tx.run(getRel))
+            const resTag = await session.readTransaction(tx => tx.run(getTag))
             let exchange = new Set()
             res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
             exchange = Array.from(exchange).map(e => JSON.parse(e))
@@ -68,6 +71,10 @@ export default function PoemPage() {
             resRel.records.map(e => toNativeTypes(e.get('rel'))).forEach(e => related.add([Object.values(e).join('')]))  
             related = Array.from(related)
             setRel(related)
+            let tags = new Set()
+            resTag.records.map(e => toNativeTypes(e.get('type'))).forEach(e => tags.add([Object.values(e).join('')]))  
+            tags = Array.from(tags)
+            setTag(tags)
             session.close()
             closeDriver()
         }
@@ -154,10 +161,13 @@ export default function PoemPage() {
                     </Col>
                 )}
             </Row>
-            <Divider></Divider>
+            <Divider>Tags</Divider>
             <Row>
-                <b>Tags:</b>
-                <br/>
+                {tag.map(e => 
+                    <Col flex={1}>
+                        {e[0]}
+                    </Col>
+                )}
             </Row>
             <Divider></Divider>
             <Row>
