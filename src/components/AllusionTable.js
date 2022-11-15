@@ -37,6 +37,23 @@ export default function AllusionTable() {
             dataIndex: 'notes',
             key: 'notes',
         },
+        {
+            title: 'link',
+            key: 'link',
+            render: (_, record) => (
+                <Row>
+                    <Select
+                        options={[
+                            {
+                                value: record.key,
+                                label: record.key
+                            }
+                        ]}
+                    ></Select>
+                    <Button>Link</Button>
+                </Row>
+            )
+        }
     ]
     let [data, setData] = useState([])
     useEffect(() => {
