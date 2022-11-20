@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Select, Col, Row, Button, Space, BackTop, Divider, Table, Input } from 'antd';
+import { Select, Col, Row, Button, Space, BackTop, Divider, Table, Input, Tag } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
-import { getAllByPlaceholderText } from '@testing-library/react';
 
 const { Column, ColmnGroup } = Table;
 
@@ -16,6 +15,8 @@ export default function AllusionTable() {
     let [auth, setAuth] = useState(false)
     let [usr, setUsr] = useState('')
     let [pwd, setPwd] = useState('')
+    let [allusion, setAllusion] = useState({})
+
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
     const columns = [
         {
@@ -61,18 +62,24 @@ export default function AllusionTable() {
             width: 200,
             render: (_, record) => (
                 <Row>
-                    {auth === true
-                        ? <><Select
-                            showSearch
-                            options={pnum}
-                            style={{
-                                width: '60%',
-                            }}
-                            onChange={handleSelect}
-                        ></Select><Button
-                            onClick={() => createLink(record.key)}
-                        >Link</Button></>
-                        : null}
+                    <Col span={24}>
+                        {allusion[record.key] !== undefined ? allusion[record.key].map(e => <Tag>{e}</Tag>) : null}
+                    </Col>
+                    <Divider></Divider>
+                    <Col span={24}>
+                        {auth === true
+                            ? <><Select
+                                showSearch
+                                options={pnum}
+                                style={{
+                                    width: '60%',
+                                }}
+                                onChange={handleSelect}
+                            ></Select><Button
+                                onClick={() => createLink(record.key)}
+                            >Link</Button></>
+                            : null}
+                    </Col>
                 </Row>
             )
         }
@@ -114,6 +121,7 @@ export default function AllusionTable() {
     useEffect(() => {
         let get = 'match (a:Honka) return (a) as honka'
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
+        let getLinks = 'MATCH (n:Honka)-[]-(p:Genji_Poem) RETURN n.id as id, p.pnum as pnum'
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
@@ -122,6 +130,7 @@ export default function AllusionTable() {
             const session = driver.session()
             const res = await session.readTransaction(tx => tx.run(get))
             const resPnum = await session.readTransaction(tx => tx.run(getPnum))
+            const resLink = await session.readTransaction(tx => tx.run(getLinks))
             let ans = []
             res.records.map(e => toNativeTypes(e.get('honka'))).forEach(e => {
                 delete Object.assign(e.properties, { ['key']: e.properties['id'] })['id']
@@ -134,6 +143,16 @@ export default function AllusionTable() {
                 ls.push({ value: e, label: e })
             })
             setPnum(ls)
+            let ll = Array.from(new Set(resLink.records.map(e => JSON.stringify([e.get('id'), e.get('pnum')])))).map(e => JSON.parse(e))
+            let links = new Object()
+            ll.forEach(e => {
+                if (e[0] in links) {
+                    links[e[0]].push(e[1])
+                } else {
+                    links[e[0]] = [e[1]]
+                }
+            })
+            setAllusion(links)
             session.close()
             closeDriver()
         }
