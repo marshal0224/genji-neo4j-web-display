@@ -8,14 +8,14 @@ import 'antd/dist/antd.min.css';
 const { Column, ColmnGroup } = Table;
 
 export default function AllusionTable() {
-    let [pnum, setPnum] = useState([{ value: '', label: '' }])
-    let [data, setData] = useState([])
-    let [select, setSelect] = useState('')
-    let [query, setQuery] = useState('')
-    let [auth, setAuth] = useState(false)
-    let [usr, setUsr] = useState('')
-    let [pwd, setPwd] = useState('')
-    let [allusion, setAllusion] = useState({})
+    const [pnum, setPnum] = useState([{ value: '', label: '' }])
+    const [data, setData] = useState([])
+    const [select, setSelect] = useState('')
+    const [query, setQuery] = useState('')
+    const [auth, setAuth] = useState(false)
+    const [usr, setUsr] = useState('')
+    const [pwd, setPwd] = useState('')
+    const [allusion, setAllusion] = useState({})
 
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
     const columns = [

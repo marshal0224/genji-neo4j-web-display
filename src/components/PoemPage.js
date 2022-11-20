@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Select, Col, Row, Button, Space, BackTop, Divider } from 'antd';
+import { Select, Col, Row, Button, Space, BackTop, Divider, Tag, Input } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 
@@ -18,20 +18,54 @@ export default function PoemPage() {
         Cranston: 'N/A'
     })
     const [source, setSource] = useState([])
-    const [rel, setRel] = useState([])
-    const [tag, setTag] = useState([])
+    const [rel, setRel] = useState([]) // currently linked honka
+    const [tag, setTag] = useState([]) // currently linked tags
+    const [tagType, setTagType] = useState([''])
+    const [tagQuery, setTagQuery] = useState('')
+    const [select, setSelect] = useState('')
     const [notes, setNotes] = useState("")
+    const [auth, setAuth] = useState(false)
+    const [usr, setUsr] = useState('')
+    const [pwd, setPwd] = useState('')
+    
+    const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
+
     if (number.length === 1) {
         number = '0' + number.toString()
     } else {
         number = number.toString()
     }
+
+
+    const handleSelect = (value) => {
+        setSelect(value)
+    }
+
+    const createLink = () => {
+        console.log(tag)
+        if (select === '') {
+            alert('Need to select a tag!')
+        } else if (tag.includes(select)) {
+            alert('Poem is already tagged as ' + select)
+        } else {
+            let bool = window.confirm('About to tag this poem as ' + select + '. ')
+            if (bool) {
+                setTagQuery('MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (t:Tag {Type: "' + select + '"}) merge (g)-[:TAGGED_AS]->(t) return (g)')
+                let ls = tag
+                ls.push(select)
+                setTag(ls)
+            }
+        }
+        setSelect('')
+    }
+
     useMemo(() => {
         let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
         let getHonka = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "' + number + '" return allusions'
         let getSrc = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:ALLUDES_TO]->(h:Honka)-[:ANTHOLOGIZED_IN]-(s:Source) where g.pnum ends with "' + number + '" return h.Honka as text, s.title as title'
         let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
         let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
+        let getTagTypes = 'match (t:Tag) return t.Type as type'
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
@@ -43,6 +77,7 @@ export default function PoemPage() {
             const resSrc = await session.readTransaction(tx => tx.run(getSrc))
             const resRel = await session.readTransaction(tx => tx.run(getRel))
             const resTag = await session.readTransaction(tx => tx.run(getTag))
+            const resType = await session.readTransaction(tx => tx.run(getTagTypes))
             let exchange = new Set()
             res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
             exchange = Array.from(exchange).map(e => JSON.parse(e))
@@ -73,13 +108,35 @@ export default function PoemPage() {
             setRel(related)
             let tags = new Set()
             resTag.records.map(e => toNativeTypes(e.get('type'))).forEach(e => tags.add([Object.values(e).join('')]))
-            tags = Array.from(tags)
+            tags = Array.from(tags).flat()
             setTag(tags)
+            let types = resType.records.map(e => e.get('type'))
+            let ls = []
+            types.forEach(e => ls.push({value: e, label: e})) 
+            setTagType(ls)
             session.close()
             closeDriver()
         }
         _().catch(console.error)
     }, [chapter, number])
+
+    useMemo(() => {
+        const _ = async () => {
+            initDriver(process.env.REACT_APP_NEO4J_URI,
+                process.env.REACT_APP_NEO4J_USERNAME,
+                process.env.REACT_APP_NEO4J_PASSWORD)
+            const driver = getDriver()
+            const session = driver.session()
+            let write = await session.writeTransaction(tx => tx.run(tagQuery))
+            session.close()
+            closeDriver()
+        }
+        if (tagQuery !== '') {
+            _().catch(console.error)
+            alert('Linked created!')
+        }
+    }, [tagQuery])
+
     return (
         <div>
             <Row>
@@ -163,17 +220,52 @@ export default function PoemPage() {
             </Row>
             <Divider>Tags</Divider>
             <Row>
-                {tag.map(e =>
-                    <Col flex={1}>
-                        {e[0]}
-                    </Col>
-                )}
+                <Col span={24}>
+                    {tag.map(e =>
+                        <Tag>{e}</Tag>
+                    )}
+                </Col>
+                <Divider></Divider>
+                <Col span={24}>
+                    {auth === true
+                        ? <><Select
+                            showSearch
+                            options={tagType}
+                            style={{
+                                width: '20%',
+                            }}
+                        onChange={handleSelect}
+                        ></Select>
+                        <Button
+                            onClick={() => createLink()}
+                        >
+                            Link
+                        </Button></>
+                        : null}
+                </Col>
             </Row>
             <Divider></Divider>
             <Row>
                 <b>Notes:</b>
                 <br />
                 <p type="non-JP">{notes}</p>
+            </Row>
+            <Divider></Divider>
+            <Row align='middle'>
+                <Col offset={10}>
+                    <Space direction='vertical'>
+                        <Input
+                            placeholder="input username"
+                            onChange={(event) => setUsr(event.target.value)}
+                        />
+                        <Input.Password
+                            placeholder="input password"
+                            onChange={(event) => setPwd(event.target.value)}
+                        />
+                    </Space>
+                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : console.log(usr, pwd)}>Login</Button>
+                    <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
+                </Col>
             </Row>
         </div>
     )

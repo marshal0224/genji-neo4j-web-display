@@ -96,7 +96,7 @@ export default function PoemQuery() {
 
     return (
         <Row>
-            <Col span={6}>
+            <Col span={5}>
                 <Select 
                     showSearch
                     placeholder="Select a chapter"
@@ -174,10 +174,8 @@ export default function PoemQuery() {
                     >Next</Button>
                 </Link>
             </Col>
-            <Col span={16}>
+            <Col span={19}>
                 <Outlet />
-            </Col>
-            <Col span={2}>
             </Col>
         </Row>
     )
