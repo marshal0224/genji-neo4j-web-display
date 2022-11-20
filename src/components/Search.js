@@ -14,7 +14,7 @@ export default class Search extends React.Component {
         super(props)
         this.state = {
             // original data pulled from Neo4j
-            chapters: Array.from(Array(54), (_,i)=> i).map(e => [e+1, 1]),
+            chapters: Array.from(Array(54), (_, i) => i).map(e => [e + 1, 1]),
             characters: [],
             // charNum: 0,
             male_speakers: [],
@@ -79,7 +79,7 @@ export default class Search extends React.Component {
     // returns the intersection of two lists
     getIntersection(ls1, ls2) {
         return ls1.map(e => {
-            if (e[1] && ls2.some(f => f[0]===e[0] && f[1])) {
+            if (e[1] && ls2.some(f => f[0] === e[0] && f[1])) {
                 return e
             } else {
                 return [e[0], 0]
@@ -131,7 +131,7 @@ export default class Search extends React.Component {
                         break
                     }
                 }
-                charFiltered.push([chars[i][0],0])
+                charFiltered.push([chars[i][0], 0])
             }
         } else {
             // if either spkr/addr is any
@@ -140,7 +140,7 @@ export default class Search extends React.Component {
                 let curr = this.checkCharsInChp(chars, this.state.graph, this.state.selectedChapters[j], false)
                 chars = this.getIntersection(prev, curr)
             }
-        } 
+        }
         return this.getIntersection(chpFiltered, charFiltered)
     }
 
@@ -193,8 +193,8 @@ export default class Search extends React.Component {
         this.setState({
             selectedAddrGen: value,
             male_addressees: male_addressees,
-            female_addressees: female_addressees, 
-            nonhuman_addressees: nonhuman_addressees, 
+            female_addressees: female_addressees,
+            nonhuman_addressees: nonhuman_addressees,
             multiple_addressees: multiple_addressees,
         })
     }
@@ -210,7 +210,7 @@ export default class Search extends React.Component {
                 if (!selectedChapters.includes(true)) {
                     char[1] = !flag
                 }
-            } catch(e) {}
+            } catch (e) { }
         })
         return chars
     }
@@ -221,9 +221,9 @@ export default class Search extends React.Component {
         for (let i = 0; i < adj.length; i++) {
             let poem_chp = parseInt(adj[i].substring(0, 2))
             if (poem_chp === chp) {
-                if (type === 'spkr' && graph.getEdgeWeight(char, adj[i]) === 3){
+                if (type === 'spkr' && graph.getEdgeWeight(char, adj[i]) === 3) {
                     return true
-                } else if (type === 'addr' && graph.getEdgeWeight(char, adj[i]) === 2){
+                } else if (type === 'addr' && graph.getEdgeWeight(char, adj[i]) === 2) {
                     return true
                 }
             }
@@ -232,7 +232,7 @@ export default class Search extends React.Component {
     }
 
     // sets the characters of a certain gender based on selected genders and returns the character list. flag: true for select, false for deselect
-    checkGender(chars, gender, selectedGenders){
+    checkGender(chars, gender, selectedGenders) {
         if (!selectedGenders.includes(gender)) {
             chars = chars.map(char => [char[0], 0])
         }
@@ -242,7 +242,7 @@ export default class Search extends React.Component {
     // returns a character with their display set by the existence of their exchange with another character
     checkHasExchange(c1, c2, graph) {
         let lca = graph.lowestCommonAncestors(c1[0], c2)
-        if (lca.filter(e => typeof(e) === 'string' && !(c1[0] !== c2 && e === "soliloquies")).length === 0) {
+        if (lca.filter(e => typeof (e) === 'string' && !(c1[0] !== c2 && e === "soliloquies")).length === 0) {
             return [c1[0], 0]
         } else if (c1[0] === c2 && lca.length === 1 && lca[0] === c2) {
             if (graph.hasEdge(c2, 'soliloquies')) {
@@ -318,7 +318,7 @@ export default class Search extends React.Component {
         let nonhuman_addressees = this.state.nonhuman_addressees
         let multiple_addressees = this.state.multiple_addressees
         // if user selects 'any' for chapter, resets the char filters based on their local values
-        if (value[value.length - 1] === 'anychp' || value.length === 0){
+        if (value[value.length - 1] === 'anychp' || value.length === 0) {
             value = ['anychp']
             if (this.state.selectedAddressee[0] === 'Any') {
                 male_speakers = male_speakers.map(char => [char[0], 1])
@@ -359,7 +359,7 @@ export default class Search extends React.Component {
                 female_addressees = this.checkCharsInChp(female_addressees, this.state.graph, difference, true)
                 nonhuman_addressees = this.checkCharsInChp(nonhuman_addressees, this.state.graph, difference, true)
                 multiple_addressees = this.checkCharsInChp(multiple_addressees, this.state.graph, difference, true)
-            } else { 
+            } else {
                 // if selecta a chapter, display new characters
                 if (value.length === 1) {
                     difference = value[0]
@@ -373,14 +373,14 @@ export default class Search extends React.Component {
                 nonhuman_addressees = this.checkCharsInChp(nonhuman_addressees, this.state.graph, difference, false)
                 multiple_addressees = this.checkCharsInChp(multiple_addressees, this.state.graph, difference, false)
             }
-        }    
+        }
         // filter out any characters not allowed by the gender filters
         male_speakers = this.checkGender(male_speakers, 'male', this.state.selectedSpkrGen)
         female_speakers = this.checkGender(female_speakers, 'female', this.state.selectedSpkrGen)
         male_addressees = this.checkGender(male_addressees, 'male', this.state.selectedAddrGen)
         female_addressees = this.checkGender(female_addressees, 'female', this.state.selectedAddrGen)
         nonhuman_addressees = this.checkGender(nonhuman_addressees, 'nonhuman', this.state.selectedAddrGen)
-        multiple_addressees = this.checkGender(multiple_addressees, 'multiple', this.state.selectedAddrGen)      
+        multiple_addressees = this.checkGender(multiple_addressees, 'multiple', this.state.selectedAddrGen)
         this.setState({
             male_speakers: male_speakers,
             female_speakers: female_speakers,
@@ -399,33 +399,33 @@ export default class Search extends React.Component {
         let chars = []
         if (type === 'addr') {
             if (this.state.selectedSpkrGen.includes('male')) {
-                chars.push([ ...this.state.male_speakers ])
+                chars.push([...this.state.male_speakers])
             } else {
                 chars.push([])
             }
             if (this.state.selectedSpkrGen.includes('female')) {
-                chars.push([ ...this.state.female_speakers ])
+                chars.push([...this.state.female_speakers])
             } else {
                 chars.push([])
             }
         } else {
             if (this.state.selectedAddrGen.includes('male')) {
-                chars.push([ ...this.state.male_addressees ])
+                chars.push([...this.state.male_addressees])
             } else {
                 chars.push([])
             }
             if (this.state.selectedAddrGen.includes('female')) {
-                chars.push([ ...this.state.female_addressees ])
+                chars.push([...this.state.female_addressees])
             } else {
                 chars.push([])
             }
             if (this.state.selectedAddrGen.includes('nonhuman')) {
-                chars.push([ ...this.state.nonhuman_addressees ])
+                chars.push([...this.state.nonhuman_addressees])
             } else {
                 chars.push([])
             }
             if (this.state.selectedAddrGen.includes('multiple')) {
-                chars.push([ ...this.state.multiple_addressees ])
+                chars.push([...this.state.multiple_addressees])
             } else {
                 chars.push([])
             }
@@ -458,7 +458,7 @@ export default class Search extends React.Component {
                     }
                 }
             })
-        } else if (value.length === 0 && this.state.selectedChapters[0] !== 'anychp') { 
+        } else if (value.length === 0 && this.state.selectedChapters[0] !== 'anychp') {
             //when a select is empty and a chp is specified, reset the other select's options by chp and gen
             chars.forEach(ls => ls.map(char => [char[0], 0]))
             // if chars are speakers
@@ -484,7 +484,7 @@ export default class Search extends React.Component {
                     this.state.selectedChapters.forEach(chp => {
                         chars[1] = this.checkCharsInChp(chars[1], this.graph, chp, false)
                     })
-                }                
+                }
                 if (this.state.selectedAddrGen.includes('nonhuman')) {
                     this.state.selectedChapters.forEach(chp => {
                         chars[2] = this.checkCharsInChp(chars[2], this.graph, chp, false)
@@ -498,13 +498,13 @@ export default class Search extends React.Component {
             }
         } else {
             // there exists a spkr/addr and a chp
-            let difference 
+            let difference
             let prevChars
             if (type === 'addr') {
                 prevChars = this.state.selectedSpeaker
             } else {
                 prevChars = this.state.selectedAddressee
-            } 
+            }
             if (prevChars.length > value.length) { // deselect
                 difference = value[0]
                 chars.filter(ls => ls.length > 0).forEach(ls => {
@@ -550,7 +550,7 @@ export default class Search extends React.Component {
                 multiple_addressees: chars[3],
             })
         }
-        if (value.length !==0 && value.includes('Any')) {
+        if (value.length !== 0 && value.includes('Any')) {
             value.splice(value.indexOf('Any'), 1)
         }
         if (value.length !== 0) {
@@ -579,7 +579,7 @@ export default class Search extends React.Component {
             })
         }
 
-        if (value.length !==0 && value.includes('Any')) {
+        if (value.length !== 0 && value.includes('Any')) {
             value.splice(value.indexOf('Any'), 1)
         }
 
@@ -627,7 +627,7 @@ export default class Search extends React.Component {
         const session = driver.session()
         let query = 'match exchange=(s:Character)-[:SPEAKER_OF]-(g:Genji_Poem)-[:ADDRESSEE_OF]-(a:Character) return exchange'
         let res = await session.readTransaction(tx => tx.run(query))
-        let exchange = res.records.map(row => {return toNativeTypes(row.get('exchange'))})
+        let exchange = res.records.map(row => { return toNativeTypes(row.get('exchange')) })
         let graph = this.Graph()
         let characters = []
         let male_speakers = []
@@ -652,8 +652,8 @@ export default class Search extends React.Component {
                 characters.push(addr)
                 graph.addEdge(addr_gen, addr)
             }
-            if (!graph.hasEdge(pnum, parseInt(pnum.substring(0,2)))) {
-                graph.addEdge(pnum, parseInt(pnum.substring(0,2)))
+            if (!graph.hasEdge(pnum, parseInt(pnum.substring(0, 2)))) {
+                graph.addEdge(pnum, parseInt(pnum.substring(0, 2)))
             }
             // w=3 for speaker, w=2 for addressee
             if (!graph.hasEdge(spkr, pnum, 3)) {
@@ -695,9 +695,9 @@ export default class Search extends React.Component {
             }
         }
         this.setState({
-            characters:characters.sort().map(e => [e, 1]),
-            male_speakers: male_speakers.sort().map(e => [e, 1]), 
-            female_speakers: female_speakers.sort().map(e => [e, 1]), 
+            characters: characters.sort().map(e => [e, 1]),
+            male_speakers: male_speakers.sort().map(e => [e, 1]),
+            female_speakers: female_speakers.sort().map(e => [e, 1]),
             male_addressees: male_addressees.sort().map(e => [e, 1]),
             female_addressees: female_addressees.sort().map(e => [e, 1]),
             multiple_addressees: multiple_addressees.sort().map(e => [e, 1]),
@@ -715,7 +715,7 @@ export default class Search extends React.Component {
         await delay(3000)
         if (this.state.newCountNeeded) {
             this.setState({
-                numOfPoems: document.getElementsByTagName('tr').length-1,
+                numOfPoems: document.getElementsByTagName('tr').length - 1,
                 newCountNeeded: false,
             })
         }
@@ -726,12 +726,12 @@ export default class Search extends React.Component {
             <div>
                 <Row>
                     <Col span={3}>
-                        <Statistic title={'Queried Poems'} value={this.state.numOfPoems}/>
+                        <Statistic title={'Queried Poems'} value={this.state.numOfPoems} />
                         <p>
                             If the count is wrong, click "query" again.
                         </p>
                         <p>
-                            Querying multiple options from one dropdown will become possible in the near future. For now, please have one option selected in each field to ensure a successful query. 
+                            Querying multiple options from one dropdown will become possible in the near future. For now, please have one option selected in each field to ensure a successful query.
                         </p>
                     </Col>
                     <Col span={18}>
@@ -749,7 +749,7 @@ export default class Search extends React.Component {
                             <p>Select chapter</p>
                             <Select
                                 ref={this.chpFilterRef}
-                                style={{ width:200 }}
+                                style={{ width: 200 }}
                                 mode={'multiple'}
                                 open={true}
                                 showSearch
@@ -766,7 +766,7 @@ export default class Search extends React.Component {
                                     (optionA, optionB) => {
                                         if (optionA.disabled === true && optionB.disabled === false) {
                                             return 1
-                                        } 
+                                        }
                                         else if (optionA.disabled === false && optionB.disabled === true) {
                                             return -1
                                         } else {
@@ -775,33 +775,33 @@ export default class Search extends React.Component {
                                     }
                                 }
                             >
-                                <Option 
-                                    className={'chp_opt'} 
+                                <Option
+                                    className={'chp_opt'}
                                     value='anychp'
                                 >
-                                        Any
+                                    Any
                                 </Option>
-                                {this.state.chapters.map(chp => 
-                                    <Option 
-                                        className={'chp_opt'} 
-                                        key={chp[0]} 
+                                {this.state.chapters.map(chp =>
+                                    <Option
+                                        className={'chp_opt'}
+                                        key={chp[0]}
                                         value={chp[0]}
                                         disabled={!chp[1]}
                                     >
-                                        {chp[0] + ' '+getChpList()[chp[0]-1]}
+                                        {chp[0] + ' ' + getChpList()[chp[0] - 1]}
                                     </Option>)}
                             </Select>
                         </form>
                         <form>
                             <CheckboxGroup defaultValue={this.state.speakerGenderList} onChange={this.handleSpkrGenChange}>
-                                <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)'}}>male</Checkbox>
-                                <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)'}}>female</Checkbox>
+                                <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)' }}>male</Checkbox>
+                                <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)' }}>female</Checkbox>
                             </CheckboxGroup>
                             <br />
                             <br />
                             <p>Select speaker</p>
-                            <Select 
-                                style={{ width:200 }}
+                            <Select
+                                style={{ width: 200 }}
                                 mode={'multiple'}
                                 open={true}
                                 showSearch
@@ -812,7 +812,7 @@ export default class Search extends React.Component {
                                     (optionA, optionB) => {
                                         if (optionA.disabled === true && optionB.disabled === false) {
                                             return 1
-                                        } 
+                                        }
                                         else if (optionA.disabled === false && optionB.disabled === true) {
                                             return -1
                                         } else {
@@ -824,14 +824,14 @@ export default class Search extends React.Component {
                                 getPopupContainer={triggerNode => triggerNode.parentNode}
                             >
                                 {<Option value='Any'>Any</Option>}
-                                {[...this.state.male_speakers, ...this.state.female_speakers].sort((a, b) => a[0].localeCompare(b[0])).map(spkr => 
-                                    <Option 
-                                        key={'spkr_'+spkr[0]} 
-                                        value={spkr[0]} 
-                                        disabled={!spkr[1]} 
+                                {[...this.state.male_speakers, ...this.state.female_speakers].sort((a, b) => a[0].localeCompare(b[0])).map(spkr =>
+                                    <Option
+                                        key={'spkr_' + spkr[0]}
+                                        value={spkr[0]}
+                                        disabled={!spkr[1]}
                                         style={{
                                             backgroundColor: this.state.male_speakers.some(e => spkr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' : 'rgba(255, 182, 193, 0.3)',
-                                    }}>
+                                        }}>
                                         {spkr[0]}
                                     </Option>)}
                             </Select>
@@ -840,26 +840,26 @@ export default class Search extends React.Component {
                             <CheckboxGroup defaultValue={this.state.addresseeGenderList} onChange={this.handleAddrGenChange}>
                                 <Row justify="space-between">
                                     <Col>
-                                        <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)'}}>male</Checkbox>
+                                        <Checkbox value={'male'} style={{ backgroundColor: 'rgba(72, 209, 204, 0.3)' }}>male</Checkbox>
                                     </Col>
                                     <Col>
-                                        <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)'}}>female</Checkbox>
+                                        <Checkbox value={'female'} style={{ backgroundColor: 'rgba(255, 182, 193, 0.3)' }}>female</Checkbox>
                                     </Col>
                                 </Row>
                                 <Row justify="space-between">
                                     <Col>
-                                        <Checkbox value={'nonhuman'} style={{ backgroundColor: 'rgba(144, 238, 144, 0.3)'}}>nonhuman</Checkbox>
+                                        <Checkbox value={'nonhuman'} style={{ backgroundColor: 'rgba(144, 238, 144, 0.3)' }}>nonhuman</Checkbox>
                                     </Col>
                                     <Col>
-                                        <Checkbox value={'multiple'} style={{ backgroundColor: 'rgba(255, 250, 205, 0.3)'}}>multiple</Checkbox>
+                                        <Checkbox value={'multiple'} style={{ backgroundColor: 'rgba(255, 250, 205, 0.3)' }}>multiple</Checkbox>
                                     </Col>
                                 </Row>
                             </CheckboxGroup>
                             <br />
                             <br />
                             <p>Select addressee</p>
-                            <Select 
-                                style={{ width:200 }}
+                            <Select
+                                style={{ width: 200 }}
                                 mode={'multiple'}
                                 open={true}
                                 showSearch
@@ -869,7 +869,7 @@ export default class Search extends React.Component {
                                     (optionA, optionB) => {
                                         if (optionA.disabled === true && optionB.disabled === false) {
                                             return 1
-                                        } 
+                                        }
                                         else if (optionA.disabled === false && optionB.disabled === true) {
                                             return -1
                                         } else {
@@ -882,19 +882,19 @@ export default class Search extends React.Component {
                                 getPopupContainer={triggerNode => triggerNode.parentNode}
                             >
                                 {<Option value='Any'>Any</Option>}
-                                {[...this.state.male_addressees, ...this.state.female_addressees, ...this.state.nonhuman_addressees, ...this.state.multiple_addressees].sort((a, b) => a[0].localeCompare(b[0])).map(addr => 
-                                <Option 
-                                    key={'addr_'+addr[0]} 
-                                    value={addr[0]} 
-                                    disabled={!addr[1]} 
-                                    style={{
-                                        backgroundColor: this.state.male_addressees.some(e => addr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' : 
-                                        this.state.female_addressees.some(e => addr[0] === e[0]) ? 'rgba(255, 182, 193, 0.3)' : 
-                                        this.state.nonhuman_addressees.some(e => addr[0] === e[0]) ? 'rgba(144, 238, 144, 0.3)' : 'rgba(255, 250, 205, 0.3)'
-                                    }
-                                }>
-                                    {addr[0]}
-                                </Option>)}
+                                {[...this.state.male_addressees, ...this.state.female_addressees, ...this.state.nonhuman_addressees, ...this.state.multiple_addressees].sort((a, b) => a[0].localeCompare(b[0])).map(addr =>
+                                    <Option
+                                        key={'addr_' + addr[0]}
+                                        value={addr[0]}
+                                        disabled={!addr[1]}
+                                        style={{
+                                            backgroundColor: this.state.male_addressees.some(e => addr[0] === e[0]) ? 'rgba(72, 209, 204, 0.3)' :
+                                                this.state.female_addressees.some(e => addr[0] === e[0]) ? 'rgba(255, 182, 193, 0.3)' :
+                                                    this.state.nonhuman_addressees.some(e => addr[0] === e[0]) ? 'rgba(144, 238, 144, 0.3)' : 'rgba(255, 250, 205, 0.3)'
+                                        }
+                                        }>
+                                        {addr[0]}
+                                    </Option>)}
                             </Select>
                         </form>
                         {/* <form>
@@ -911,28 +911,28 @@ export default class Search extends React.Component {
                                 <Option>ENKeyword</Option>
                             </Select>
                         </form> */}
-                        <Link 
+                        <Link
                             to={`/search/${this.state.selectedChapters}/${this.state.selectedSpkrGen}/${this.state.selectedSpeaker}/${this.state.selectedAddrGen}/${this.state.selectedAddressee}/${this.state.auth}/${this.state.username}/${this.state.password}`}
                         >
                             <Button onClick={this.updateCount}>Query</Button>
                         </Link>
                         {/* </Panel> */}
-                    {/* </Collapse> */}
-                    <Outlet />
+                        {/* </Collapse> */}
+                        <Outlet />
                     </Col>
                     <Col span={3}>
-                            <Space direction='vertical'>
-                                <Input 
-                                    placeholder="input username" 
-                                    onChange={this.updateUsername}
-                                />
-                                <Input.Password 
-                                    placeholder="input password" 
-                                    onChange={this.updatePassword}
-                                />
-                            </Space>
-                            <Button disabled={this.state.auth} onClick={() => this.setState({ auth: true })}>Login</Button>
-                            <Button disabled={!this.state.auth} onClick={() => this.setState({ auth: false })}>Logout</Button>
+                        <Space direction='vertical'>
+                            <Input
+                                placeholder="input username"
+                                onChange={this.updateUsername}
+                            />
+                            <Input.Password
+                                placeholder="input password"
+                                onChange={this.updatePassword}
+                            />
+                        </Space>
+                        <Button disabled={this.state.auth} onClick={() => this.setState({ auth: true })}>Login</Button>
+                        <Button disabled={!this.state.auth} onClick={() => this.setState({ auth: false })}>Logout</Button>
                         <BackTop>
                             <div>Back to top</div>
                         </BackTop>

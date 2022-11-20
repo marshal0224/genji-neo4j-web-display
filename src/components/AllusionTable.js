@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Select, Col, Row, Button, Space, BackTop, Divider, Table } from 'antd';
+import { Select, Col, Row, Button, Space, BackTop, Divider, Table, Input } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 import { getAllByPlaceholderText } from '@testing-library/react';
@@ -13,7 +13,10 @@ export default function AllusionTable() {
     let [data, setData] = useState([])
     let [select, setSelect] = useState('')
     let [query, setQuery] = useState('')
-
+    let [auth, setAuth] = useState(false)
+    let [usr, setUsr] = useState('')
+    let [pwd, setPwd] = useState('')
+    const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
     const columns = [
         {
             title: 'ID',
@@ -58,17 +61,18 @@ export default function AllusionTable() {
             width: 200,
             render: (_, record) => (
                 <Row>
-                    <Select
-                        showSearch
-                        options={pnum}
-                        style={{
-                            width: '60%',
-                        }}
-                        onChange={handleSelect}
-                    ></Select>
-                    <Button
-                        onClick={() => createLink(record.key)}
-                    >Link</Button>
+                    {auth === true
+                        ? <><Select
+                            showSearch
+                            options={pnum}
+                            style={{
+                                width: '60%',
+                            }}
+                            onChange={handleSelect}
+                        ></Select><Button
+                            onClick={() => createLink(record.key)}
+                        >Link</Button></>
+                        : null}
                 </Row>
             )
         }
@@ -90,7 +94,7 @@ export default function AllusionTable() {
         setSelect('')
     }
 
-    useEffect(() => {
+    useMemo(() => {
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
@@ -135,43 +139,31 @@ export default function AllusionTable() {
         }
         _().catch(console.error)
     }, [])
+
     return (
         <div>
-            {/*   <Table dataSource={data}>
-        <ColumnGroup title="Name">
-        <Column title="First Name" dataIndex="firstName" key="firstName" />
-        <Column title="Last Name" dataIndex="lastName" key="lastName" />
-        </ColumnGroup>
-        <Column title="Age" dataIndex="age" key="age" />
-        <Column title="Address" dataIndex="address" key="address" />
-        <Column
-        title="Tags"
-        dataIndex="tags"
-        key="tags"
-        render={(tags) => (
-            <>
-            {tags.map((tag) => (
-                <Tag color="blue" key={tag}>
-                {tag}
-                </Tag>
-            ))}
-            </>
-        )}
-        />
-        <Column
-        title="Action"
-        key="action"
-        render={(_, record) => (
-            <Space size="middle">
-            <a>Invite {record.lastName}</a>
-            <a>Delete</a>
-            </Space>
-        )}
-        />
-    </Table> */}
-            <Table dataSource={data} columns={columns}>
-                {/* <Column title="Honka" width={1}/> */}
-            </Table>
+            <Row>
+                <Col span={21}>
+                    <Table dataSource={data} columns={columns} />
+                </Col>
+                <Col span={3}>
+                    <Space direction='vertical'>
+                        <Input
+                            placeholder="input username"
+                            onChange={(event) => setUsr(event.target.value)}
+                        />
+                        <Input.Password
+                            placeholder="input password"
+                            onChange={(event) => setPwd(event.target.value)}
+                        />
+                    </Space>
+                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : console.log(usr, pwd)}>Login</Button>
+                    <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
+                    <BackTop>
+                        <div>Back to top</div>
+                    </BackTop>
+                </Col>
+            </Row>
         </div>
     )
 }

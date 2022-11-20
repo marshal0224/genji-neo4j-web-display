@@ -10,10 +10,10 @@ import { toNativeTypes } from '../utils'
 // 5. upon editing completion, updates DB content according to input
 
 export default class Edit extends React.Component {
-    constructor(props){
+    constructor(props) {
         super(props)
         this.state = {
-            uri: this.props.uri, 
+            uri: this.props.uri,
             user: this.props.user,
             password: this.props.password,
             propertyVal: this.props.currVal,
@@ -36,26 +36,27 @@ export default class Edit extends React.Component {
         if (propertyName === 'Japanese' || propertyName === 'Romaji') {
             read = await session.readTransaction(tx => {
                 return tx.run(
-                    'MATCH (n:Genji_Poem {pnum:"'+pnum+'"}) return n.'+propertyName+' as val'
-                , {pnum, propertyName})
+                    'MATCH (n:Genji_Poem {pnum:"' + pnum + '"}) return n.' + propertyName + ' as val'
+                    , { pnum, propertyName })
             })
         } else if (propertyName === 'name') {
             name = this.props.name
             read = await session.readTransaction(tx => {
                 return tx.run(
-                    'MATCH (c:Character {name:"'+name+'"}) return c.name as val'
-            )})
+                    'MATCH (c:Character {name:"' + name + '"}) return c.name as val'
+                )
+            })
         } else if (propertyName === 'page') {
             read = await session.readTransaction(tx => {
                 return tx.run(
-                    'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"Waley"}) return t.WaleyPageNum as val'
-                , {pnum, propertyName})
+                    'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"Waley"}) return t.WaleyPageNum as val'
+                    , { pnum, propertyName })
             })
         } else {
             read = await session.readTransaction(tx => {
                 return tx.run(
-                    'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"'+propertyName+'"}) return t.translation as val'
-                , {pnum, propertyName})
+                    'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"' + propertyName + '"}) return t.translation as val'
+                    , { pnum, propertyName })
             })
         }
         if (!read.records.length) {
@@ -67,16 +68,16 @@ export default class Edit extends React.Component {
                 propertyVal: 'not entered'
             })
         } else {
-            let val = read.records.map(row => {return toNativeTypes(row.get('val'))})
+            let val = read.records.map(row => { return toNativeTypes(row.get('val')) })
             let res
             if (propertyName === 'Japanese') {
                 val = JSON.stringify(val[0].valueOf())
                 let len = val.length
-                val = val.substring(0, len-1).split(',')
+                val = val.substring(0, len - 1).split(',')
                 res = ''
-                for (let i=0; i < val.length; i++) {
+                for (let i = 0; i < val.length; i++) {
                     let e = val[i].split(':')[1]
-                    e = e.substring(1,e.length-1)
+                    e = e.substring(1, e.length - 1)
                     res += e
                 }
                 this.setState({
@@ -113,27 +114,27 @@ export default class Edit extends React.Component {
             if (propertyName === 'Japanese' || propertyName === 'Romaji') {
                 write = await session.writeTransaction(tx => {
                     return tx.run(
-                        'MATCH (n:Genji_Poem {pnum: "'+pnum+'"}) SET n.'+propertyName+' = "'+propertyVal+'" RETURN n.'+propertyName+' AS val'
-                    , {pnum, propertyName, propertyVal})
+                        'MATCH (n:Genji_Poem {pnum: "' + pnum + '"}) SET n.' + propertyName + ' = "' + propertyVal + '" RETURN n.' + propertyName + ' AS val'
+                        , { pnum, propertyName, propertyVal })
                 })
             } else if (propertyName === 'name') {
                 let name = this.state.name
                 write = await session.writeTransaction(tx => {
                     return tx.run(
-                        'MATCH (c:Character {name: "'+name+'"}) SET c.name = "'+propertyVal+'" RETURN c.'+propertyName+' AS val'
-                    , {propertyVal, name})
+                        'MATCH (c:Character {name: "' + name + '"}) SET c.name = "' + propertyVal + '" RETURN c.' + propertyName + ' AS val'
+                        , { propertyVal, name })
                 })
             } else if (propertyName === 'page') {
                 write = await session.writeTransaction(tx => {
                     return tx.run(
-                        'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"Waley"}) SET t.WaleyPageNum="'+propertyVal+'"'
-                        , {pnum})
+                        'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"Waley"}) SET t.WaleyPageNum="' + propertyVal + '"'
+                        , { pnum })
                 })
             } else {
                 write = await session.writeTransaction(tx => {
                     return tx.run(
-                        'MATCH (n:Genji_Poem {pnum:"'+pnum+'"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"'+propertyName+'"}) SET t.translation="'+propertyVal+'" return t.translation'
-                        , {pnum, propertyName})
+                        'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"' + propertyName + '"}) SET t.translation="' + propertyVal + '" return t.translation'
+                        , { pnum, propertyName })
                 })
             }
             // console.log(write)
@@ -152,12 +153,12 @@ export default class Edit extends React.Component {
     }
 
     render() {
-        return(
+        return (
             <div>
                 <p className={this.props.pnum}>{this.state.propertyVal}</p>
                 <label>
                     <textarea value={this.state.propertyVal} onChange={this.updateStatePropertyVal}></textarea>
-                    <br/>
+                    <br />
                     <button onClick={this.getDBPropertyVal}>Get Val</button>
                     <button onClick={this.updateDBPropertyVal}>Update</button>
                 </label>

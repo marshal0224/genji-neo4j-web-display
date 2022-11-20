@@ -4,12 +4,12 @@ import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../uti
 import { useParams } from 'react-router-dom'
 import Edit from './edit'
 import { Link } from 'react-router-dom'
-export default function Poem() { 
+export default function Poem() {
     let { chapter, spkrGen, speaker, addrGen, addressee, auth, username, password } = useParams()
     const [metadata, setMetadata] = useState([])
     const [entries, setEntries] = useState([])
     const [editProp, setEditProp] = useState([])
-    const [charAndGen, setCharAndGen] = useState([[],[]])
+    const [charAndGen, setCharAndGen] = useState([[], []])
     // const [characters, setCharacters] = useState([])
     // const [genders, setGenders] = useState([])
     // console.log( chapter, spkrGen, speaker, addrGen, addressee, auth, username, password )
@@ -37,48 +37,48 @@ export default function Poem() {
         if (speaker === 'Any' && spkrGen === 'Any') {
             getSpeaker = '(:Character)'
         } else if (speaker === 'Any' && spkrGen !== 'Any') {
-            getSpeaker = '(:Character {gender: "'+spkrGen+'"})'
-        } else{
-            getSpeaker = '(:Character {name: "'+speaker+'"})'
-        } 
+            getSpeaker = '(:Character {gender: "' + spkrGen + '"})'
+        } else {
+            getSpeaker = '(:Character {name: "' + speaker + '"})'
+        }
         if (addressee === 'Any' && addrGen === 'Any') {
             getAddressee = '(:Character)'
         } else if (addressee === 'Any' && addrGen !== 'Any') {
-            getAddressee = '(:Character {gender: "'+addrGen+'"})'
+            getAddressee = '(:Character {gender: "' + addrGen + '"})'
         } else {
-            getAddressee = '(:Character {name: "'+addressee+'"})'
+            getAddressee = '(:Character {name: "' + addressee + '"})'
         }
         if (chapter === 'anychp') {
             getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter), '
         } else {
             //as of Apirl 2022, the chapter numbers are in string
-            getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "'+chapter+'"}), '
+            getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "' + chapter + '"}), '
         }
         // if (JPKeyword !== 'nokeyword') {
         //     getJPKeyword = 'where g.Japanese contains "'+JPKeyword[0]+'"'
         // }
-        let get =   'match exchange='+getSpeaker+'-[:SPEAKER_OF]-(g:Genji_Poem)-'
-                        +'[:ADDRESSEE_OF]-'+getAddressee 
-                        +getChapter
-                        +'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
-                        +' return exchange, trans'
-        const _ = async () => { 
-            initDriver( process.env.REACT_APP_NEO4J_URI, 
-                process.env.REACT_APP_NEO4J_USERNAME, 
-                process.env.REACT_APP_NEO4J_PASSWORD )
+        let get = 'match exchange=' + getSpeaker + '-[:SPEAKER_OF]-(g:Genji_Poem)-'
+            + '[:ADDRESSEE_OF]-' + getAddressee
+            + getChapter
+            + 'trans=(g)-[:TRANSLATION_OF]-(t:Translation) '
+            + ' return exchange, trans'
+        const _ = async () => {
+            initDriver(process.env.REACT_APP_NEO4J_URI,
+                process.env.REACT_APP_NEO4J_USERNAME,
+                process.env.REACT_APP_NEO4J_PASSWORD)
             const driver = getDriver()
             const session = driver.session()
             const res1 = await session.readTransaction(tx => tx.run(getChar))
             setCharAndGen([
                 res1.records.map(row => {
                     return toNativeTypes(row.get('char'))
-                    }).map(e => Object.values(e).join('')), 
+                }).map(e => Object.values(e).join('')),
                 res1.records.map(row => {
                     return toNativeTypes(row.get('gender'))
-                    }).map(e => Object.values(e).join(''))])
-            const res2 = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter}))
-            let poemRes = res2.records.map(row => {return toNativeTypes(row.get('exchange'))})
-            let transTemp = res2.records.map(row => {return toNativeTypes(row.get('trans'))}).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
+                }).map(e => Object.values(e).join(''))])
+            const res2 = await session.readTransaction(tx => tx.run(get, { speaker, addressee, chapter }))
+            let poemRes = res2.records.map(row => { return toNativeTypes(row.get('exchange')) })
+            let transTemp = res2.records.map(row => { return toNativeTypes(row.get('trans')) }).map(row => [Object.keys(row.end.properties), Object.values(row.end.properties)])
             let [plist, info, propname] = getPoemTableContent(poemRes, transTemp)
             setMetadata(plist)
             // [
@@ -137,38 +137,38 @@ export default function Poem() {
     function setColumnOptions(event) {
         let type = event.target.value
         if (type !== 'Select:') {
-            let col = '.ptcol'+JSON.stringify(event.target.className).slice(-2,-1)
+            let col = '.ptcol' + JSON.stringify(event.target.className).slice(-2, -1)
             let cells = document.querySelectorAll(col)
             cells.forEach(e => {
-                        e.querySelectorAll('select').forEach(e => {
-                        e.value = type
-                        let p = e.parentElement.querySelector('p')
-                        let pnum = p.className
-                        if (type === 'Waley') {
-                            p.innerHTML = entries[pnum][type]+'\n'+entries[pnum]['WaleyPageNum']
-                        } else {
-                            p.innerHTML = entries[pnum][type]
-                        }
-                        if (type === 'Japanese') {
-                            p.setAttribute('type', 'JP')
-                        } else {
-                            p.setAttribute('type', 'non-JP')
-                        }
-                    })
+                e.querySelectorAll('select').forEach(e => {
+                    e.value = type
+                    let p = e.parentElement.querySelector('p')
+                    let pnum = p.className
+                    if (type === 'Waley') {
+                        p.innerHTML = entries[pnum][type] + '\n' + entries[pnum]['WaleyPageNum']
+                    } else {
+                        p.innerHTML = entries[pnum][type]
+                    }
+                    if (type === 'Japanese') {
+                        p.setAttribute('type', 'JP')
+                    } else {
+                        p.setAttribute('type', 'non-JP')
+                    }
+                })
             })
-            let j = parseInt(JSON.stringify(event.target.className).slice(-2,-1))
+            let j = parseInt(JSON.stringify(event.target.className).slice(-2, -1))
             let prop = editProp
-            prop.forEach(row => row[j-1] = type)
+            prop.forEach(row => row[j - 1] = type)
             setEditProp(prop)
         }
     }
 
     function setCharColor(name) {
         let characters = charAndGen[0]
-        let genders =charAndGen[1]
+        let genders = charAndGen[1]
         let index = characters.indexOf(name)
         let gender = genders[index]
-        if (gender === 'male'){
+        if (gender === 'male') {
             return (
                 <p className='male-char'>{name}</p>
             )
@@ -191,7 +191,7 @@ export default function Poem() {
             target.innerHTML = ''
         } else {
             if (type === 'Waley') {
-                target.innerHTML = entries[pnum][type]+'\n'+entries[pnum]['WaleyPageNum']
+                target.innerHTML = entries[pnum][type] + '\n' + entries[pnum]['WaleyPageNum']
             } else {
                 target.innerHTML = entries[pnum][type]
             }
@@ -203,27 +203,27 @@ export default function Poem() {
         }
         event.target.value = type
         let prop = editProp
-        let i = parseInt(pnum.substring(4,6))
-        let j = parseInt(event.target.parentElement.className.substring(5,6))
-        prop[i-1][j-1] = type
+        let i = parseInt(pnum.substring(4, 6))
+        let j = parseInt(event.target.parentElement.className.substring(5, 6))
+        prop[i - 1][j - 1] = type
         setEditProp(prop)
     }
 
     return (
         <div style={{ position: "relative" }}>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
             <table>
                 <thead>
                     <tr>
@@ -239,15 +239,15 @@ export default function Poem() {
                         </th>
                         <th>
                             {auth === true
-                            ? 'Cranston'
-                            : <select className={'ptcol3'} onChange={setColumnOptions}>
-                                <option>Translation A</option>
-                                <option>Cranston</option>
-                                <option>Seidensticker</option>
-                                <option>Tyler</option>
-                                <option>Waley</option>
-                                <option>Washburn</option>
-                            </select> }
+                                ? 'Cranston'
+                                : <select className={'ptcol3'} onChange={setColumnOptions}>
+                                    <option>Translation A</option>
+                                    <option>Cranston</option>
+                                    <option>Seidensticker</option>
+                                    <option>Tyler</option>
+                                    <option>Waley</option>
+                                    <option>Washburn</option>
+                                </select>}
                         </th>
                         <th>{auth === true
                             ? 'Seidensticker'
@@ -266,7 +266,7 @@ export default function Poem() {
                     </tr>
                 </thead>
                 <tbody>
-                    {metadata.map((row) => 
+                    {metadata.map((row) =>
                         <tr key={row[0]}>
                             <td>{parseChp(row[0])}</td>
                             <td className='pg'>{
@@ -276,132 +276,132 @@ export default function Poem() {
                             }</td>
                             <td className='spkrCol'>
                                 {setCharColor(row[1])}
-                                {auth === true 
-                                && <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD} 
-                                    propertyName={'name'} 
-                                    name={row[1]} 
-                                />}
+                                {auth === true
+                                    && <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'name'}
+                                        name={row[1]}
+                                    />}
                             </td>
                             <td className='addrCol'>
                                 {setCharColor(row[2])}
                                 {auth === true
-                                && <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD} 
-                                    propertyName={'name'} 
-                                    name={row[2]}
-                                />}
+                                    && <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'name'}
+                                        name={row[2]}
+                                    />}
                             </td>
                             <td className='ptcol1'>
-                                {auth === true 
-                                ? <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD}     propertyName={'Japanese'} 
-                                    currVal={entries[row[0]]['Japanese']} 
-                                    pnum={row[0]} 
-                                />
-                                : <p type='JP' className={row[0]} style={{ padding: "10px" }}>{entries[row[0]]['Japanese']}</p>} 
+                                {auth === true
+                                    ? <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD} propertyName={'Japanese'}
+                                        currVal={entries[row[0]]['Japanese']}
+                                        pnum={row[0]}
+                                    />
+                                    : <p type='JP' className={row[0]} style={{ padding: "10px" }}>{entries[row[0]]['Japanese']}</p>}
                             </td>
                             <td className='ptcol2'>
-                                {auth === true 
-                                ? <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD}    
-                                    propertyName={'Romaji'} 
-                                    currVal={entries[row[0]]['Romaji']} 
-                                    pnum={row[0]} 
-                                />
-                                : <p className={row[0]} style={{ padding: "10px" }}>{entries[row[0]]['Romaji']}</p>}
+                                {auth === true
+                                    ? <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'Romaji'}
+                                        currVal={entries[row[0]]['Romaji']}
+                                        pnum={row[0]}
+                                    />
+                                    : <p className={row[0]} style={{ padding: "10px" }}>{entries[row[0]]['Romaji']}</p>}
                             </td>
-                            {auth === true 
-                            ? <td className='ptcol3'>
-                                <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD}    
-                                    propertyName={'Cranston'} 
-                                    currVal={entries[row[0]]['Cranston']} 
-                                    pnum={row[0]} 
-                                />
-                            </td> 
-                            : <td className='ptcol3'>
-                                <select onChange={updateSelection}>
-                                    <option>select:</option>
-                                    {getOptions(row[0]).map((item) => <option key={entries[row[0]][item]}>{item}</option>)}
-                                </select>
-                                <br/>
-                                <p className={row[0]}></p>
-                            </td>}
                             {auth === true
-                            ? <td className='ptcol4'>
-                                <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD} 
-                                    propertyName={'Seidensticker'} 
-                                    currVal={entries[row[0]]['Seidensticker']} 
-                                    pnum={row[0]} 
-                                />
-                            </td>  
-                            :
-                            <td className='ptcol4'>
-                                <select onChange={updateSelection}>
-                                    <option>select:</option>
-                                    {getOptions(row[0]).map((item) => <option key={entries[row[0]][item]}>{item}</option>)}
-                                </select>
-                                <br/>
-                                <p className={row[0]}></p>
-                            </td>}
+                                ? <td className='ptcol3'>
+                                    <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'Cranston'}
+                                        currVal={entries[row[0]]['Cranston']}
+                                        pnum={row[0]}
+                                    />
+                                </td>
+                                : <td className='ptcol3'>
+                                    <select onChange={updateSelection}>
+                                        <option>select:</option>
+                                        {getOptions(row[0]).map((item) => <option key={entries[row[0]][item]}>{item}</option>)}
+                                    </select>
+                                    <br />
+                                    <p className={row[0]}></p>
+                                </td>}
                             {auth === true
-                            ? <td className='ptcol5'>
-                                <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD}                                    propertyName={'Tyler'} 
-                                    currVal={entries[row[0]]['Tyler']} 
-                                    pnum={row[0]} 
-                                />
-                            </td> 
-                            : null}
-                            {auth === true 
-                            ? <td className='ptcol6'>
-                                <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD} 
-                                    propertyName={'Waley'} 
-                                    currVal={entries[row[0]]['Waley']} 
-                                    pnum={row[0]} 
-                                />
-                                <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD} 
-                                    propertyName={'page'} 
-                                    currVal={entries[row[0]]['WaleyPageNum']} 
-                                    pnum={row[0]} 
-                                />
-                            </td> 
-                            : null}
-                            {auth === true 
-                            ? <td className='ptcol7'>
-                                <Edit 
-                                    uri={process.env.REACT_APP_NEO4J_URI} 
-                                    user={process.env.REACT_APP_NEO4J_USERNAME} 
-                                    password={process.env.REACT_APP_NEO4J_PASSWORD} 
-                                    propertyName={'Washburn'} 
-                                    currVal={entries[row[0]]['Washburn']} 
-                                    pnum={row[0]} 
-                                />
-                            </td> 
-                            : null}
-                    </tr>)}
+                                ? <td className='ptcol4'>
+                                    <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'Seidensticker'}
+                                        currVal={entries[row[0]]['Seidensticker']}
+                                        pnum={row[0]}
+                                    />
+                                </td>
+                                :
+                                <td className='ptcol4'>
+                                    <select onChange={updateSelection}>
+                                        <option>select:</option>
+                                        {getOptions(row[0]).map((item) => <option key={entries[row[0]][item]}>{item}</option>)}
+                                    </select>
+                                    <br />
+                                    <p className={row[0]}></p>
+                                </td>}
+                            {auth === true
+                                ? <td className='ptcol5'>
+                                    <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD} propertyName={'Tyler'}
+                                        currVal={entries[row[0]]['Tyler']}
+                                        pnum={row[0]}
+                                    />
+                                </td>
+                                : null}
+                            {auth === true
+                                ? <td className='ptcol6'>
+                                    <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'Waley'}
+                                        currVal={entries[row[0]]['Waley']}
+                                        pnum={row[0]}
+                                    />
+                                    <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'page'}
+                                        currVal={entries[row[0]]['WaleyPageNum']}
+                                        pnum={row[0]}
+                                    />
+                                </td>
+                                : null}
+                            {auth === true
+                                ? <td className='ptcol7'>
+                                    <Edit
+                                        uri={process.env.REACT_APP_NEO4J_URI}
+                                        user={process.env.REACT_APP_NEO4J_USERNAME}
+                                        password={process.env.REACT_APP_NEO4J_PASSWORD}
+                                        propertyName={'Washburn'}
+                                        currVal={entries[row[0]]['Washburn']}
+                                        pnum={row[0]}
+                                    />
+                                </td>
+                                : null}
+                        </tr>)}
                 </tbody>
             </table>
         </div>
