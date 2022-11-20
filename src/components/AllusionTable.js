@@ -96,6 +96,13 @@ export default function AllusionTable() {
             let bool = window.confirm('About to link between ' + key + ' and ' + select + '. ')
             if (bool) {
                 setQuery("MATCH (g:Genji_Poem {pnum:'" + select + "'}), (h:Honka {id:'" + key + "'}) MERGE (g)-[:ALLUDES_TO]->(h) MERGE (h)-[:ALLUDED_TO_IN]->(g) return (h)")
+                let al = allusion
+                if (key in al) {
+                    al[key].push(select)
+                } else {
+                    al[key] = [select]
+                }
+                setAllusion(al)
             }
         }
         setSelect('')
