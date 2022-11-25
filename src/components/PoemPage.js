@@ -231,6 +231,7 @@ export default function PoemPage() {
                         ? <><Select
                             showSearch
                             options={tagType}
+                            value={select}
                             style={{
                                 width: '20%',
                             }}

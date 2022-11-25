@@ -103,6 +103,8 @@ export default function AllusionTable() {
                     al[key] = [select]
                 }
                 setAllusion(al)
+            } else {
+                alert('Canceled. If you still want to link between ' + key + ' and ' + select + ', choose another poem and switch back.')
             }
         }
         setSelect('')
