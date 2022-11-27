@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useReducer } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select, Col, Row, Button, Space, BackTop, Divider, Tag, Input } from 'antd';
@@ -21,12 +21,14 @@ export default function PoemPage() {
     const [rel, setRel] = useState([]) // currently linked honka
     const [tag, setTag] = useState([]) // currently linked tags
     const [tagType, setTagType] = useState([''])
-    const [tagQuery, setTagQuery] = useState('')
+    const [tagQuery, setTagQuery] = useState([])
     const [select, setSelect] = useState('')
     const [notes, setNotes] = useState("")
     const [auth, setAuth] = useState(false)
     const [usr, setUsr] = useState('')
     const [pwd, setPwd] = useState('')
+
+    const forceUpdate = useReducer(x => x + 1, 0)[1]
     
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
 
@@ -42,7 +44,6 @@ export default function PoemPage() {
     }
 
     const createLink = () => {
-        console.log(tag)
         if (select === '') {
             alert('Need to select a tag!')
         } else if (tag.includes(select)) {
@@ -50,13 +51,27 @@ export default function PoemPage() {
         } else {
             let bool = window.confirm('About to tag this poem as ' + select + '. ')
             if (bool) {
-                setTagQuery('MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (t:Tag {Type: "' + select + '"}) merge (g)-[:TAGGED_AS]->(t) return (g)')
+                setTagQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (t:Tag {Type: "' + select + '"}) where g.pnum ends with "' + number + '" merge (g)-[:TAGGED_AS]->(t) return (g)', 'create'])
                 let ls = tag
-                ls.push(select)
+                ls.push([select, true])
                 setTag(ls)
             }
         }
         setSelect('')
+    }
+
+    const deleteLink = (i) => (event) => {
+        let type = event.target.textContent
+        if (auth) {
+            let bool = window.confirm('About to delete a tag link.')
+            if (bool) {
+                let temp = tag
+                temp[i][1] = false
+                setTag(temp)
+                forceUpdate()
+                setTagQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[r:TAGGED_AS]->(t:Tag {Type: "' + type + '"}) where g.pnum ends with "' + number + '" delete r return (g)', 'delete'])
+            }
+        }
     }
 
     useMemo(() => {
@@ -109,6 +124,7 @@ export default function PoemPage() {
             let tags = new Set()
             resTag.records.map(e => toNativeTypes(e.get('type'))).forEach(e => tags.add([Object.values(e).join('')]))
             tags = Array.from(tags).flat()
+            tags = tags.map(e => [e, true])
             setTag(tags)
             let types = resType.records.map(e => e.get('type'))
             let ls = []
@@ -127,13 +143,18 @@ export default function PoemPage() {
                 process.env.REACT_APP_NEO4J_PASSWORD)
             const driver = getDriver()
             const session = driver.session()
-            let write = await session.writeTransaction(tx => tx.run(tagQuery))
+            let write = await session.writeTransaction(tx => tx.run(tagQuery[0]))
             session.close()
             closeDriver()
         }
-        if (tagQuery !== '') {
-            _().catch(console.error)
-            alert('Linked created!')
+        if (tagQuery.length > 0) {
+            if (tagQuery[1] === 'create') {
+                _().catch(console.error)
+                alert('Link created!')
+            } else if (tagQuery[1] === 'delete') {
+                _().catch(console.error)
+                alert('Link deleted!')
+            }
         }
     }, [tagQuery])
 
@@ -222,7 +243,12 @@ export default function PoemPage() {
             <Row>
                 <Col span={24}>
                     {tag.map(e =>
-                        <Tag>{e}</Tag>
+                        <Tag 
+                            visible={e[1]}
+                            // closable={auth}
+                            onClick={deleteLink(tag.indexOf(e))}
+                            // onClose={deleteLink}
+                        >{e[0]}</Tag>
                     )}
                 </Col>
                 <Divider></Divider>
@@ -264,7 +290,7 @@ export default function PoemPage() {
                             onChange={(event) => setPwd(event.target.value)}
                         />
                     </Space>
-                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : console.log(usr, pwd)}>Login</Button>
+                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : null}>Login</Button>
                     <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
                 </Col>
             </Row>
