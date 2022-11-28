@@ -78,8 +78,17 @@ export default function PoemPage() {
     }
 
     const createRel = () => {
+        let selfCheck = false
+        for (let i = 0; i < pnum.length; i++) {
+            if ((parseInt(pnum[i].value.substring(0, 2)) === parseInt(chapter)) && (parseInt(pnum[i].value.substring(4, 6)) === parseInt(number))) {
+                selfCheck = true
+                break
+            }
+        }
         if (IA === '') {
             alert('Need to select a poem!')
+        } else if (selfCheck) {
+            alert('Cannot self-link!')
         } else if (rel.includes(IA)) {
             alert('Relation already exists')
         } else {
@@ -180,22 +189,22 @@ export default function PoemPage() {
     }, [chapter, number])
 
     useMemo(() => {
-        const _ = query => async () => {
+        const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
                 process.env.REACT_APP_NEO4J_PASSWORD)
             const driver = getDriver()
             const session = driver.session()
-            let write = await session.writeTransaction(tx => tx.run(query[0]))
+            let write = await session.writeTransaction(tx => tx.run(tagQuery[0]))
             session.close()
             closeDriver()
         }
         if (tagQuery.length > 0) {
             if (tagQuery[1] === 'create') {
-                _(tagQuery)
+                _().catch(console.error)
                 alert('Link created!')
             } else if (tagQuery[1] === 'delete') {
-                _(tagQuery)
+                _().catch(console.error)
                 alert('Link deleted!')
             }
         } 
