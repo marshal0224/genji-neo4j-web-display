@@ -23,6 +23,8 @@ export default function AllusionTable() {
     const [newHonka, setNewHonka] = useState('')
     const [newRomaji, setNewRomaji] = useState('')
     const [newSO, setNewSO] = useState('')
+    const [newTranslator, setNewTranslator] = useState('')
+    const [newTranslation, setNewTranslation] = useState('')
     const [newPoet, setNewPoet] = useState('')
     const [newSource, setNewSource] = useState('')
 
@@ -49,7 +51,7 @@ export default function AllusionTable() {
         },
         {
             title: 'Source',
-            dataIndex: 'source_and_order',
+            dataIndex: 'source_and_number',
             key: 'Source',
         },
         {
@@ -73,7 +75,7 @@ export default function AllusionTable() {
             key: 'notes',
         },
         {
-            title: 'Referred to by',
+            title: 'Alluded to by',
             key: 'link',
             width: 200,
             render: (_, record) => (
@@ -119,7 +121,7 @@ export default function AllusionTable() {
                 if (key in al) {
                     al[key].push([select, true])
                 } else {
-                    al[key] = [select, true]
+                    al[key] = [[select, true]]
                 }
                 setAllusion(al)
             } else {
@@ -145,7 +147,7 @@ export default function AllusionTable() {
 
     const newEntry = () => {
         let id = 'H'+(maxID+1)
-        setQuery(['match (p:People {name:"'+newPoet+'"}), (s:Source {title:"'+newSource+'"}) merge path=(p)-[:AUTHOR_OF]->(h:Honka {id: "'+id+'"})-[:ANTHOLOGIZED_IN]->(s) set h.Honka="'+newHonka+'", h.Romaji="'+newRomaji+'", h.source_and_order="'+newSO+'" return "entry" as res', 'entry'])
+        setQuery(['match (p:People {name:"'+newPoet+'"}), (s:Source {title:"'+newSource+'"}) merge path=(p)-[:AUTHOR_OF]->(h:Honka {id: "'+id+'"})-[:ANTHOLOGIZED_IN]->(s) set h.Honka="'+newHonka+'", h.Romaji="'+newRomaji+'", h.source_and_number="'+newSO+'", h.'+newTranslator+'="'+newTranslation+'" return "entry" as res', 'entry'])
         setNewHonka('')
         setNewRomaji('')
         setNewSO('')
@@ -220,7 +222,7 @@ export default function AllusionTable() {
             })
             setPnum(ls)
             let ll = Array.from(new Set(resLink.records.map(e => JSON.stringify([e.get('id'), e.get('pnum')])))).map(e => JSON.parse(e))
-            let links = new Object()
+            let links = {}
             ll.forEach(e => {
                 if (e[0] in links) {
                     links[e[0]].push([e[1], true])
@@ -282,6 +284,20 @@ export default function AllusionTable() {
                         <TextArea 
                             placeholder='E.g. Kokinshu 123, notice the space in between' 
                             onChange={(event) => setNewSO(event.target.value)}    
+                        />
+                        <label>Translator</label>
+                        <Select 
+                            showSearch
+                            style={{
+                                width: '100%'
+                            }}
+                            options={poet}
+                            value={newTranslator}
+                            onChange={(value) => setNewTranslator(value)}
+                        />
+                        <label>Translation</label>
+                        <TextArea 
+                            onChange={(event) => setNewTranslation(event.target.value)}    
                         />
                         <label>Poet</label>
                         <Select 
