@@ -4,6 +4,7 @@ import { toNativeTypes, getChpList } from '../utils'
 import { Select, Col, Row, Button, Space, BackTop, Divider, Tag, Input } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
+import TextArea from 'antd/lib/input/TextArea';
 
 export default function PoemPage() {
     let { chapter, number } = useParams()
@@ -25,6 +26,7 @@ export default function PoemPage() {
     const [tag, setTag] = useState([]) // currently linked tags
     const [tagType, setTagType] = useState([''])
     const [tagQuery, setTagQuery] = useState([])
+    const [noteQuery, setNoteQuery] = useState('')
     const [select, setSelect] = useState('')
     const [notes, setNotes] = useState("")
     const [auth, setAuth] = useState(false)
@@ -40,7 +42,6 @@ export default function PoemPage() {
     } else {
         number = number.toString()
     }
-
 
     const handleSelect = (value) => {
         setSelect(value)
@@ -114,6 +115,17 @@ export default function PoemPage() {
                 forceUpdate()
                 setRelQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[r:INTERNAL_ALLUSION_TO]->(s:Genji_Poem {pnum: "' + p + '"}), (s)-[t:INTERNAL_ALLUSION_TO]->(g) where g.pnum ends with "' + number + '" delete r delete t return (g)', 'delete'])
             }
+        }
+    }
+
+    const updateNote = () => {
+        let bool = window.confirm('About to update the notes')
+        if (bool) {
+            let n = notes
+            // n.replace("'", "\\'")
+            n = n.toString().replace(/"/g, '\\"');
+            // console.log(n)
+            setNoteQuery('MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}) where g.pnum ends with "' + number + '" SET g.notes = "' + n + '" return (g)')
         }
     }
 
@@ -231,6 +243,24 @@ export default function PoemPage() {
             }
         } 
     }, [relQuery])
+
+    useMemo(() => {
+        const _ = async () => {
+            initDriver(process.env.REACT_APP_NEO4J_URI,
+                process.env.REACT_APP_NEO4J_USERNAME,
+                process.env.REACT_APP_NEO4J_PASSWORD)
+            const driver = getDriver()
+            const session = driver.session()
+            let write = await session.writeTransaction(tx => tx.run(noteQuery))
+            session.close()
+            closeDriver()
+        }
+        if (noteQuery !== '') {
+            _().catch(console.error)
+            alert('Notes updated!')
+            setNoteQuery('')
+        } 
+    }, [noteQuery])
 
     return (
         <div>
@@ -372,6 +402,9 @@ export default function PoemPage() {
                 <b>Notes:</b>
                 <br />
                 <p type="non-JP">{notes}</p>
+                {auth === true 
+                    ? <><TextArea defaultValue={notes} onChange={(event) => setNotes(event.target.value)}/><Button onClick={() => updateNote()}>Update</Button></>
+                : null}
             </Row>
             <Divider></Divider>
             <Row align='middle'>
