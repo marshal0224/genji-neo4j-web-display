@@ -53,6 +53,26 @@ export default function AllusionTable() {
             title: 'Source',
             dataIndex: 'source_and_number',
             key: 'Source',
+            render: (text) => (
+                <Row>
+                    <p>{text}</p>
+                    <Divider></Divider>
+                    <Col span={24}>
+                        {auth === true
+                            ? <><Select
+                                showSearch
+                                options={pnum}
+                                style={{
+                                    width: '60%',
+                                }}
+                                onChange={handleSelect}
+                            ></Select><Button
+                                // onClick={() => createLink(record.key)}
+                            >Link</Button></>
+                            : null}
+                    </Col>
+                </Row>
+            )
         },
         {
             title: 'Vincent',
