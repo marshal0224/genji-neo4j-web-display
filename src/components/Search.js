@@ -897,27 +897,11 @@ export default class Search extends React.Component {
                                     </Option>)}
                             </Select>
                         </form>
-                        {/* <form>
-                            <Select
-                                placeholder="Enter Japanese keyword(s)"
-                            >
-                                <Option>JPKeyword</Option>
-                            </Select>
-                        </form>
-                        <form>
-                            <Select
-                                placeholder="Enter English keyword(s)"
-                            >
-                                <Option>ENKeyword</Option>
-                            </Select>
-                        </form> */}
                         <Link
                             to={`/search/${this.state.selectedChapters}/${this.state.selectedSpkrGen}/${this.state.selectedSpeaker}/${this.state.selectedAddrGen}/${this.state.selectedAddressee}/${this.state.auth}/${this.state.username}/${this.state.password}`}
                         >
                             <Button onClick={this.updateCount}>Query</Button>
                         </Link>
-                        {/* </Panel> */}
-                        {/* </Collapse> */}
                         <Outlet />
                     </Col>
                     <Col span={3}>

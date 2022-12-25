@@ -126,18 +126,16 @@ export default class Edit extends React.Component {
                 })
             } else if (propertyName === 'page') {
                 write = await session.writeTransaction(tx => {
-                    return tx.run(
-                        'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"Waley"}) SET t.WaleyPageNum="' + propertyVal + '"'
-                        , { pnum })
+                    let query = 'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"Waley"}) SET t.WaleyPageNum="' + propertyVal + '" return (t)'
+                    return tx.run(query)
                 })
             } else {
                 write = await session.writeTransaction(tx => {
-                    return tx.run(
-                        'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"' + propertyName + '"}) SET t.translation="' + propertyVal + '" return t.translation'
-                        , { pnum, propertyName })
+                    let query = 'MATCH (n:Genji_Poem {pnum:"' + pnum + '"})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:"' + propertyName + '"}) SET t.translation="' + propertyVal + '" return t.translation'
+                    return tx.run(query)
                 })
             }
-            // console.log(write)
+            alert('DB updated!')
             // this.props.changeKey()
         } else {
             alert('DB update canceled')

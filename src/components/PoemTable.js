@@ -54,9 +54,6 @@ export default function Poem() {
             //as of Apirl 2022, the chapter numbers are in string
             getChapter = ', (g)-[:INCLUDED_IN]-(:Chapter {chapter_number: "' + chapter + '"}), '
         }
-        // if (JPKeyword !== 'nokeyword') {
-        //     getJPKeyword = 'where g.Japanese contains "'+JPKeyword[0]+'"'
-        // }
         let get = 'match exchange=' + getSpeaker + '-[:SPEAKER_OF]-(g:Genji_Poem)-'
             + '[:ADDRESSEE_OF]-' + getAddressee
             + getChapter
