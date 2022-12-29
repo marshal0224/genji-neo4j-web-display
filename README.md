@@ -2,7 +2,7 @@
 Our DB is on Aura, and the Cypher commands embeded in the scripts will likely only fit our DB. If you are interested in using this project for your own DB, consider rewriting the cypher queries, and subsequently how are the data being treated throughout. If you also have a textual database, we will eventually post our node and relationship layout, as well as our schema. Until then, feel free to reach out.
 
 # Neo4j Database Structure
-To be written
+![](arch.png)
 
 # Neo4j-React Interaction
 To be written

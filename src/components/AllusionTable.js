@@ -61,7 +61,7 @@ export default function AllusionTable() {
                         {auth === true
                             ? <><Select
                                 showSearch
-                                options={pnum}
+                                options={source}
                                 style={{
                                     width: '60%',
                                 }}
@@ -115,7 +115,7 @@ export default function AllusionTable() {
                     <Divider></Divider>
                     <Col span={24}>
                         {allusion[record.key] !== undefined 
-                        ? Array.from(new Set(allusion[record.key].map(e => chapters[parseInt(e[0].substring(0, 2))]))).map(e => <Tag>{e}</Tag>) 
+                        ? Array.from(new Set(allusion[record.key].map(e => chapters[parseInt(e[0].substring(0, 2)) - 1]))).map(e => <Tag>{e}</Tag>) 
                         : null}
                     </Col>
                     <Col span={24}>
@@ -275,6 +275,7 @@ export default function AllusionTable() {
             temp.forEach(e => {
                 poets.push({ value: e, label: e })
             })
+            console.log(poets)
             setPoet(poets)
             temp = resSrc.records.map(e => e.get('source'))
             let sources = []
