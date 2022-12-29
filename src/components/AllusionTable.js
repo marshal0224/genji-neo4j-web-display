@@ -6,8 +6,6 @@ import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 
-const { Column, ColmnGroup } = Table;
-
 export default function AllusionTable() {
     const [pnum, setPnum] = useState([{ value: '', label: '' }])
     const [data, setData] = useState([])
@@ -27,6 +25,7 @@ export default function AllusionTable() {
     const [newTranslation, setNewTranslation] = useState('')
     const [newPoet, setNewPoet] = useState('')
     const [newSource, setNewSource] = useState('')
+    const [selectedTranslation, setSelectedTranslation] = useState('Vincent')
 
     const forceUpdate = useReducer(x => x + 1, 0)[1]
 
@@ -67,7 +66,7 @@ export default function AllusionTable() {
                                 }}
                                 onChange={handleSelect}
                             ></Select><Button
-                                // onClick={() => createLink(record.key)}
+                            // onClick={() => createLink(record.key)}
                             >Link</Button></>
                             : null}
                     </Col>
@@ -75,19 +74,25 @@ export default function AllusionTable() {
             )
         },
         {
-            title: 'Vincent',
-            dataIndex: 'Vincent',
-            key: 'Vincent',
-        },
-        {
-            title: 'Washburn',
-            dataIndex: 'Washburn',
-            key: 'Washburn',
-        },
-        {
-            title: 'Tyler',
-            dataIndex: 'Tyler',
-            key: 'Tyler',
+            title: (
+                <Select 
+                    value={selectedTranslation} 
+                    onChange={(value) => setSelectedTranslation(value)}  
+                    options={[{value: 'Tyler', label: 'Tyler'},{value: 'Vincent', label: 'Vincent'},{value: 'Washburn', label: 'Washburn'}]}
+                    width={100}
+                />
+            ),
+            dataIndex: 'name',
+            key: 'name',
+            render: (value, record) => {
+                if (selectedTranslation === 'Vincent') {
+                    return record.Vincent;
+                } else if (selectedTranslation === 'Washburn') {
+                    return record.Washburn;
+                } else if (selectedTranslation === 'Tyler') {
+                    return record.Tyler;
+                }
+            },
         },
         {
             title: 'notes',
@@ -101,7 +106,7 @@ export default function AllusionTable() {
             render: (_, record) => (
                 <Row>
                     <Col span={24}>
-                        {allusion[record.key] !== undefined ? allusion[record.key].map(e => <Tag 
+                        {allusion[record.key] !== undefined ? allusion[record.key].map(e => <Tag
                             visible={e[1]}
                             onClick={deleteLink(e[0], record.key)}
                         >{e[0]}</Tag>) : null}
@@ -166,8 +171,8 @@ export default function AllusionTable() {
     }
 
     const newEntry = () => {
-        let id = 'H'+(maxID+1)
-        setQuery(['match (p:People {name:"'+newPoet+'"}), (s:Source {title:"'+newSource+'"}) merge path=(p)-[:AUTHOR_OF]->(h:Honka {id: "'+id+'"})-[:ANTHOLOGIZED_IN]->(s) set h.Honka="'+newHonka+'", h.Romaji="'+newRomaji+'", h.source_and_number="'+newSO+'", h.'+newTranslator+'="'+newTranslation+'" return "entry" as res', 'entry'])
+        let id = 'H' + (maxID + 1)
+        setQuery(['match (p:People {name:"' + newPoet + '"}), (s:Source {title:"' + newSource + '"}) merge path=(p)-[:AUTHOR_OF]->(h:Honka {id: "' + id + '"})-[:ANTHOLOGIZED_IN]->(s) set h.Honka="' + newHonka + '", h.Romaji="' + newRomaji + '", h.source_and_number="' + newSO + '", h.' + newTranslator + '="' + newTranslation + '" return "entry" as res', 'entry'])
         setNewHonka('')
         setNewRomaji('')
         setNewSO('')
@@ -189,7 +194,7 @@ export default function AllusionTable() {
         if (query.length > 0) {
             if (query[1] === 'entry') {
                 let bool = window.confirm('About to create a new Honka!')
-                if  (bool) {
+                if (bool) {
                     _().catch(console.error)
                     setMaxID(maxID + 1)
                 }
@@ -203,6 +208,7 @@ export default function AllusionTable() {
         }
     }, [query])
 
+    // table content
     useEffect(() => {
         let get = 'match (a:Honka) return (a) as honka'
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
@@ -225,6 +231,7 @@ export default function AllusionTable() {
             let key = 0
             res.records.map(e => toNativeTypes(e.get('honka'))).forEach(e => {
                 delete Object.assign(e.properties, { ['key']: e.properties['id'] })['id']
+                e.properties.translations = { Vincent: e.properties.Vincent, Washburn: e.properties.Washburn, Tyler: e.properties.Tyler }
                 ans.push(e.properties)
                 key = parseInt(e.properties.key.slice(1))
                 if (max < key) {
@@ -254,13 +261,13 @@ export default function AllusionTable() {
             temp = resPoet.records.map(e => e.get('poet'))
             let poets = []
             temp.forEach(e => {
-                poets.push({value: e, label: e})
+                poets.push({ value: e, label: e })
             })
             setPoet(poets)
             temp = resSrc.records.map(e => e.get('source'))
             let sources = []
             temp.forEach(e => {
-                sources.push({value: e, label: e})
+                sources.push({ value: e, label: e })
             })
             setSource(sources)
             session.close()
@@ -289,59 +296,59 @@ export default function AllusionTable() {
                     <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : console.log(usr, pwd)}>Login</Button>
                     <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
                     <Divider></Divider>
-                    {auth === true 
-                    ? <>
-                        <p>ID: H{maxID+1}</p>
-                        <label>Honka</label>
-                        <TextArea 
-                            onChange={(event) => setNewHonka(event.target.value)} 
-                        />
-                        <label>Romaji</label>
-                        <TextArea 
-                            onChange={(event) => setNewRomaji(event.target.value)}
-                        />
-                        <label>Source and order</label>
-                        <TextArea 
-                            placeholder='E.g. Kokinshu 123, notice the space in between' 
-                            onChange={(event) => setNewSO(event.target.value)}    
-                        />
-                        <label>Translator</label>
-                        <Select 
-                            showSearch
-                            style={{
-                                width: '100%'
-                            }}
-                            options={poet}
-                            value={newTranslator}
-                            onChange={(value) => setNewTranslator(value)}
-                        />
-                        <label>Translation</label>
-                        <TextArea 
-                            onChange={(event) => setNewTranslation(event.target.value)}    
-                        />
-                        <label>Poet</label>
-                        <Select 
-                            showSearch
-                            style={{
-                                width: '100%'
-                            }}
-                            options={poet}
-                            value={newPoet}
-                            onChange={(value) => setNewPoet(value)}
-                        />
-                        <label>Source</label>
-                        <Select
-                            showSearch
-                            style={{
-                                width: '100%'
-                            }}
-                            options={source}
-                            value={newSource}
-                            onChange={(value) => setNewSource(value)}
-                        />
-                        <Button onClick={newEntry}>Create</Button>
-                    </>
-                    : null}
+                    {auth === true
+                        ? <>
+                            <p>ID: H{maxID + 1}</p>
+                            <label>Honka</label>
+                            <TextArea
+                                onChange={(event) => setNewHonka(event.target.value)}
+                            />
+                            <label>Romaji</label>
+                            <TextArea
+                                onChange={(event) => setNewRomaji(event.target.value)}
+                            />
+                            <label>Source and order</label>
+                            <TextArea
+                                placeholder='E.g. Kokinshu 123, notice the space in between'
+                                onChange={(event) => setNewSO(event.target.value)}
+                            />
+                            <label>Translator</label>
+                            <Select
+                                showSearch
+                                style={{
+                                    width: '100%'
+                                }}
+                                options={poet}
+                                value={newTranslator}
+                                onChange={(value) => setNewTranslator(value)}
+                            />
+                            <label>Translation</label>
+                            <TextArea
+                                onChange={(event) => setNewTranslation(event.target.value)}
+                            />
+                            <label>Poet</label>
+                            <Select
+                                showSearch
+                                style={{
+                                    width: '100%'
+                                }}
+                                options={poet}
+                                value={newPoet}
+                                onChange={(value) => setNewPoet(value)}
+                            />
+                            <label>Source</label>
+                            <Select
+                                showSearch
+                                style={{
+                                    width: '100%'
+                                }}
+                                options={source}
+                                value={newSource}
+                                onChange={(value) => setNewSource(value)}
+                            />
+                            <Button onClick={newEntry}>Create</Button>
+                        </>
+                        : null}
                     <BackTop>
                         <div>Back to top</div>
                     </BackTop>
