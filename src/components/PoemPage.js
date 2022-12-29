@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useReducer } from 'react'
+import React, { useMemo, useState, useReducer, useEffect } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select, Col, Row, Button, Space, BackTop, Divider, Tag, Input } from 'antd';
@@ -129,7 +129,7 @@ export default function PoemPage() {
         }
     }
 
-    useMemo(() => {
+    useEffect(() => {
         let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
         let getHonka = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "' + number + '" return allusions'
         let getSrc = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:ALLUDES_TO]->(h:Honka)-[:ANTHOLOGIZED_IN]-(s:Source) where g.pnum ends with "' + number + '" return h.Honka as text, s.title as title'
@@ -196,8 +196,10 @@ export default function PoemPage() {
             setPnum(pls)
             session.close()
             closeDriver()
+            console.log('line 200')
         }
         _().catch(console.error)
+        console.log(pnum)
     }, [chapter, number])
 
     useMemo(() => {

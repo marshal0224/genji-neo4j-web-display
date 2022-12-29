@@ -96,7 +96,7 @@ export default function AllusionTable() {
             },
         },
         {
-            title: 'notes',
+            title: 'Notes',
             dataIndex: 'notes',
             key: 'notes',
         },
