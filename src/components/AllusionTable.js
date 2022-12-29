@@ -29,6 +29,7 @@ export default function AllusionTable() {
 
     const forceUpdate = useReducer(x => x + 1, 0)[1]
 
+    const chapters = getChpList()
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
     const columns = [
         {
@@ -113,17 +114,28 @@ export default function AllusionTable() {
                     </Col>
                     <Divider></Divider>
                     <Col span={24}>
+                        {allusion[record.key] !== undefined 
+                        ? Array.from(new Set(allusion[record.key].map(e => chapters[parseInt(e[0].substring(0, 2))]))).map(e => <Tag>{e}</Tag>) 
+                        : null}
+                    </Col>
+                    <Col span={24}>
                         {auth === true
-                            ? <><Select
-                                showSearch
-                                options={pnum}
-                                style={{
-                                    width: '60%',
-                                }}
-                                onChange={handleSelect}
-                            ></Select><Button
-                                onClick={() => createLink(record.key)}
-                            >Link</Button></>
+                            ? <>
+                                <Divider></Divider>
+                                <Select
+                                    showSearch
+                                    options={pnum}
+                                    style={{
+                                        width: '60%',
+                                    }}
+                                    onChange={handleSelect}
+                                ></Select>
+                                <Button
+                                    onClick={() => createLink(record.key)}
+                                >
+                                    Link
+                                </Button>
+                            </>
                             : null}
                     </Col>
                 </Row>
