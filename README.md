@@ -5,7 +5,18 @@ Our DB is on Aura, and the Cypher commands embeded in the scripts will likely on
 ![](arch.png)
 
 # Neo4j-React Interaction
-To be written
+We display the following through the app: 
+- Original Japanese poem (waka)
+- Waka Romaji
+- Waka translations in English
+- Genji chapters in which the waka appear
+- Characters who exchange waka
+- Other poems which the waka alluded to
+
+We organize these texts on the following pages:
+- Poem page, where a user can query for a single waka and see it on the page with its romaji, its speaker(s) and addressee(s), its translations, etc.
+- Poem search table, where a user can query for a list of waka by specifying constraints including chapter, speaker, addressee, etc. 
+- Allusion table
 
 # How to Use
 1. Run `npm i` in the project root directory
