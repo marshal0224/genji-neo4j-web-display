@@ -318,3 +318,7 @@ export function getPoemTableContent(poemRes, transTemp) {
     })
     return [plist, info, propname]
 }
+
+export function concatObj(e) {
+    return Object.values(e).join('')
+}

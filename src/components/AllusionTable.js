@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useState, useReducer } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getChpList } from '../utils'
+import { toNativeTypes, getChpList, concatObj } from '../utils'
 import { Select, Col, Row, Button, Space, BackTop, Divider, Table, Input, Tag } from 'antd';
-import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 
 export default function AllusionTable() {
     const [pnum, setPnum] = useState([{ value: '', label: '' }])
     const [data, setData] = useState([])
-    const [select, setSelect] = useState('')
+    const [selectedPnum, setSelectedPnum] = useState('')
     const [query, setQuery] = useState([])
     const [poet, setPoet] = useState([])
     const [source, setSource] = useState([])
@@ -26,6 +25,9 @@ export default function AllusionTable() {
     const [newPoet, setNewPoet] = useState('')
     const [newSource, setNewSource] = useState('')
     const [selectedTranslation, setSelectedTranslation] = useState('Vincent')
+    const [editSource, setEditSource] = useState('')
+    const [editOrder, setEditOrder] = useState('N/A')
+    const [sourceQuery, setSourceQuery] = useState('')
 
     const forceUpdate = useReducer(x => x + 1, 0)[1]
 
@@ -51,24 +53,44 @@ export default function AllusionTable() {
         },
         {
             title: 'Source',
-            dataIndex: 'source_and_number',
+            dataIndex: 'Source',
             key: 'Source',
-            render: (text) => (
+            render: (text, record) => (
                 <Row>
-                    <p>{text}</p>
+                    <Col span={24}>
+                        {text !== undefined ? text.map(e => 
+                            <Tag
+                                visible={e[2]}
+                                onClick={deleteHonkaSourceLink(record.key, e[0])}
+                            >
+                                {e[1] !== 'N/A' ? e[0]+' '+e[1] : e[0]}
+                            </Tag>) 
+                        : null}
+                    </Col>
                     <Divider></Divider>
                     <Col span={24}>
                         {auth === true
-                            ? <><Select
-                                showSearch
-                                options={source}
-                                style={{
-                                    width: '60%',
-                                }}
-                                onChange={handleSelect}
-                            ></Select><Button
-                            // onClick={() => createLink(record.key)}
-                            >Link</Button></>
+                            ? <>
+                                <label>Source</label>
+                                <Select
+                                    showSearch
+                                    options={source}
+                                    style={{
+                                        width: '100%',
+                                    }}
+                                    onChange={(value) => setEditSource(value)}
+                                />
+                                <label>Order</label>
+                                <Input 
+                                    defaultValue={'N/A'}
+                                    onChange={(event) => setEditOrder(event.target.value)}
+                                />
+                                <Button
+                                    onClick={createSourceEdge(record.key)}
+                                >
+                                    Link
+                                </Button>
+                            </>
                             : null}
                     </Col>
                 </Row>
@@ -103,7 +125,6 @@ export default function AllusionTable() {
         {
             title: 'Alluded to by',
             key: 'link',
-            width: 200,
             render: (_, record) => (
                 <Row>
                     <Col span={24}>
@@ -115,7 +136,10 @@ export default function AllusionTable() {
                     <Divider></Divider>
                     <Col span={24}>
                         {allusion[record.key] !== undefined 
-                        ? Array.from(new Set(allusion[record.key].map(e => chapters[parseInt(e[0].substring(0, 2)) - 1]))).map(e => <Tag>{e}</Tag>) 
+                        ? Array.from(new Set(allusion[record.key].map(e => chapters[parseInt(e[0].substring(0, 2)) - 1]))).map(e =>
+                            <Tag>
+                                {e}
+                            </Tag>) 
                         : null}
                     </Col>
                     <Col span={24}>
@@ -128,7 +152,7 @@ export default function AllusionTable() {
                                     style={{
                                         width: '60%',
                                     }}
-                                    onChange={handleSelect}
+                                    onChange={(value) => setSelectedPnum(value)}
                                 ></Select>
                                 <Button
                                     onClick={() => createLink(record.key)}
@@ -143,29 +167,66 @@ export default function AllusionTable() {
         }
     ]
 
-    const handleSelect = (value) => {
-        setSelect(value)
+    const createSourceEdge = (id) => (event) => {
+        if (editSource === '') {
+            alert('Need to select a source title!')
+        } else {
+            let bool = window.confirm('About to link ' + editSource + ' to ' + id + ' as a source with order ' + editOrder)
+            if (bool) {
+                setSourceQuery('Match (s:Source {title:"' + editSource + '"}), (h:Honka {id:"' + id + '"}) merge p=(s)<-[:ANTHOLOGIZED_IN {order: "' + editOrder + '"}]-(h) return p')
+                let temp = data
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i].key === id) {
+                        if (data[i].Source === undefined) {
+                            data[i].Source = [[editSource, editOrder]]
+                        } else {
+                            data[i].Source.push([editSource, editOrder])
+                        }
+                    }
+                }
+            } else {
+                alert('Link canceled!')
+            }
+        }
     }
 
+    useMemo(() => {
+        const _ = async () => {
+            initDriver(process.env.REACT_APP_NEO4J_URI,
+                process.env.REACT_APP_NEO4J_USERNAME,
+                process.env.REACT_APP_NEO4J_PASSWORD)
+            const driver = getDriver()
+            const session = driver.session()
+            let write = await session.writeTransaction(tx => tx.run(sourceQuery))
+            session.close()
+            closeDriver()
+        }
+        if (sourceQuery !== '') {
+            _().catch(console.error)
+            setSourceQuery('')
+            alert('Link created!')
+        }
+    }, [sourceQuery])
+
     const createLink = (key) => {
-        if (select === '') {
+        if (selectedPnum === '') {
             alert('Need to select a pnum!')
         } else {
-            let bool = window.confirm('About to link between ' + key + ' and ' + select + '. ')
+            let bool = window.confirm('About to link between ' + key + ' and ' + selectedPnum + '. ')
             if (bool) {
-                setQuery(["MATCH (g:Genji_Poem {pnum:'" + select + "'}), (h:Honka {id:'" + key + "'}) MERGE (g)-[:ALLUDES_TO]->(h) MERGE (h)-[:ALLUDED_TO_IN]->(g) return (h)", 'link'])
+                setQuery(["MATCH (g:Genji_Poem {pnum:'" + selectedPnum + "'}), (h:Honka {id:'" + key + "'}) MERGE (g)-[:ALLUDES_TO]->(h) MERGE (h)-[:ALLUDED_TO_IN]->(g) return (h)", 'link'])
                 let al = allusion
                 if (key in al) {
-                    al[key].push([select, true])
+                    al[key].push([selectedPnum, true])
                 } else {
-                    al[key] = [[select, true]]
+                    al[key] = [[selectedPnum, true]]
                 }
                 setAllusion(al)
             } else {
-                alert('Canceled. If you still want to link between ' + key + ' and ' + select + ', choose another poem and switch back.')
+                alert('Canceled. If you still want to link between ' + key + ' and ' + selectedPnum + ', choose another poem and switch back.')
             }
         }
-        setSelect('')
+        setSelectedPnum('')
     }
 
     const deleteLink = (pnum, id) => () => {
@@ -176,8 +237,21 @@ export default function AllusionTable() {
                 let a = allusion
                 a[id][index][1] = false
                 setAllusion(a)
-                forceUpdate()
                 setQuery(["MATCH (g:Genji_Poem {pnum:'" + pnum + "'})-[r:ALLUDES_TO]->(h:Honka {id:'" + id + "'}), (h)-[s:ALLUDED_TO_IN]->(g) delete r delete s return (g)", 'delete'])
+            }
+        }
+    }
+
+    const deleteHonkaSourceLink = (id, title) => () => {
+        if (auth) {
+            let bool = window.confirm(`About to delete a link between ${id} and ${title}.`)
+            if (bool) {
+                let d = data
+                // d[parseInt(id.slice(1))-1]['Source'][2] = false
+                // setData(d)
+                // forceUpdate()
+                console.log(d[parseInt(id.slice(1))])
+                // setQuery(["MATCH (g:Genji_Poem {pnum:'" + pnum + "'})-[r:ALLUDES_TO]->(h:Honka {id:'" + id + "'}), (h)-[s:ALLUDED_TO_IN]->(g) delete r delete s return (g)", 'delete'])
             }
         }
     }
@@ -227,6 +301,7 @@ export default function AllusionTable() {
         let getLinks = 'MATCH (n:Honka)-[]-(p:Genji_Poem) RETURN n.id as id, p.pnum as pnum'
         let getPoet = 'match (p:People) return p.name as poet'
         let getSource = 'match (s:Source) return s.title as source'
+        let getHonkaSource = 'match (h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source) return h.id as id, r.order as order, s.title as title'
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
@@ -238,6 +313,7 @@ export default function AllusionTable() {
             const resLink = await session.readTransaction(tx => tx.run(getLinks))
             const resPoet = await session.readTransaction(tx => tx.run(getPoet))
             const resSrc = await session.readTransaction(tx => tx.run(getSource))
+            const resEdge = await session.readTransaction(tx => tx.run(getHonkaSource))
             let ans = []
             let max = 0
             let key = 0
@@ -249,6 +325,20 @@ export default function AllusionTable() {
                 if (max < key) {
                     max = key
                 }
+            })
+            let tempEdgeList = resEdge.records.map(e => [concatObj(toNativeTypes(e.get('id'))), concatObj(toNativeTypes(e.get('title'))), concatObj(toNativeTypes(e.get('order')))])
+            let tempEdgeObj = {}
+            tempEdgeList.forEach(e => {
+                if (tempEdgeObj[e[0]] === undefined) {
+                    tempEdgeObj[e[0]] = [[e[1], e[2], true]]
+                } else {
+                    tempEdgeObj[e[0]].push([e[1], e[2], true])
+                }
+            })
+            ans.forEach(e => {
+                if (tempEdgeObj[e.key] !== undefined) {
+                    e.Source = tempEdgeObj[e.key]
+                } 
             })
             setData(ans)
             if (maxID !== max) {
@@ -275,7 +365,6 @@ export default function AllusionTable() {
             temp.forEach(e => {
                 poets.push({ value: e, label: e })
             })
-            console.log(poets)
             setPoet(poets)
             temp = resSrc.records.map(e => e.get('source'))
             let sources = []
