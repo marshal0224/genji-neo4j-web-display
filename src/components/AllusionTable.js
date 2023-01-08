@@ -146,7 +146,6 @@ export default function AllusionTable() {
             title: 'Source',
             dataIndex: 'Source',
             key: 'Source',
-            editable: true,
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
