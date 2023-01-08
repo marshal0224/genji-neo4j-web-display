@@ -1,16 +1,96 @@
-import React, { useEffect, useMemo, useState, useReducer } from 'react'
+import React, { useContext, useEffect, useMemo, useState, useReducer, useRef } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList, concatObj } from '../utils'
-import { Select, Col, Row, Button, Space, BackTop, Divider, Table, Input, Tag } from 'antd';
+import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 
+// Editable cell code from antd doc
+const EditableContext = React.createContext(null);
+const EditableRow = ({ index, ...props }) => {
+    const [form] = Form.useForm();
+    return (
+        <Form form={form} component={false}>
+            <EditableContext.Provider value={form}>
+                <tr {...props} />
+            </EditableContext.Provider>
+        </Form>
+    );
+};
+const EditableCell = ({
+    title,
+    editable,
+    children,
+    dataIndex,
+    record,
+    handleSave,
+    ...restProps
+}) => {
+    const [editing, setEditing] = useState(false);
+    const inputRef = useRef(null);
+    const form = useContext(EditableContext);
+    useEffect(() => {
+        if (editing) {
+            inputRef.current.focus();
+        }
+    }, [editing]);
+    const toggleEdit = () => {
+        setEditing(!editing);
+        form.setFieldsValue({
+            [dataIndex]: record[dataIndex],
+        });
+    };
+    const save = async () => {
+        try {
+            const values = await form.validateFields();
+            toggleEdit();
+            handleSave({
+                ...record,
+                ...values,
+            });
+        } catch (errInfo) {
+            console.log('Save failed:', errInfo);
+        }
+    };
+    let childNode = children;
+    if (editable) {
+        childNode = editing ? (
+            <Form.Item
+                style={{
+                    margin: 0,
+                }}
+                name={dataIndex}
+                rules={[
+                    {
+                        required: true,
+                        message: `${title} is required.`,
+                    },
+                ]}
+            >
+                <TextArea ref={inputRef} onPressEnter={save} onBlur={save} />
+            </Form.Item>
+        ) : (
+            <div
+                className="editable-cell-value-wrap"
+                style={{
+                    paddingRight: 24,
+                }}
+                onClick={toggleEdit}
+            >
+                {children}
+            </div>
+        );
+    }
+    return <td {...restProps}>{childNode}</td>;
+};
+// end of antd code
 export default function AllusionTable() {
     const [pnum, setPnum] = useState([{ value: '', label: '' }])
     const [data, setData] = useState([])
     const [selectedPnum, setSelectedPnum] = useState('')
     const [query, setQuery] = useState([])
     const [poet, setPoet] = useState([])
+    const [translators, setTranslators] = useState([{value: 'Tyler', label: 'Tyler'},{value: 'Vincent', label: 'Vincent'},{value: 'Washburn', label: 'Washburn'}])
     const [source, setSource] = useState([])
     const [auth, setAuth] = useState(false)
     const [usr, setUsr] = useState('')
@@ -19,11 +99,11 @@ export default function AllusionTable() {
     const [maxID, setMaxID] = useState(0)
     const [newHonka, setNewHonka] = useState('')
     const [newRomaji, setNewRomaji] = useState('')
-    const [newSO, setNewSO] = useState('')
     const [newTranslator, setNewTranslator] = useState('')
     const [newTranslation, setNewTranslation] = useState('')
     const [newPoet, setNewPoet] = useState('')
     const [newSource, setNewSource] = useState('')
+    const [newOrder, setNewOrder] = useState('N/A')
     const [selectedTranslation, setSelectedTranslation] = useState('Vincent')
     const [editSource, setEditSource] = useState('')
     const [editOrder, setEditOrder] = useState('N/A')
@@ -33,11 +113,14 @@ export default function AllusionTable() {
 
     const chapters = getChpList()
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
-    const columns = [
+    const defaultColumns = [
         {
             title: 'ID',
             dataIndex: 'key',
-            key: 'ID'
+            key: 'ID',
+            sorter: (a, b) => parseInt(a.key.slice(1)) - parseInt(b.key.slice(1)),
+            defaultSortOrder: 'ascend',
+            editable: true,
         },
         {
             title: 'Honka',
@@ -45,23 +128,32 @@ export default function AllusionTable() {
             key: 'Honka',
             width: 280,
             textWrap: 'word-break',
+            editable: true,
         },
         {
             title: 'Romaji',
             dataIndex: 'Romaji',
             key: 'Romaji',
+            editable: true,
+        },
+        {
+            title: 'Poet',
+            dataIndex: 'Poet', 
+            key: 'Poet',
+            editable: true,
         },
         {
             title: 'Source',
             dataIndex: 'Source',
             key: 'Source',
+            editable: true,
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
                         {text !== undefined ? text.map(e => 
                             <Tag
                                 visible={e[2]}
-                                onClick={deleteHonkaSourceLink(record.key, e[0])}
+                                onClick={(event) => deleteHonkaSourceLink(record.key, e[0], e[1])}
                             >
                                 {e[1] !== 'N/A' ? e[0]+' '+e[1] : e[0]}
                             </Tag>) 
@@ -86,7 +178,7 @@ export default function AllusionTable() {
                                     onChange={(event) => setEditOrder(event.target.value)}
                                 />
                                 <Button
-                                    onClick={createSourceEdge(record.key)}
+                                    onClick={(event) => createSourceEdge(record.key)}
                                 >
                                     Link
                                 </Button>
@@ -101,19 +193,18 @@ export default function AllusionTable() {
                 <Select 
                     value={selectedTranslation} 
                     onChange={(value) => setSelectedTranslation(value)}  
-                    options={[{value: 'Tyler', label: 'Tyler'},{value: 'Vincent', label: 'Vincent'},{value: 'Washburn', label: 'Washburn'}]}
+                    // options={[{value: 'Tyler', label: 'Tyler'},{value: 'Vincent', label: 'Vincent'},{value: 'Washburn', label: 'Washburn'}]}
+                    options={translators}
                     width={100}
                 />
             ),
             dataIndex: 'name',
             key: 'name',
+            editable: true,
             render: (value, record) => {
-                if (selectedTranslation === 'Vincent') {
-                    return record.Vincent;
-                } else if (selectedTranslation === 'Washburn') {
-                    return record.Washburn;
-                } else if (selectedTranslation === 'Tyler') {
-                    return record.Tyler;
+                // console.log(record[selectedTranslation])
+                if (record['translations'] !== undefined) {
+                    return record['translations'][selectedTranslation]
                 }
             },
         },
@@ -121,6 +212,7 @@ export default function AllusionTable() {
             title: 'Notes',
             dataIndex: 'notes',
             key: 'notes',
+            editable: true,
         },
         {
             title: 'Alluded to by',
@@ -128,10 +220,15 @@ export default function AllusionTable() {
             render: (_, record) => (
                 <Row>
                     <Col span={24}>
-                        {allusion[record.key] !== undefined ? allusion[record.key].map(e => <Tag
-                            visible={e[1]}
-                            onClick={deleteLink(e[0], record.key)}
-                        >{e[0]}</Tag>) : null}
+                        {allusion[record.key] !== undefined 
+                            ? allusion[record.key].map(e => 
+                                <Tag
+                                    visible={e[1]}
+                                    onClick={deleteLink(e[0], record.key)}
+                                >
+                                    {e[0]}
+                                </Tag>) 
+                            : null}
                     </Col>
                     <Divider></Divider>
                     <Col span={24}>
@@ -167,7 +264,30 @@ export default function AllusionTable() {
         }
     ]
 
-    const createSourceEdge = (id) => (event) => {
+    const components = {
+        body: {
+            row: EditableRow, 
+            cell: EditableCell,
+        },
+    }
+
+    const columns = defaultColumns.map((col) => {
+        if (!col.editable) {
+            return col;
+        } else {
+            return {
+                ...col, 
+                onCell: (record) => ({
+                    record, 
+                    editable: col.editable,
+                    dataIndex: col.dataIndex,
+                    title: col.title,
+                })
+            }
+        }
+    })
+
+    const createSourceEdge = (id) => {
         if (editSource === '') {
             alert('Need to select a source title!')
         } else {
@@ -176,14 +296,16 @@ export default function AllusionTable() {
                 setSourceQuery('Match (s:Source {title:"' + editSource + '"}), (h:Honka {id:"' + id + '"}) merge p=(s)<-[:ANTHOLOGIZED_IN {order: "' + editOrder + '"}]-(h) return p')
                 let temp = data
                 for (let i = 0; i < data.length; i++) {
-                    if (data[i].key === id) {
-                        if (data[i].Source === undefined) {
-                            data[i].Source = [[editSource, editOrder]]
+                    if (temp[i].key === id) {
+                        if (temp[i].Source === undefined) {
+                            temp[i].Source = [[editSource, editOrder, true]]
                         } else {
-                            data[i].Source.push([editSource, editOrder])
+                            temp[i].Source.push([editSource, editOrder, true])
                         }
                     }
                 }
+                setData(temp)
+                // forceUpdate()
             } else {
                 alert('Link canceled!')
             }
@@ -242,28 +364,40 @@ export default function AllusionTable() {
         }
     }
 
-    const deleteHonkaSourceLink = (id, title) => () => {
+    const deleteHonkaSourceLink = (id, title, order) => {
         if (auth) {
-            let bool = window.confirm(`About to delete a link between ${id} and ${title}.`)
+            let bool = window.confirm(`About to delete a link between ${id} and ${title} ${order}.`)
             if (bool) {
                 let d = data
-                // d[parseInt(id.slice(1))-1]['Source'][2] = false
-                // setData(d)
+                let index = d[parseInt(id.slice(1))]['Source'].findIndex(element => element[0] === title && element[1] === order);
+                d[parseInt(id.slice(1))]['Source'][index][2] = false
+                setData(d)
                 // forceUpdate()
-                console.log(d[parseInt(id.slice(1))])
-                // setQuery(["MATCH (g:Genji_Poem {pnum:'" + pnum + "'})-[r:ALLUDES_TO]->(h:Honka {id:'" + id + "'}), (h)-[s:ALLUDED_TO_IN]->(g) delete r delete s return (g)", 'delete'])
+                setQuery([`MATCH (h:Honka {id:"${id}"})-[r:ANTHOLOGIZED_IN {order:"${order}"}]->(s:Source {title:"${title}"}) delete r return (h)`, 'delete'])
             }
         }
     }
 
     const newEntry = () => {
         let id = 'H' + (maxID + 1)
-        setQuery(['match (p:People {name:"' + newPoet + '"}), (s:Source {title:"' + newSource + '"}) merge path=(p)-[:AUTHOR_OF]->(h:Honka {id: "' + id + '"})-[:ANTHOLOGIZED_IN]->(s) set h.Honka="' + newHonka + '", h.Romaji="' + newRomaji + '", h.source_and_number="' + newSO + '", h.' + newTranslator + '="' + newTranslation + '" return "entry" as res', 'entry'])
-        setNewHonka('')
-        setNewRomaji('')
-        setNewSO('')
-        setNewPoet('')
-        setNewSource('')
+        if (newPoet === '') {
+            alert("Need a poet!")
+        } else if (newTranslator === '') {
+            alert("Need a translator!")
+        } else if (newSource === '') {
+            alert("Need a source!")
+        } else {
+            setQuery(['match (p:People {name:"' + newPoet + '"}), (t:People {name: "'+newTranslator+'"}), (s:Source {title:"' + newSource + '"}) create entry=(p)-[:AUTHOR_OF]->(h:Honka {id: "' + id + '"})-[:ANTHOLOGIZED_IN {order: "' + newOrder + '"}]->(s), (h)<-[:TRANSLATION_OF]-(:Translation {translation: "'+newTranslation+'"})<-[:TRANSLATOR_OF]-(t) set h.Honka="' + newHonka + '", h.Romaji="' + newRomaji + '" return entry as res', 'entry'])
+            console.log(query)
+            setNewHonka('')
+            setNewRomaji('')
+            setNewPoet('')
+            setNewTranslator('')
+            setNewTranslation('')
+            setNewSource('')
+            setNewOrder('N/A')
+            forceUpdate()
+        }
     }
 
     useMemo(() => {
@@ -284,6 +418,7 @@ export default function AllusionTable() {
                     _().catch(console.error)
                     setMaxID(maxID + 1)
                 }
+                alert('Honka created! Please refresh the honka table to see it.')
             } else if (query[1] === 'link') {
                 _().catch(console.error)
                 alert('Linked created!')
@@ -300,8 +435,10 @@ export default function AllusionTable() {
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
         let getLinks = 'MATCH (n:Honka)-[]-(p:Genji_Poem) RETURN n.id as id, p.pnum as pnum'
         let getPoet = 'match (p:People) return p.name as poet'
+        let getHonkaPoet = 'match (h:Honka)<-[:AUTHOR_OF]-(p:People) return h.id as id, p.name as name'
         let getSource = 'match (s:Source) return s.title as source'
         let getHonkaSource = 'match (h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source) return h.id as id, r.order as order, s.title as title'
+        let getTrans = 'match (h:Honka)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) return h.id as id, t.translation as trans, p.name as name'
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
@@ -312,21 +449,38 @@ export default function AllusionTable() {
             const resPnum = await session.readTransaction(tx => tx.run(getPnum))
             const resLink = await session.readTransaction(tx => tx.run(getLinks))
             const resPoet = await session.readTransaction(tx => tx.run(getPoet))
+            const resPoetEdge = await session.readTransaction(tx => tx.run(getHonkaPoet))
             const resSrc = await session.readTransaction(tx => tx.run(getSource))
-            const resEdge = await session.readTransaction(tx => tx.run(getHonkaSource))
+            const resSourceEdge = await session.readTransaction(tx => tx.run(getHonkaSource))
+            const resTrans = await session.readTransaction(tx => tx.run(getTrans))
             let ans = []
             let max = 0
             let key = 0
+            let translators = new Set()
+            let transLs = resTrans.records.map(e => [concatObj(toNativeTypes(e.get('id'))), concatObj(toNativeTypes(e.get('trans'))), concatObj(toNativeTypes(e.get('name')))])
+            let transObj = {}
+            transLs.forEach(e => {
+                translators.add(e[2])
+                if (transObj[e[0]] === undefined) {
+                    transObj[e[0]] = {}
+                    transObj[e[0]][e[2]] = e[1]
+                } else {
+                    transObj[e[0]][e[2]] = e[1]
+                }
+            })
+            translators = Array.from(translators).map(e => ({value: e, label: e}))
+            setTranslators(translators)
             res.records.map(e => toNativeTypes(e.get('honka'))).forEach(e => {
                 delete Object.assign(e.properties, { ['key']: e.properties['id'] })['id']
-                e.properties.translations = { Vincent: e.properties.Vincent, Washburn: e.properties.Washburn, Tyler: e.properties.Tyler }
+                // e.properties.translations = { Vincent: e.properties.Vincent, Washburn: e.properties.Washburn, Tyler: e.properties.Tyler }
+                e.properties.translations = transObj[e.properties.key]
                 ans.push(e.properties)
                 key = parseInt(e.properties.key.slice(1))
                 if (max < key) {
                     max = key
                 }
             })
-            let tempEdgeList = resEdge.records.map(e => [concatObj(toNativeTypes(e.get('id'))), concatObj(toNativeTypes(e.get('title'))), concatObj(toNativeTypes(e.get('order')))])
+            let tempEdgeList = resSourceEdge.records.map(e => [concatObj(toNativeTypes(e.get('id'))), concatObj(toNativeTypes(e.get('title'))), concatObj(toNativeTypes(e.get('order')))])
             let tempEdgeObj = {}
             tempEdgeList.forEach(e => {
                 if (tempEdgeObj[e[0]] === undefined) {
@@ -339,6 +493,11 @@ export default function AllusionTable() {
                 if (tempEdgeObj[e.key] !== undefined) {
                     e.Source = tempEdgeObj[e.key]
                 } 
+            })
+            let poetEdge = resPoetEdge.records.map(e => [concatObj(toNativeTypes(e.get('id'))), concatObj(toNativeTypes(e.get('name')))])
+            poetEdge.forEach(e => {
+                let index = ans.findIndex(ele => ele.key === e[0])
+                ans[index].Poet = e[1]
             })
             setData(ans)
             if (maxID !== max) {
@@ -382,7 +541,12 @@ export default function AllusionTable() {
         <div>
             <Row>
                 <Col span={21}>
-                    <Table dataSource={data} columns={columns} />
+                    <Table 
+                        columns={auth ? columns : defaultColumns} 
+                        components={components} 
+                        dataSource={data} 
+                        rowClassName={() => 'editable-row'}
+                    />
                 </Col>
                 <Col span={3}>
                     <Space direction='vertical'>
@@ -408,11 +572,6 @@ export default function AllusionTable() {
                             <label>Romaji</label>
                             <TextArea
                                 onChange={(event) => setNewRomaji(event.target.value)}
-                            />
-                            <label>Source and order</label>
-                            <TextArea
-                                placeholder='E.g. Kokinshu 123, notice the space in between'
-                                onChange={(event) => setNewSO(event.target.value)}
                             />
                             <label>Translator</label>
                             <Select
@@ -447,6 +606,11 @@ export default function AllusionTable() {
                                 options={source}
                                 value={newSource}
                                 onChange={(value) => setNewSource(value)}
+                            />
+                            <label>Order</label>
+                            <Input 
+                                defaultValue={"N/A"}
+                                onChange={(value) => setNewOrder(value)}
                             />
                             <Button onClick={newEntry}>Create</Button>
                         </>
