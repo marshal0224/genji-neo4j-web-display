@@ -4,6 +4,7 @@ import { toNativeTypes, getChpList, concatObj } from '../utils'
 import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
+import { Link } from 'react-router-dom';
 
 // Editable cell code from antd doc
 const EditableContext = React.createContext(null);
@@ -221,12 +222,18 @@ export default function AllusionTable() {
                     <Col span={24}>
                         {allusion[record.key] !== undefined 
                             ? allusion[record.key].map(e => 
-                                <Tag
-                                    visible={e[1]}
-                                    onClick={auth ? deleteLink(e[0], record.key) : null}
+                                <Link 
+                                    to={`/poems/${parseInt(e[0].substring(0, 2))}/${parseInt(e[0].substring(4, 6))}`}
+                                    target="_blank"
                                 >
+                                    <Tag
+                                        visible={e[1]}
+                                        onClick={auth ? deleteLink(e[0], record.key) : null}
+                                    >
                                     {e[0]}
-                                </Tag>) 
+                                </Tag>
+                                </Link>
+                                ) 
                             : null}
                     </Col>
                     <Divider></Divider>

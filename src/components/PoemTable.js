@@ -267,7 +267,10 @@ export default function PoemTable() {
                         <tr key={row[0]}>
                             <td>{parseChp(row[0])}</td>
                             <td className='pg'>{
-                                <Link to={`/poem/${parseInt(row[0].substring(0, 2))}/${parseInt(row[0].match(/.{1,2}/g)[2])}`}>
+                                <Link 
+                                    to={`/poems/${parseInt(row[0].substring(0, 2))}/${parseInt(row[0].match(/.{1,2}/g)[2])}`}
+                                    target="_blank"
+                                >
                                     {parseOrder(row[0])}
                                 </Link>
                             }</td>
