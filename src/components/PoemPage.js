@@ -129,6 +129,7 @@ export default function PoemPage() {
         }
     }
 
+    // pulls the content of a poem page based on chapter and number
     useEffect(() => {
         let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
         let getHonka = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "' + number + '" return allusions'
@@ -202,6 +203,7 @@ export default function PoemPage() {
         console.log(pnum)
     }, [chapter, number])
 
+    // async func for tag queries
     useMemo(() => {
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
@@ -224,6 +226,7 @@ export default function PoemPage() {
         } 
     }, [tagQuery])
 
+    // async func for related poem queries
     useMemo(() => {
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
@@ -246,6 +249,7 @@ export default function PoemPage() {
         } 
     }, [relQuery])
 
+    // async func for notes. There is probably a way to merge them...
     useMemo(() => {
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
@@ -376,7 +380,9 @@ export default function PoemPage() {
                         <Tag 
                             visible={e[1]}
                             onClick={deleteLink(tag.indexOf(e))}
-                        >{e[0]}</Tag>
+                        >
+                            {e[0]}
+                        </Tag>
                     )}
                 </Col>
                 <Divider></Divider>
@@ -389,8 +395,8 @@ export default function PoemPage() {
                             style={{
                                 width: '20%',
                             }}
-                        onChange={handleSelect}
-                        ></Select>
+                            onChange={handleSelect}
+                        />
                         <Button
                             onClick={() => createLink()}
                         >

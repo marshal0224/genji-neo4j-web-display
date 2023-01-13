@@ -4,7 +4,7 @@ import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../uti
 import { useParams } from 'react-router-dom'
 import Edit from './edit'
 import { Link } from 'react-router-dom'
-export default function Poem() {
+export default function PoemTable() {
     let { chapter, spkrGen, speaker, addrGen, addressee, auth, username, password } = useParams()
     const [metadata, setMetadata] = useState([])
     const [entries, setEntries] = useState([])

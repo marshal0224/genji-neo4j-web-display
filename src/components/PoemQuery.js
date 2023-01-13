@@ -1,20 +1,23 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
-import { Select, Col, Row, Button, Space, BackTop } from 'antd';
+import { Select, Col, Row, Button } from 'antd';
 import 'antd/dist/antd.min.css';
-import { Link, Outlet, useParams } from 'react-router-dom';
+import { Link, Outlet, } from 'react-router-dom';
 const { Option } = Select;
 
 export default function PoemQuery() {
     // chapters: {0:{num: '1', count: 9, name: 'Kiritsubo 桐壺'},...}
     const [chapters, setChapters] = useState([])
+    // values of the selects
     const [chpSelect, setChpSelect] = useState([false, "", undefined])
     const [count, setCount] = useState([])
     // prevNext: [["prevChp", "nextChp"], ["prevNum", "nextNum"]]
     const [prevNext, setPrevNext] = useState([["",""],["",""]])
     const [buttonLock, setButtonLock] = useState(true)
-    useMemo(() => {
+
+    // loads the dropdowns
+    useEffect(() => {
         let get = 'match (:Genji_Poem)-[r:INCLUDED_IN]->(c:Chapter) return c.chapter_number as num, c.chapter_name as name, count(r) as count'
         const _ = async () => {
             initDriver( process.env.REACT_APP_NEO4J_URI, 
@@ -94,6 +97,10 @@ export default function PoemQuery() {
         }
     }
 
+    function updatePrevNext(value) {
+        
+    }
+
     return (
         <Row>
             <Col span={5}>
@@ -136,7 +143,7 @@ export default function PoemQuery() {
                     )}
                 </Select>
                 <Link
-                    to={`/poem/${chpSelect[1]}/${chpSelect[2]}`}
+                    to={`/poems/${chpSelect[1]}/${chpSelect[2]}`}
                 >
                     <Button 
                         disabled={typeof chpSelect[2] === 'undefined'}
@@ -150,7 +157,7 @@ export default function PoemQuery() {
                 </Link>
                 <br />
                 <Link
-                    to={`/poem/${prevNext[0][0]}/${prevNext[0][1]}`}    
+                    to={`/poems/${prevNext[0][0]}/${prevNext[0][1]}`}    
                 >
                     <Button
                         disabled={buttonLock}
@@ -162,7 +169,7 @@ export default function PoemQuery() {
                     >Previous</Button>
                 </Link>
                 <Link
-                    to={`/poem/${prevNext[1][0]}/${prevNext[1][1]}`}    
+                    to={`/poems/${prevNext[1][0]}/${prevNext[1][1]}`}    
                 >
                     <Button
                         disabled={buttonLock}

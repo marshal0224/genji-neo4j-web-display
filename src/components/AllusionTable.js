@@ -223,7 +223,7 @@ export default function AllusionTable() {
                             ? allusion[record.key].map(e => 
                                 <Tag
                                     visible={e[1]}
-                                    onClick={deleteLink(e[0], record.key)}
+                                    onClick={auth ? deleteLink(e[0], record.key) : null}
                                 >
                                     {e[0]}
                                 </Tag>) 

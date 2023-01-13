@@ -2,8 +2,16 @@ import React from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { BrowserRouter } from "react-router-dom";
+import { Home } from './components/Home';
+// import reportWebVitals from './reportWebVitals';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import PoemQuery from './components/PoemQuery';
+import PoemPage from './components/PoemPage';
+import AllusionTable from './components/AllusionTable';
+import Search from './components/Search';
+import PoemTable from './components/PoemTable';
+import { About } from './components/About';
+import { Acknowledgements } from './components/Acknowledgements';
 
 let password = prompt("Please enter the password for visiting this site", "Password");
 let auth = false
@@ -16,14 +24,60 @@ if (auth) {
   // Create a root.
   const root = ReactDOMClient.createRoot(container);
 
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <App />, 
+      children: [
+        {
+          index: true,
+          element: <Home />
+        }, 
+        {
+          path: "/poems",
+          element: <PoemQuery />, 
+          children: [
+            {
+              path: ":chapter/:number",
+              element: <PoemPage />
+            }
+          ]
+        }, 
+        {
+          path: "/allusions",
+          element: <AllusionTable />
+        }, 
+        {
+          path: "/search",
+          element: <Search />, 
+          children: [
+            {
+              path: ":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password",
+              element: <PoemTable />
+            }
+          ]
+        }, 
+        {
+          path: "/about", 
+          element: <About />
+        }, 
+        {
+          path: "/acknowledgements",
+          element: <Acknowledgements />
+        }
+      ]
+    }
+  ])
+
   root.render(
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>
+    // <BrowserRouter>
+    //     <App />
+    // </BrowserRouter>
+    <RouterProvider router={router} />
   );
 
   // If you want to start measuring performance in your app, pass a function
   // to log results (for example: reportWebVitals(console.log))
   // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-  reportWebVitals();
+//   reportWebVitals();
 }

@@ -1,16 +1,8 @@
 import './App.css';
 import React from 'react'
-import PoemTable from './components/PoemTable'
-import { Route, Routes, Link, Navigate } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
-import Search from './components/Search';
-import PoemQuery from './components/PoemQuery';
-import PoemPage from './components/PoemPage';
 import { HeaderImg } from './components/Header';
-import { Home } from './components/Home';
-import { About } from './components/About';
-import { Acknowledgements } from './components/Acknowledgements';
-import AllusionTable from './components/AllusionTable';
 
 const { Header, Content, Footer } = Layout;
 
@@ -60,7 +52,7 @@ export default class App extends React.Component{
           {
             key: 'Poem',
             label: (
-              <Link to="/poem">Poems</Link>
+              <Link to="/poems">Poems</Link>
             )
           }, 
           {
@@ -103,19 +95,7 @@ export default class App extends React.Component{
           backgroundColor: 'white', 
         }}
       >
-      <Routes>
-          <Route path="/" element={<Home />}/>
-          <Route path="/poem" element={<PoemQuery />}>
-            <Route path=":chapter/:number" element={<PoemPage />}></Route>
-          </Route>
-          <Route path="/allusions" element={<AllusionTable />}></Route>
-          <Route path="/search" element={<Search />}>
-            <Route path=":chapter/:spkrGen/:speaker/:addrGen/:addressee/:auth/:username/:password" element={<PoemTable />}></Route>
-          </Route>
-          <Route path="/about" element={<About />}/>
-          <Route path="/acknowledgements" element={<Acknowledgements />}/>
-          <Route path="/" element={<Navigate to="/"/>} />
-      </Routes>
+        <Outlet />
       </Content>
       {/* <Footer
         style={{
