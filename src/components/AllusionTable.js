@@ -225,6 +225,8 @@ export default function AllusionTable() {
                                 <Link 
                                     to={`/poems/${parseInt(e[0].substring(0, 2))}/${parseInt(e[0].substring(4, 6))}`}
                                     target="_blank"
+                                    preventScrollReset={true}
+                                    onClick={(event) => auth ? event.preventDefault() : event}
                                 >
                                     <Tag
                                         visible={e[1]}
