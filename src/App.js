@@ -6,104 +6,103 @@ import { HeaderImg } from './components/Header';
 
 const { Header, Content, Footer } = Layout;
 
-export default class App extends React.Component{
+export default function App() {
 
-  render() {
-    return (
-      <div className="App">
-      <HeaderImg title="The Tale of Genji Poem Database" subTitle="Gamma Version"/>
-      <Layout
-        style={{
-          minHeight: "90vh"
-        }}
-      >
-      <Header
-        style={{
-          position: 'relative',
-          // zIndex: 1,
-          width: '100%',
-          padding: '0',
-          background: 'white',
-        }}
-      >
-      <Menu
-        style={{
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-        mode="horizontal"
-        items={[
-          {
-            key: 'Home',
-            label: (
-              <Link to="/">Home</Link>
-            )
-          }, 
-          // {
-          //   key: 'Chapters',
-          //   label: 'Chapters'
-          // }, 
-          // {
-          //   key: 'Characters',
-          //   label: 'Characters'
-          // }, 
-          {
-            key: 'Poem',
-            label: (
-              <Link to="/poems">Poems</Link>
-            )
-          }, 
-          {
-            key: 'Allusions',
-            label: (
-              <Link to="/allusions">Allusions</Link>
-            )
-          }, 
-          {
-            key: 'Search',
-            label: (
-              <Link to="/search">Search</Link>
-            )
-          }, 
-          // {
-          //   key: 'Edit',
-          //   label: 'Edit'
-          // }
-          {
-            key: 'About Poetry in the Tale of Genjii',
-            label: (
-              <Link to="/about">About Poetry in the Tale of Genjii</Link>
-            )
-          }, 
-          {
-            key: 'Acknowledgements',
-            label: (
-              <Link to="/acknowledgements">Acknowledgements</Link>
-            )
-          }
-        ]}
-      />
-      </Header> 
-      <Content
-        className="site-layout"
-        style={{
-          position: 'relative',
-          padding: '0 50px',
-          height: "calc(90vh - 134px)",
-          backgroundColor: 'white', 
-        }}
-      >
-        <Outlet />
-      </Content>
-      {/* <Footer
-        style={{
-          textAlign: 'center',
-        }}
-      >
-        J. Keith Vincent © 2022
-      </Footer> */}
-      </Layout>
-      </div>
-)}}
+  return (
+    <div className="App">
+    <HeaderImg title="The Tale of Genji Poem Database" subTitle="Gamma Version"/>
+    <Layout
+      style={{
+        minHeight: "90vh"
+      }}
+    >
+    <Header
+      style={{
+        position: 'relative',
+        width: '100%',
+        padding: '0',
+        background: 'white',
+      }}
+    >
+    <Menu
+      style={{
+        position: 'relative',
+        display: 'flex',
+        justifyContent: 'center',
+        textAlign: 'center',
+      }}
+      mode="horizontal"
+      items={[
+        {
+          key: 'Home',
+          label: (
+            <Link to="/">Home</Link>
+          )
+        }, 
+        // {
+        //   key: 'Chapters',
+        //   label: 'Chapters'
+        // }, 
+        // {
+        //   key: 'Characters',
+        //   label: 'Characters'
+        // }, 
+        {
+          key: 'Poem',
+          label: (
+            <Link to="/poems">Poems</Link>
+          )
+        }, 
+        {
+          key: 'Allusions',
+          label: (
+            <Link to="/allusions">Allusions</Link>
+          )
+        }, 
+        {
+          key: 'Search',
+          label: (
+            <Link to="/search">Search</Link>
+          )
+        }, 
+        // {
+        //   key: 'Edit',
+        //   label: 'Edit'
+        // }
+        {
+          key: 'About Poetry in the Tale of Genjii',
+          label: (
+            <Link to="/about">About Poetry in the Tale of Genji</Link>
+          )
+        }, 
+        {
+          key: 'Acknowledgements',
+          label: (
+            <Link to="/acknowledgements">Acknowledgements</Link>
+          )
+        }
+      ]}
+    />
+    </Header> 
+    <Content
+      className="site-layout"
+      style={{
+        position: 'relative',
+        padding: '0 50px',
+        height: "calc(90vh - 134px)",
+        backgroundColor: 'white', 
+      }}
+    >
+      <Outlet />
+    </Content>
+    {/* <Footer
+      style={{
+        textAlign: 'center',
+      }}
+    >
+      J. Keith Vincent © 2022
+    </Footer> */}
+    </Layout>
+    </div>
+  )
+}
