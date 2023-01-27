@@ -3,7 +3,7 @@ import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select, Col, Row, Button } from 'antd';
 import 'antd/dist/antd.min.css';
-import { Link, Outlet, } from 'react-router-dom';
+import { Link, Outlet, useParams } from 'react-router-dom';
 const { Option } = Select;
 
 export default function PoemQuery() {
@@ -15,6 +15,8 @@ export default function PoemQuery() {
     // prevNext: [["prevChp", "nextChp"], ["prevNum", "nextNum"]]
     const [prevNext, setPrevNext] = useState([["",""],["",""]])
     const [buttonLock, setButtonLock] = useState(true)
+
+    let { chapter, number } = useParams()
 
     // loads the dropdowns
     useEffect(() => {
@@ -40,6 +42,10 @@ export default function PoemQuery() {
             closeDriver()
         }
         _().catch(console.error)
+        if (chapter !== undefined && number !== undefined) {
+            setChpSelect([true, chapter, number])
+            setButtonLock(false)
+        }
     }, [])
 
     // value: int, poem order
