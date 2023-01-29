@@ -68,7 +68,7 @@ const EditableCell = ({
                     },
                 ]}
             >
-                <TextArea ref={inputRef} onPressEnter={save} onBlur={save} />
+                <TextArea ref={inputRef} onBlur={save} />
             </Form.Item>
         ) : (
             <div
@@ -108,6 +108,7 @@ export default function AllusionTable() {
     const [selectedTranslation, setSelectedTranslation] = useState('Vincent')
     const [editSource, setEditSource] = useState('')
     const [editOrder, setEditOrder] = useState('N/A')
+    const [editPoet, setEditPoet] = useState('')
     const [sourceQuery, setSourceQuery] = useState('')
 
     const forceUpdate = useReducer(x => x + 1, 0)[1]
@@ -141,7 +142,42 @@ export default function AllusionTable() {
             title: 'Poet',
             dataIndex: 'Poet', 
             key: 'Poet',
-            editable: true,
+            width: 280,
+            render: (text, record) => (
+                <Row>
+                    <Col span={24}>
+                        {/* {text !== undefined ? text.map(e => 
+                            <Tag
+                                visible={e[2]}
+                                onClick={(event) => deleteHonkaSourceLink(record.key, e[0], e[1])}
+                            >
+                                {e[1] !== 'N/A' ? e[0]+' '+e[1] : e[0]}
+                            </Tag>) 
+                        : null} */}
+                        {text}
+                    </Col>
+                    <Divider></Divider>
+                    <Col span={24}>
+                        {auth === true
+                            ? <>
+                                <Select
+                                    showSearch
+                                    options={poet}
+                                    style={{
+                                        width: '100%',
+                                    }}
+                                    onChange={(value) => setEditPoet(value)}
+                                />
+                                <Button
+                                    onClick={(event) => createPoetEdge(record.key)}
+                                >
+                                    Link
+                                </Button>
+                            </>
+                            : null}
+                    </Col>
+                </Row>
+            )
         },
         {
             title: 'Source',
@@ -277,6 +313,10 @@ export default function AllusionTable() {
         },
     }
 
+    function handleSave(a) {
+        console.log(a)
+    }
+
     const columns = defaultColumns.map((col) => {
         if (!col.editable) {
             return col;
@@ -288,6 +328,7 @@ export default function AllusionTable() {
                     editable: col.editable,
                     dataIndex: col.dataIndex,
                     title: col.title,
+                    handleSave: handleSave,
                 })
             }
         }
@@ -308,6 +349,31 @@ export default function AllusionTable() {
                         } else {
                             temp[i].Source.push([editSource, editOrder, true])
                         }
+                    }
+                }
+                setData(temp)
+                // forceUpdate()
+            } else {
+                alert('Link canceled!')
+            }
+        }
+    }
+
+    const createPoetEdge = (id) => {
+        if (editPoet === '') {
+            alert('Need to select a poet!')
+        } else {
+            let bool = window.confirm('About to link ' + editPoet + ' to ' + id + ' as a poet!')
+            if (bool) {
+                setSourceQuery('Match (p:People {name:"' + editPoet + '"}), (h:Honka {id:"' + id + '"})<-[r:AUTHOR_OF]-() delete r merge path=(p)-[:AUTHOR_OF]->(h) return path')
+                let temp = data
+                for (let i = 0; i < data.length; i++) {
+                    if (temp[i].key === id) {
+                        // if (temp[i].Poet === undefined) {
+                            temp[i].Poet = editPoet
+                        // } else {
+                        //     temp[i].Source.push([editSource, editOrder, true])
+                        // }
                     }
                 }
                 setData(temp)
@@ -478,7 +544,6 @@ export default function AllusionTable() {
             setTranslators(translators)
             res.records.map(e => toNativeTypes(e.get('honka'))).forEach(e => {
                 delete Object.assign(e.properties, { ['key']: e.properties['id'] })['id']
-                // e.properties.translations = { Vincent: e.properties.Vincent, Washburn: e.properties.Washburn, Tyler: e.properties.Tyler }
                 e.properties.translations = transObj[e.properties.key]
                 ans.push(e.properties)
                 key = parseInt(e.properties.key.slice(1))
