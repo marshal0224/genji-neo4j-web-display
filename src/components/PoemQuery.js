@@ -3,18 +3,19 @@ import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList } from '../utils'
 import { Select, Col, Row, Button } from 'antd';
 import 'antd/dist/antd.min.css';
-import { Link, Outlet, useParams } from 'react-router-dom';
+import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 const { Option } = Select;
 
 export default function PoemQuery() {
     // chapters: {0:{num: '1', count: 9, name: 'Kiritsubo 桐壺'},...}
     const [chapters, setChapters] = useState([])
-    // values of the selects
+    // values of the selects, e.g., [true, "1", "1"]
     const [chpSelect, setChpSelect] = useState([false, "", undefined])
     const [count, setCount] = useState([])
     // prevNext: [["prevChp", "nextChp"], ["prevNum", "nextNum"]]
-    const [prevNext, setPrevNext] = useState([["",""],["",""]])
+    const [prevNext, setPrevNext] = useState([["",-1],["",-1]])
     const [buttonLock, setButtonLock] = useState(true)
+    const loc = useLocation()
 
     let { chapter, number } = useParams()
 
@@ -38,74 +39,45 @@ export default function PoemQuery() {
                 })
             });
             setChapters(chp)
+            // access via url
+            if (chapter !== undefined && number !== undefined) {
+                setChpSelect([true, chapter, number])
+                setButtonLock(false)
+                updatePrevNext(chp)
+            }
             session.close()
             closeDriver()
         }
         _().catch(console.error)
-        if (chapter !== undefined && number !== undefined) {
-            setChpSelect([true, chapter, number])
-            setButtonLock(false)
-        }
     }, [])
 
-    // value: int, poem order
-    function updatePrev(value) {
-        let currChp = parseInt(chpSelect[1])
+    function updatePrevNext(chps) {
         let prev, next
-        console.log(chpSelect)
-        console.log(chpSelect[1] !== '1' && value === 1)
-        if (chpSelect[1] === '1' && value === 1) {
+        if (chapter === '1' && number === '1') {
             prev = ['1', 1]
             next = ['1', 2]
-        } else if (chpSelect[1] === '54') {
+        } else if (chapter === '54') {
             prev = ['53', 28]
             next = ['54', 1]
-        } else if (chpSelect[1] !== '1' && value === 1) {
-            console.log("Line 52")
-            prev = [chapters[currChp - 2].num, chapters[currChp - 2].count]
-            next = [chapters[currChp - 1].num, 2]
-        } else if (value === count.length) {
-            prev = [chapters[currChp - 1].num, value - 1]
-            next = [chapters[currChp].num, 1]
-        } else if (value < count.length) {
-            prev = [chpSelect[1], value - 1]
-            next = [chpSelect[1], value + 1]
+        } else if (number === '1') {
+            prev = [(parseInt(chapter) - 1).toString(), chps[parseInt(chapter) - 2].count]
+            next = [chapter, 2]
+        } else if (number === chps[parseInt(chapter) - 1].count.toString()) {
+            prev = [chapter, parseInt(number) - 1]
+            next = [(parseInt(chapter) + 1).toString(), 1]
+        } else {
+            prev = [chapter, parseInt(number) - 1]
+            next = [chapter, parseInt(number) + 1]
         } 
-        console.log(prev)
         setPrevNext([prev, next])
-        setChpSelect([true, prev[0], value])
-        setCount(Array.from({length: chapters[parseInt(chpSelect[1]) - 1].count}, (_, i) => i + 1))
+        setChpSelect([true, chapter, number])
     }
 
-    function updateNext(value, buttonClick) {
-        let currChp = parseInt(chpSelect[1])
-        let prev, next
-        if (chpSelect[1] === '1' && value === 1) { // first poem
-            prev = ['1', 1]
-            next = ['1', 2]
-        } else if (chpSelect[1] === '54') { // last poem
-            prev = ['53', 28]
-            next = ['54', 1]
-        } else if (chpSelect[1] !== '1' && value === 1) { // for the first poem of each chapter, set the previous to be [prevChp, count] and the next to be [currChp, 2]
-            prev = [chapters[currChp - 2].num, chapters[currChp - 2].count]
-            next = [chapters[currChp - 1].num, 2]
-        } else if (value === count.length) {
-            prev = [chpSelect[1], value - 1]
-            next = [chapters[currChp - 1].num, 1]
-        } else if (value < count.length) {
-            prev = [chpSelect[1], value - 1]
-            next = [chpSelect[1], value + 1]
-        } 
-        setPrevNext([prev, next])
-        if (buttonClick) {
-            setChpSelect([true, next[0], value])
-            setCount(Array.from({length: chapters[parseInt(chpSelect[1]) - 1].count}, (_, i) => i + 1))
+    useEffect(() => {
+        if (chapters.length && chapter !== undefined && number !== undefined) {
+            updatePrevNext(chapters)
         }
-    }
-
-    function updatePrevNext(value) {
-        
-    }
+    }, [loc, chapters])
 
     return (
         <Row>
@@ -136,7 +108,7 @@ export default function PoemQuery() {
                     value={chpSelect[2]}
                     onSelect={(value) => {
                         setChpSelect([chpSelect[0], chpSelect[1], value])
-                        updateNext(value, false)
+                        // updateNext(value, false)
                     }}
                 >
                     {count.map(ct => 
@@ -155,11 +127,12 @@ export default function PoemQuery() {
                         disabled={typeof chpSelect[2] === 'undefined'}
                         onClick={
                             () => {
-                                updateNext(chpSelect[2], false)
                                 setButtonLock(false)
                             }
                         }
-                    >Query</Button>
+                    >
+                        Query
+                    </Button>
                 </Link>
                 <br />
                 <Link
@@ -167,24 +140,18 @@ export default function PoemQuery() {
                 >
                     <Button
                         disabled={buttonLock}
-                        onClick={
-                            () => {
-                                updatePrev(prevNext[0][1], true)
-                            }
-                        }
-                    >Previous</Button>
+                    >
+                        Previous
+                    </Button>
                 </Link>
                 <Link
                     to={`/poems/${prevNext[1][0]}/${prevNext[1][1]}`}    
                 >
                     <Button
                         disabled={buttonLock}
-                        onClick={
-                            () => {
-                                updateNext(prevNext[1][1], true)
-                            }
-                        }
-                    >Next</Button>
+                    >
+                        Next
+                    </Button>
                 </Link>
             </Col>
             <Col span={19}>

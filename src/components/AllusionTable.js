@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState, useReducer, useRef } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList, concatObj } from '../utils'
-import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag } from 'antd';
+import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag, AutoComplete } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 import { Link } from 'react-router-dom';
@@ -193,16 +193,15 @@ export default function AllusionTable() {
                 <Select 
                     value={selectedTranslation} 
                     onChange={(value) => setSelectedTranslation(value)}  
-                    // options={[{value: 'Tyler', label: 'Tyler'},{value: 'Vincent', label: 'Vincent'},{value: 'Washburn', label: 'Washburn'}]}
                     options={translators}
-                    width={100}
+                    // width={100}
                 />
             ),
             dataIndex: 'name',
             key: 'name',
             editable: true,
+            width: 'auto',
             render: (value, record) => {
-                // console.log(record[selectedTranslation])
                 if (record['translations'] !== undefined) {
                     return record['translations'][selectedTranslation]
                 }

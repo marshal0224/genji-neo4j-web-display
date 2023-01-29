@@ -197,10 +197,8 @@ export default function PoemPage() {
             setPnum(pls)
             session.close()
             closeDriver()
-            console.log('line 200')
         }
         _().catch(console.error)
-        console.log(pnum)
     }, [chapter, number])
 
     // async func for tag queries
