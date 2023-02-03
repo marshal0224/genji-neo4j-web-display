@@ -50,6 +50,8 @@ export function getChpList() {
     return ["Kiritsubo 桐壺","Hahakigi 帚木","Utsusemi 空蝉","Yūgao 夕顔","Wakamurasaki 若紫","Suetsumuhana 末摘花","Momiji no Ga 紅葉賀","Hana no En 花宴","Aoi 葵","Sakaki 榊","Hana Chiru Sato 花散里","Suma 須磨","Akashi 明石","Miotsukushi 澪標","Yomogiu 蓬生","Sekiya 関屋","E Awase 絵合","Matsukaze 松風","Usugumo 薄雲","Asagao 朝顔","Otome 乙女","Tamakazura 玉鬘","Hatsune 初音","Kochō 胡蝶","Hotaru 螢","Tokonatsu 常夏","Kagaribi 篝火","Nowaki 野分","Miyuki 行幸","Fujibakama 藤袴","Makibashira 真木柱","Umegae 梅枝","Fuji no Uraba 藤裏葉","Wakana: Jō 若菜上","Wakana: Ge 若菜下","Kashiwagi 柏木","Yokobue 横笛","Suzumushi 鈴虫","Yūgiri 夕霧","Minori 御法","Maboroshi 幻","Niou Miya 匂宮","Kōbai 紅梅","Takekawa 竹河","Hashihime 橋姫","Shii ga Moto 椎本","Agemaki 総角","Sawarabi 早蕨","Yadorigi 宿木","Azumaya 東屋","Ukifune 浮舟","Kagerō 蜻蛉","Tenarai 手習","Yume no Ukihashi 夢浮橋"]
 }
 
+// input: String pnum, poem number
+// output: A html paragraph that contains the chapter name of a Genji poem with Romaji in front of Kanji
 export function parseChp(pnum) {
     let [chp, _, smt] = pnum.match(/.{1,2}/g)
     let chp_name
@@ -224,6 +226,8 @@ export function parseChp(pnum) {
     )
 }
 
+// input: String pnum, poem number
+// output: A html paragraph that contains the order of a poem in its chapter
 export function parseOrder(pnum) {
     let [chp, _, order] = pnum.match(/.{1,2}/g)
     order = parseInt(order)
@@ -246,6 +250,7 @@ export function sortPnums(plist) {
     }
     return plist
 }
+
 
 export function getPoemTableContent(poemRes, transTemp) {
     let speakers = poemRes.map(row => row.segments[0].start.properties.name)

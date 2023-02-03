@@ -7,14 +7,18 @@ import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 const { Option } = Select;
 
 export default function PoemQuery() {
-    // chapters: {0:{num: '1', count: 9, name: 'Kiritsubo 桐壺'},...}
+    // chapters: [{num: '1', count: 9, name: 'Kiritsubo 桐壺'},...]
+    // count: number of poems in a chapter
     const [chapters, setChapters] = useState([])
     // values of the selects, e.g., [true, "1", "1"]
     const [chpSelect, setChpSelect] = useState([false, "", undefined])
+    // 
     const [count, setCount] = useState([])
     // prevNext: [["prevChp", "nextChp"], ["prevNum", "nextNum"]]
     const [prevNext, setPrevNext] = useState([["",-1],["",-1]])
+    // use this state variable to disable the previous and next buttons (not query), becomes false once a poem page is loaded
     const [buttonLock, setButtonLock] = useState(true)
+    // keeps track of the url
     const loc = useLocation()
 
     let { chapter, number } = useParams()
