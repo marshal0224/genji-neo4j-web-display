@@ -138,6 +138,13 @@ export default function PoemPage() {
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
         let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
         let getTagTypes = 'match (t:Tag) return t.Type as type'
+        setTrans({
+            Waley: 'N/A',
+            Seidensticker: 'N/A',
+            Tyler: 'N/A',
+            Washburn: 'N/A',
+            Cranston: 'N/A'
+        })
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,

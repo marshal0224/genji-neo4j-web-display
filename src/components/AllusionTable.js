@@ -1,92 +1,15 @@
 import React, { useContext, useEffect, useMemo, useState, useReducer, useRef } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { toNativeTypes, getChpList, concatObj } from '../utils'
-import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag, AutoComplete } from 'antd';
+import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 import { Link } from 'react-router-dom';
 
-// Editable cell code from antd doc
-const EditableContext = React.createContext(null);
-const EditableRow = ({ index, ...props }) => {
-    const [form] = Form.useForm();
-    return (
-        <Form form={form} component={false}>
-            <EditableContext.Provider value={form}>
-                <tr {...props} />
-            </EditableContext.Provider>
-        </Form>
-    );
-};
-const EditableCell = ({
-    title,
-    editable,
-    children,
-    dataIndex,
-    record,
-    handleSave,
-    ...restProps
-}) => {
-    const [editing, setEditing] = useState(false);
-    const inputRef = useRef(null);
-    const form = useContext(EditableContext);
-    useEffect(() => {
-        if (editing) {
-            inputRef.current.focus();
-        }
-    }, [editing]);
-    const toggleEdit = () => {
-        setEditing(!editing);
-        form.setFieldsValue({
-            [dataIndex]: record[dataIndex],
-        });
-    };
-    const save = async () => {
-        try {
-            const values = await form.validateFields();
-            toggleEdit();
-            handleSave({
-                ...record,
-                ...values,
-            });
-        } catch (errInfo) {
-            console.log('Save failed:', errInfo);
-        }
-    };
-    let childNode = children;
-    if (editable) {
-        childNode = editing ? (
-            <Form.Item
-                style={{
-                    margin: 0,
-                }}
-                name={dataIndex}
-                rules={[
-                    {
-                        required: true,
-                        message: `${title} is required.`,
-                    },
-                ]}
-            >
-                <TextArea ref={inputRef} onBlur={save} />
-            </Form.Item>
-        ) : (
-            <div
-                className="editable-cell-value-wrap"
-                style={{
-                    paddingRight: 24,
-                }}
-                onClick={toggleEdit}
-            >
-                {children}
-            </div>
-        );
-    }
-    return <td {...restProps}>{childNode}</td>;
-};
-// end of antd code
 export default function AllusionTable() {
     const [pnum, setPnum] = useState([{ value: '', label: '' }])
+    const [rerender, setRerender] = useState(0)
+    // data is the state variable that fills the table
     const [data, setData] = useState([])
     const [selectedPnum, setSelectedPnum] = useState('')
     const [query, setQuery] = useState([])
@@ -111,7 +34,135 @@ export default function AllusionTable() {
     const [editPoet, setEditPoet] = useState('')
     const [sourceQuery, setSourceQuery] = useState('')
 
+    // Editable cell code from antd doc
+    const EditableContext = React.createContext(null);
+    const EditableRow = ({ index, ...props }) => {
+        const [form] = Form.useForm();
+        return (
+            <Form form={form} component={false}>
+                <EditableContext.Provider value={form}>
+                    <tr {...props} />
+                </EditableContext.Provider>
+            </Form>
+        );
+    };
+    const EditableCell = ({
+        title,
+        editable,
+        children,
+        dataIndex,
+        record,
+        handleSave,
+        ...restProps
+    }) => {
+        const [editing, setEditing] = useState(false);
+        const inputRef = useRef(null);
+        const form = useContext(EditableContext);
+        useEffect(() => {
+            if (editing) {
+                inputRef.current.focus();
+            }
+        }, [editing]);
+        const toggleEdit = () => {
+            setEditing(!editing);
+            if (dataIndex !== 'name') {
+                form.setFieldsValue({
+                    [dataIndex]: record[dataIndex],
+                });
+            } else {
+                form.setFieldsValue({
+                    [dataIndex]: record['translations'] === undefined || record['translations'][selectedTranslation] === undefined ? " " : record['translations'][selectedTranslation]
+                })
+            }
+        };
+        const save = async () => {
+            try {
+                const values = await form.validateFields();
+                toggleEdit();
+                let [updated, key, honka, romaji, translation, notes, newTrans] = handleSave({
+                    ...record,
+                    ...values,
+                });
+                if (updated) {
+                    initDriver(process.env.REACT_APP_NEO4J_URI,
+                        process.env.REACT_APP_NEO4J_USERNAME,
+                        process.env.REACT_APP_NEO4J_PASSWORD)
+                    const driver = getDriver()
+                    const session = driver.session()
+                    if (newTrans) {
+                        let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key}) CREATE (t:Translation {translation: $translation}) MERGE (h)<-[:TRANSLATION_OF]-(t)<-[:TRANSLATOR_OF]-(p:People {name:$selectedTranslation}) return "OK"', {key: key, selectedTranslation: selectedTranslation, translation: translation}))
+                        console.log(write)
+                    } else {
+                        let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:$selectedTranslation}) SET h.Honka = $honka, h.Romaji = $romaji, h.notes = $notes, t.translation = $translation return "OK"', {key: key, selectedTranslation: selectedTranslation, honka: honka, romaji: romaji, notes: notes, translation: translation}))
+                    }
+                    session.close()
+                    closeDriver()
+                } else {
+                    console.log('nothing changed')
+                }
+            } catch (errInfo) {
+                console.log('Save failed:', errInfo);
+            }
+        };
+        let childNode = children;
+        if (editable) {
+            childNode = editing ? (
+                <Form.Item
+                    style={{
+                        margin: 0,
+                    }}
+                    name={dataIndex}
+                >
+                    <TextArea ref={inputRef} onBlur={save} />
+                </Form.Item>
+            ) : (
+                <div
+                    className="editable-cell-value-wrap"
+                    style={{
+                        paddingRight: 24,
+                    }}
+                    onClick={toggleEdit}
+                >
+                    {children[1] === undefined ? [children[0], " "] : children}
+                </div>
+            );
+        }
+        return <td {...restProps}>{childNode}</td>;
+    };
+    // end of antd code
+
     const forceUpdate = useReducer(x => x + 1, 0)[1]
+
+    const handleSave = (newRow) => {
+        let d = data
+        let i = Object.keys(d).find(e => d[e].key === newRow.key)
+        let updated = false 
+        let newTrans = false
+        // if a translation is edited
+        if (newRow.name !== undefined) {
+            if (newRow.translations === undefined) {
+                newRow['translations'] = {}
+                newRow['translations'][selectedTranslation] = newRow['name']
+                d['name'] = newRow['name']
+                newTrans = true
+            } else {
+                newRow['translations'][selectedTranslation] = newRow['name']
+            }
+            updated = true
+        }
+        if (d[i].Honka !== newRow.Honka || d[i].Romaji !== newRow.Romaji || d[i].notes !== newRow.notes) {
+            // have to do this plus the forceupdate to get the table to rerender for some reason
+            d[i].Honka = newRow.Honka
+            d[i].Romaji = newRow.Romaji
+            d[i].notes = newRow.notes
+            updated = true
+        }
+        if (updated) {
+            setData(d)
+            forceUpdate()
+        }
+        return [updated, newRow.key, newRow.Honka, newRow.Romaji, newRow.translations[selectedTranslation], newRow.notes, newTrans]
+    }
 
     const chapters = getChpList()
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
@@ -122,7 +173,7 @@ export default function AllusionTable() {
             key: 'ID',
             sorter: (a, b) => parseInt(a.key.slice(1)) - parseInt(b.key.slice(1)),
             defaultSortOrder: 'ascend',
-            editable: true,
+            // editable: true,
         },
         {
             title: 'Honka',
@@ -131,12 +182,18 @@ export default function AllusionTable() {
             width: 280,
             textWrap: 'word-break',
             editable: true,
+            render: (value, record) => (
+                <p>{value === '' ? ' ' : value}</p>
+            )
         },
         {
             title: 'Romaji',
             dataIndex: 'Romaji',
             key: 'Romaji',
             editable: true,
+            render: (value, record) => (
+                <p>{value === '' ? ' ' : value}</p>
+            )
         },
         {
             title: 'Poet',
@@ -146,14 +203,6 @@ export default function AllusionTable() {
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
-                        {/* {text !== undefined ? text.map(e => 
-                            <Tag
-                                visible={e[2]}
-                                onClick={(event) => deleteHonkaSourceLink(record.key, e[0], e[1])}
-                            >
-                                {e[1] !== 'N/A' ? e[0]+' '+e[1] : e[0]}
-                            </Tag>) 
-                        : null} */}
                         {text}
                     </Col>
                     <Divider></Divider>
@@ -248,6 +297,9 @@ export default function AllusionTable() {
             dataIndex: 'notes',
             key: 'notes',
             editable: true,
+            render: (value, record) => (
+                <p>{value === '' ? ' ' : value}</p>
+            )
         },
         {
             title: 'Alluded to by',
@@ -313,10 +365,6 @@ export default function AllusionTable() {
         },
     }
 
-    function handleSave(a) {
-        console.log(a)
-    }
-
     const columns = defaultColumns.map((col) => {
         if (!col.editable) {
             return col;
@@ -328,7 +376,7 @@ export default function AllusionTable() {
                     editable: col.editable,
                     dataIndex: col.dataIndex,
                     title: col.title,
-                    handleSave: handleSave,
+                    handleSave,
                 })
             }
         }
@@ -369,15 +417,10 @@ export default function AllusionTable() {
                 let temp = data
                 for (let i = 0; i < data.length; i++) {
                     if (temp[i].key === id) {
-                        // if (temp[i].Poet === undefined) {
                             temp[i].Poet = editPoet
-                        // } else {
-                        //     temp[i].Source.push([editSource, editOrder, true])
-                        // }
                     }
                 }
                 setData(temp)
-                // forceUpdate()
             } else {
                 alert('Link canceled!')
             }
@@ -606,7 +649,7 @@ export default function AllusionTable() {
             closeDriver()
         }
         _().catch(console.error)
-    }, [])
+    }, [rerender])
 
     return (
         <div>
@@ -632,6 +675,8 @@ export default function AllusionTable() {
                     </Space>
                     <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : console.log(usr, pwd)}>Login</Button>
                     <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
+                    <br />
+                    <Button disabled={!auth} onClick={() => setRerender(rerender + 1)}>Refresh Table</Button>
                     <Divider></Divider>
                     {auth === true
                         ? <>
