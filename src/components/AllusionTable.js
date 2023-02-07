@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState, useReducer, useRef } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getChpList, concatObj } from '../utils'
+import { concatObj, getChpList, sortPnumsFromObjList, toNativeTypes } from '../utils'
 import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
@@ -91,7 +91,6 @@ export default function AllusionTable() {
                     const session = driver.session()
                     if (newTrans) {
                         let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key}) CREATE (t:Translation {translation: $translation}) MERGE (h)<-[:TRANSLATION_OF]-(t)<-[:TRANSLATOR_OF]-(p:People {name:$selectedTranslation}) return "OK"', {key: key, selectedTranslation: selectedTranslation, translation: translation}))
-                        console.log(write)
                     } else {
                         let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:$selectedTranslation}) SET h.Honka = $honka, h.Romaji = $romaji, h.notes = $notes, t.translation = $translation return "OK"', {key: key, selectedTranslation: selectedTranslation, honka: honka, romaji: romaji, notes: notes, translation: translation}))
                     }
@@ -218,7 +217,7 @@ export default function AllusionTable() {
                                     onChange={(value) => setEditPoet(value)}
                                 />
                                 <Button
-                                    onClick={(event) => createPoetEdge(record.key)}
+                                    onClick={() => createPoetEdge(record.key)}
                                 >
                                     Link
                                 </Button>
@@ -341,7 +340,7 @@ export default function AllusionTable() {
                                     showSearch
                                     options={pnum}
                                     style={{
-                                        width: '60%',
+                                        width: '100%',
                                     }}
                                     onChange={(value) => setSelectedPnum(value)}
                                 ></Select>
@@ -503,7 +502,6 @@ export default function AllusionTable() {
             alert("Need a source!")
         } else {
             setQuery(['match (p:People {name:"' + newPoet + '"}), (t:People {name: "'+newTranslator+'"}), (s:Source {title:"' + newSource + '"}) create entry=(p)-[:AUTHOR_OF]->(h:Honka {id: "' + id + '"})-[:ANTHOLOGIZED_IN {order: "' + newOrder + '"}]->(s), (h)<-[:TRANSLATION_OF]-(:Translation {translation: "'+newTranslation+'"})<-[:TRANSLATOR_OF]-(t) set h.Honka="' + newHonka + '", h.Romaji="' + newRomaji + '" return entry as res', 'entry'])
-            console.log(query)
             setNewHonka('')
             setNewRomaji('')
             setNewPoet('')
@@ -620,8 +618,11 @@ export default function AllusionTable() {
             let temp = resPnum.records.map(e => e.get('pnum'))
             let ls = []
             temp.forEach(e => {
-                ls.push({ value: e, label: e })
+                if (e !== null) {
+                    ls.push({ value: e, label: e })
+                }
             })
+            ls = sortPnumsFromObjList(ls)
             setPnum(ls)
             let ll = Array.from(new Set(resLink.records.map(e => JSON.stringify([e.get('id'), e.get('pnum')])))).map(e => JSON.parse(e))
             let links = {}
@@ -673,7 +674,7 @@ export default function AllusionTable() {
                             onChange={(event) => setPwd(event.target.value)}
                         />
                     </Space>
-                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : console.log(usr, pwd)}>Login</Button>
+                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : null}>Login</Button>
                     <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
                     <br />
                     <Button disabled={!auth} onClick={() => setRerender(rerender + 1)}>Refresh Table</Button>

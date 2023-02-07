@@ -236,6 +236,7 @@ export function parseOrder(pnum) {
     )
 }
 
+// plist: a list of string
 export function sortPnums(plist) {
     for (let i = 0; i < plist.length-1; i++) {
         for (let j = 0; j < plist.length-i-1; j++) {
@@ -251,6 +252,21 @@ export function sortPnums(plist) {
     return plist
 }
 
+// objList: a list of object in the form of {value: val, label: lab}, where the values are strings of pnums.
+export function sortPnumsFromObjList(objList) {
+    for (let i = 0; i < objList.length-1; i++) {
+        for (let j = 0; j < objList.length-i-1; j++) {
+            if ((parseInt(objList[j].value.substring(0, 2)) > parseInt(objList[j+1].value.substring(0, 2))) 
+            || (parseInt(objList[j].value.substring(0, 2)) >= parseInt(objList[j+1].value.substring(0, 2)) 
+            && parseInt(objList[j].value.substring(4, 6)) > parseInt(objList[j+1].value.substring(4, 6)))) {
+                let temp = objList[j+1]
+                objList[j+1] = objList[j]
+                objList[j] = temp
+            }
+        }
+    }
+    return objList
+}
 
 export function getPoemTableContent(poemRes, transTemp) {
     let speakers = poemRes.map(row => row.segments[0].start.properties.name)
