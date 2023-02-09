@@ -90,7 +90,7 @@ export default function AllusionTable() {
                     const driver = getDriver()
                     const session = driver.session()
                     if (newTrans) {
-                        let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key}) CREATE (t:Translation {translation: $translation}) MERGE (h)<-[:TRANSLATION_OF]-(t)<-[:TRANSLATOR_OF]-(p:People {name:$selectedTranslation}) return "OK"', {key: key, selectedTranslation: selectedTranslation, translation: translation}))
+                        let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key}), (p:People {name:$selectedTranslation}) CREATE (t:Translation {translation: $translation}) MERGE (h)<-[:TRANSLATION_OF]-(t)<-[:TRANSLATOR_OF]-(p) return "OK"', {key: key, selectedTranslation: selectedTranslation, translation: translation}))
                     } else {
                         let write = await session.writeTransaction(tx => tx.run('MATCH (h:Honka {id: $key})<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People {name:$selectedTranslation}) SET h.Honka = $honka, h.Romaji = $romaji, h.notes = $notes, t.translation = $translation return "OK"', {key: key, selectedTranslation: selectedTranslation, honka: honka, romaji: romaji, notes: notes, translation: translation}))
                     }
