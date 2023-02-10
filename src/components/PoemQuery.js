@@ -55,6 +55,7 @@ export default function PoemQuery() {
         _().catch(console.error)
     }, [])
 
+    // chps: the chapters state array
     function updatePrevNext(chps) {
         let prev, next
         if (chapter === '1' && number === '1') {
@@ -63,10 +64,13 @@ export default function PoemQuery() {
         } else if (chapter === '54') {
             prev = ['53', 28]
             next = ['54', 1]
+        } else if (chapter === '42') {
+            prev = ['41', 26]
+            next = ['43', 1]
         } else if (number === '1') {
             prev = [(parseInt(chapter) - 1).toString(), chps[parseInt(chapter) - 2].count]
             next = [chapter, 2]
-        } else if (number === chps[parseInt(chapter) - 1].count.toString()) {
+        } else if (parseInt(number) === chps[parseInt(chapter) - 1].count) {
             prev = [chapter, parseInt(number) - 1]
             next = [(parseInt(chapter) + 1).toString(), 1]
         } else {
@@ -77,6 +81,7 @@ export default function PoemQuery() {
         setChpSelect([true, chapter, number])
     }
 
+    // 
     useEffect(() => {
         if (chapters.length && chapter !== undefined && number !== undefined) {
             updatePrevNext(chapters)
@@ -144,6 +149,7 @@ export default function PoemQuery() {
                 >
                     <Button
                         disabled={buttonLock}
+                        onClick={() => setCount(Array.from({length: chapters[parseInt(prevNext[0]) - 1].count}, (_, i) => i + 1))}
                     >
                         Previous
                     </Button>
@@ -153,6 +159,7 @@ export default function PoemQuery() {
                 >
                     <Button
                         disabled={buttonLock}
+                        onClick={() => setCount(Array.from({length: chapters[parseInt(prevNext[1]) - 1].count}, (_, i) => i + 1))}
                     >
                         Next
                     </Button>
