@@ -65,10 +65,12 @@ export default function App() {
             <Link to="/search">Search</Link>
           )
         }, 
-        // {
-        //   key: 'Edit',
-        //   label: 'Edit'
-        // }
+        {
+          key: 'Edit',
+          label: (
+            <Link to="/edit">Edit</Link>
+          )
+        }, 
         {
           key: 'About Poetry in the Tale of Genjii',
           label: (

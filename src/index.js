@@ -10,6 +10,7 @@ import PoemPage from './components/PoemPage';
 import AllusionTable from './components/AllusionTable';
 import Search from './components/Search';
 import PoemTable from './components/PoemTable';
+import EditPage from './components/EditPage';
 import { About } from './components/About';
 import { Acknowledgements } from './components/Acknowledgements';
 
@@ -56,6 +57,10 @@ if (auth) {
               element: <PoemTable />
             }
           ]
+        }, 
+        {
+          path: "/edit",
+          element: <EditPage />,
         }, 
         {
           path: "/about", 

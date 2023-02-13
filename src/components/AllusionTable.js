@@ -231,6 +231,7 @@ export default function AllusionTable() {
             title: 'Source',
             dataIndex: 'Source',
             key: 'Source',
+            editable: false,
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
@@ -259,7 +260,7 @@ export default function AllusionTable() {
                                 <label>Order</label>
                                 <Input 
                                     defaultValue={'N/A'}
-                                    onChange={(event) => setEditOrder(event.target.value)}
+                                    onChange={(value) => setEditOrder(value)}
                                 />
                                 <Button
                                     onClick={(event) => createSourceEdge(record.key)}
@@ -483,8 +484,8 @@ export default function AllusionTable() {
             let bool = window.confirm(`About to delete a link between ${id} and ${title} ${order}.`)
             if (bool) {
                 let d = data
-                let index = d[parseInt(id.slice(1))]['Source'].findIndex(element => element[0] === title && element[1] === order);
-                d[parseInt(id.slice(1))]['Source'][index][2] = false
+                let index = d[parseInt(id.slice(1))+1]['Source'].findIndex(element => element[0] === title && element[1] === order);
+                d[parseInt(id.slice(1))+1]['Source'][index][2] = false
                 setData(d)
                 // forceUpdate()
                 setQuery([`MATCH (h:Honka {id:"${id}"})-[r:ANTHOLOGIZED_IN {order:"${order}"}]->(s:Source {title:"${title}"}) delete r return (h)`, 'delete'])
@@ -521,6 +522,7 @@ export default function AllusionTable() {
             const driver = getDriver()
             const session = driver.session()
             let write = await session.writeTransaction(tx => tx.run(query[0]))
+            console.log(write)
             session.close()
             closeDriver()
         }
