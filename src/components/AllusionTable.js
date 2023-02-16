@@ -29,8 +29,8 @@ export default function AllusionTable() {
     const [newSource, setNewSource] = useState('')
     const [newOrder, setNewOrder] = useState('N/A')
     const [selectedTranslation, setSelectedTranslation] = useState('Vincent')
-    const [editSource, setEditSource] = useState('')
-    const [editOrder, setEditOrder] = useState('N/A')
+    const [editSource, setEditSource] = useState({})
+    const [editOrder, setEditOrder] = useState({})
     const [editPoet, setEditPoet] = useState('')
     const [sourceQuery, setSourceQuery] = useState('')
 
@@ -255,18 +255,31 @@ export default function AllusionTable() {
                                     style={{
                                         width: '100%',
                                     }}
-                                    onChange={(value) => setEditSource(value)}
+                                    value={editSource[record.key]}
+                                    onChange={(value) => {
+                                        let temp = editSource
+                                        temp[record.key] = value
+                                        setEditSource(temp)
+                                        forceUpdate()
+                                    }}
                                 />
-                                <label>Order</label>
+                                <label>Order (press enter down here to link)</label>
                                 <Input 
+                                    allowClear
                                     defaultValue={'N/A'}
-                                    onChange={(value) => setEditOrder(value)}
+                                    onPressEnter={(event) => {
+                                            let temp = editOrder
+                                            temp[record.key] = event.target.value
+                                            setEditOrder(temp)
+                                            // forceUpdate()
+                                            createSourceEdge(record.key)
+                                    }}
                                 />
-                                <Button
+                                {/* <Button
                                     onClick={(event) => createSourceEdge(record.key)}
                                 >
                                     Link
-                                </Button>
+                                </Button> */}
                             </>
                             : null}
                     </Col>
@@ -386,16 +399,16 @@ export default function AllusionTable() {
         if (editSource === '') {
             alert('Need to select a source title!')
         } else {
-            let bool = window.confirm('About to link ' + editSource + ' to ' + id + ' as a source with order ' + editOrder)
+            let bool = window.confirm('About to link ' + editSource[id] + ' to ' + id + ' as a source with order ' + editOrder[id])
             if (bool) {
-                setSourceQuery('Match (s:Source {title:"' + editSource + '"}), (h:Honka {id:"' + id + '"}) merge p=(s)<-[:ANTHOLOGIZED_IN {order: "' + editOrder + '"}]-(h) return p')
+                setSourceQuery('Match (s:Source {title:"' + editSource[id] + '"}), (h:Honka {id:"' + id + '"}) merge p=(s)<-[:ANTHOLOGIZED_IN {order: "' + editOrder[id] + '"}]-(h) return p')
                 let temp = data
                 for (let i = 0; i < data.length; i++) {
                     if (temp[i].key === id) {
                         if (temp[i].Source === undefined) {
-                            temp[i].Source = [[editSource, editOrder, true]]
+                            temp[i].Source = [[editSource[id], editOrder[id], true]]
                         } else {
-                            temp[i].Source.push([editSource, editOrder, true])
+                            temp[i].Source.push([editSource[id], editOrder[id], true])
                         }
                     }
                 }
@@ -617,6 +630,14 @@ export default function AllusionTable() {
             if (maxID !== max) {
                 setMaxID(max)
             }
+            let init_src = {}
+            let init_order = {}
+            for (let i = 0; i < max; i ++) {
+                init_src['H'+JSON.stringify(i)] = ''
+                init_order['H'+JSON.stringify(i)] = 'N/A'
+            }
+            setEditSource(init_src)
+            setEditOrder(init_order)
             let temp = resPnum.records.map(e => e.get('pnum'))
             let ls = []
             temp.forEach(e => {
