@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useReducer, useEffect } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getChpList } from '../utils'
-import { Select, Col, Row, Button, Space, BackTop, Divider, Tag, Input } from 'antd';
+import { toNativeTypes } from '../utils'
+import { Select, Col, Row, Button, Space, Divider, Tag, Input } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
@@ -10,6 +10,7 @@ export default function PoemPage() {
     let { chapter, number } = useParams()
     const [speaker, setSpeaker] = useState([])
     const [addressee, setAddressee] = useState([])
+    // Japanese and Romaji
     const [JPRM, setJPRM] = useState([])
     const [trans, setTrans] = useState({
         Waley: 'N/A',
@@ -158,6 +159,7 @@ export default function PoemPage() {
             const resTag = await session.readTransaction(tx => tx.run(getTag))
             const resType = await session.readTransaction(tx => tx.run(getTagTypes))
             const resPnum = await session.readTransaction(tx => tx.run(getPnum))
+            // holds unique values of speaker & addressee & Japanese & Romaji (top row)
             let exchange = new Set()
             res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
             exchange = Array.from(exchange).map(e => JSON.parse(e))
