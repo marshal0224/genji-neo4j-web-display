@@ -199,6 +199,16 @@ export default function AllusionTable() {
             dataIndex: 'Poet', 
             key: 'Poet',
             width: 280,
+            sorter: (a, b) => {
+                if (a.Poet === undefined) {
+                    return 1
+                } else if (b.Poet === undefined) {
+                    return -1
+                } else {
+                    return a.Poet > b.Poet ? 1 : -1
+                }
+            },
+            defaultSortOrder: 'ascend',
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
@@ -225,13 +235,22 @@ export default function AllusionTable() {
                             : null}
                     </Col>
                 </Row>
-            )
+            ), 
         },
         {
             title: 'Source',
             dataIndex: 'Source',
             key: 'Source',
             editable: false,
+            sorter: (a, b) => {
+                if (a.Source === undefined) {
+                    return 1
+                } else if (b.Source === undefined) {
+                    return -1
+                } else {
+                    return a.Poet > b.Poet ? 1 : -1
+                }
+            },
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
@@ -519,8 +538,9 @@ export default function AllusionTable() {
             let bool = window.confirm(`About to delete a link between ${id} and ${title} ${order}.`)
             if (bool) {
                 let d = data
-                let index = d[parseInt(id.slice(1))]['Source'].findIndex(element => element[0] === title && element[1] === order);
-                d[parseInt(id.slice(1))]['Source'][index][2] = false
+                let hIndex = data.findIndex(e => e.key === id)
+                let eIndex = d[hIndex]['Source'].findIndex(element => element[0] === title && element[1] === order);
+                d[hIndex]['Source'][eIndex][2] = false
                 setData(d)
                 // forceUpdate()
                 setQuery([`MATCH (h:Honka {id:"${id}"})-[r:ANTHOLOGIZED_IN {order:"${order}"}]->(s:Source {title:"${title}"}) delete r return (h)`, 'delete'])
