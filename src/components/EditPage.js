@@ -6,10 +6,11 @@ import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 
 export default function EditPage() {
-    let labels = [{value: 'nickname', label: 'nickname'}, {value: 'nicktitle', label: 'nicktitle'}, {value: 'people', label: 'people'}, {value: 'source', label: 'source'}, {value: 'translation', label: 'translation'}]
+    let labels = [{value: 'Nickname', label: 'Nickname'}, {value: 'Nicktitle', label: 'Nicktitle'}, {value: 'People', label: 'People'}, {value: 'Source', label: 'Source'}, {value: 'Translation', label: 'Translation'}]
     // list of objects that describe the property key(s) of a label, e.g., [{Nickname: nickname}]
     const [form] = Form.useForm()
     const [props, setProps] = React.useState({})
+    const [nodeQuery, setNoteQuery] = React.useState('')
 
     const onLabelChange = (value) => {
         switch (value) {
@@ -21,7 +22,7 @@ export default function EditPage() {
     };
 
     useEffect(() => {
-        let ls = labels.map(e => "'"+e.label+"'")
+        let ls = labels.map(e => "'"+e.value+"'")
         const _ = async () => {
             initDriver(process.env.REACT_APP_NEO4J_URI,
                 process.env.REACT_APP_NEO4J_USERNAME,
@@ -46,13 +47,52 @@ export default function EditPage() {
                     keysObj[e[0]].props.push(e[1])
                 }
             }
-            console.log(keysObj)
             setProps(keysObj)
             session.close()
             closeDriver()
         }
         _().catch(console.error)
     }, [])
+
+    // async func for notes. There is probably a way to merge them...
+    useMemo(() => {
+        const _ = async () => {
+            initDriver(process.env.REACT_APP_NEO4J_URI,
+                process.env.REACT_APP_NEO4J_USERNAME,
+                process.env.REACT_APP_NEO4J_PASSWORD)
+            const driver = getDriver()
+            const session = driver.session()
+            let write = await session.writeTransaction(tx => tx.run(nodeQuery))
+            session.close()
+            closeDriver()
+        }
+        if (nodeQuery !== '') {
+            _().catch(console.error)
+            alert('Node entered')
+            setNoteQuery('')
+        } 
+    }, [nodeQuery])
+
+    const submitNode = () => {
+        let bool = window.confirm('About to create a new node!')
+        if (bool) {
+            let label = form.getFieldValue('label')
+            let propKeys = props[label].props
+            let query = `CREATE (n:${label}) SET `
+            propKeys.forEach(e => {
+                query = query.concat(`n.\`${e}\`=${form.getFieldValue(e)},`)
+            });
+            query = query.slice(0, -1)
+            query = query.concat(` return (n)`)
+            setNoteQuery(query)
+        } else {
+            alert('Canceled!')
+        }
+    }
+
+    const resetNodeForm = () => {
+        form.resetFields()
+    }
 
     // new node: label, props
     // new edge: nodes, edge label, props
@@ -66,10 +106,10 @@ export default function EditPage() {
                     <Form
                         {...{
                             labelCol: {
-                                span: 8,
+                                span: 10,
                             },
                             wrapperCol: {
-                                span: 16,
+                                span: 14,
                             },
                         }}
                         form={form}
@@ -101,36 +141,28 @@ export default function EditPage() {
                             noStyle
                             shouldUpdate={(prevValues, currentValues) => prevValues.label !== currentValues.label}
                         >
-                            {({ getFieldValue }) =>
-                                // props[getFieldValue('label')].props.forEach(e => 
-                                getFieldValue('label') === 'nickname' ?
+                            {({ getFieldValue }) => 
+                                (getFieldValue('label') !== undefined) ? 
+                                props[getFieldValue('label')].props.map(e => 
                                     <Form.Item
-                                        name={'nickname'}
-                                        label={'nickname'}
-                                        rules={[
-                                            {
-                                                required: true,
-                                            },
-                                        ]}
+                                        name={e}
+                                        label={e}
+                                        // rules={[
+                                        //     {
+                                        //         required: true,
+                                        //     },
+                                        // ]}
+                                        key={e}
                                     >
                                         <Input />
-                                    </Form.Item>
-                                : getFieldValue('label') === 'nicktitle' ?
-                                    <Form.Item
-                                        name={'nicktitle'}
-                                        label={'nicktitle'}
-                                        rules={[
-                                            {
-                                                required: true,
-                                            },
-                                        ]}
-                                    >
-                                        <Input />
-                                    </Form.Item>
-                                : null
+                                    </Form.Item>    
+                                ) : null
                             }
                         </Form.Item>
                     </Form>
+                    <br/>
+                    <Button onClick={submitNode}>Submit</Button>
+                    <Button onClick={resetNodeForm}>Reset</Button>
                 </Col>
                 <Col span={3}/>
             </Row>
