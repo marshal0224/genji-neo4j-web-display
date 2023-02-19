@@ -80,7 +80,7 @@ export default function EditPage() {
             let propKeys = props[label].props
             let query = `CREATE (n:${label}) SET `
             propKeys.forEach(e => {
-                query = query.concat(`n.\`${e}\`=${form.getFieldValue(e)},`)
+                query = query.concat(`n.\`${e}\`="${form.getFieldValue(e)}",`)
             });
             query = query.slice(0, -1)
             query = query.concat(` return (n)`)
