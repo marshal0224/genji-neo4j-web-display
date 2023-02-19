@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState, useReducer, useRef } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
 import { concatObj, getChpList, sortPnumsFromObjList, toNativeTypes } from '../utils'
-import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag } from 'antd';
+import { Col, BackTop, Button, Divider, Form, Input, Row, Select, Space, Table, Tag, Tooltip } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
 import { Link } from 'react-router-dom';
@@ -322,18 +322,28 @@ export default function AllusionTable() {
                     <Col span={24}>
                         {allusion[record.key] !== undefined 
                             ? allusion[record.key].map(e => 
-                                <Link 
-                                    to={`/poems/${parseInt(e[0].substring(0, 2))}/${parseInt(e[0].substring(4, 6))}`}
-                                    target="_blank"
-                                    onClick={(event) => auth ? event.preventDefault() : event}
-                                >
-                                    <Tag
-                                        visible={e[1]}
-                                        onClick={auth ? deleteLink(e[0], record.key) : null}
+                                <>
+                                    <Link 
+                                        to={`/poems/${parseInt(e[0].substring(0, 2))}/${parseInt(e[0].substring(4, 6))}`}
+                                        target="_blank"
+                                        onClick={(event) => auth ? event.preventDefault() : event}
                                     >
-                                    {e[0]}
-                                </Tag>
-                                </Link>
+                                        <Tooltip title={e[2] === null ? null : e[2]}>
+                                            <Tag
+                                                visible={e[1]}
+                                                onClick={auth ? deleteLink(e[0], record.key) : null}
+                                            >
+                                                {e[0]}
+                                            </Tag>
+                                        </Tooltip>
+                                    </Link>
+                                    <TextArea
+                                        style={{display: auth ? 'flex' : 'none'}}
+                                        defaultValue={e[2]}
+                                        allowClear
+                                        onPressEnter={(event) => updateAllusionEdgeNotes( e[0], record.key, event.target.value)}
+                                    />
+                                </>
                                 ) 
                             : null}
                     </Col>
@@ -394,6 +404,18 @@ export default function AllusionTable() {
             }
         }
     })
+
+    const updateAllusionEdgeNotes = (pnum, id, value) => {
+        let bool = window.confirm('About to update the notes for the allusion edge between '+pnum+' and '+id)
+        if (bool) {
+            setQuery(['MATCH (:Genji_Poem {pnum: "'+pnum+'"})-[r:ALLUDES_TO]-(:Honka {id: "'+id+'"}) set r.notes="'+value+'" return r.notes', 'allusionEdgeNotes'])
+            let a = allusion
+            a[id][a[id].findIndex(e => e[0] === pnum)][2] = value
+            setAllusion(a)
+        } else {
+            alert('Notes update canceled! ')
+        }
+    }
 
     const createSourceEdge = (id) => {
         if (editSource === '') {
@@ -497,8 +519,8 @@ export default function AllusionTable() {
             let bool = window.confirm(`About to delete a link between ${id} and ${title} ${order}.`)
             if (bool) {
                 let d = data
-                let index = d[parseInt(id.slice(1))+1]['Source'].findIndex(element => element[0] === title && element[1] === order);
-                d[parseInt(id.slice(1))+1]['Source'][index][2] = false
+                let index = d[parseInt(id.slice(1))]['Source'].findIndex(element => element[0] === title && element[1] === order);
+                d[parseInt(id.slice(1))]['Source'][index][2] = false
                 setData(d)
                 // forceUpdate()
                 setQuery([`MATCH (h:Honka {id:"${id}"})-[r:ANTHOLOGIZED_IN {order:"${order}"}]->(s:Source {title:"${title}"}) delete r return (h)`, 'delete'])
@@ -535,7 +557,7 @@ export default function AllusionTable() {
             const driver = getDriver()
             const session = driver.session()
             let write = await session.writeTransaction(tx => tx.run(query[0]))
-            console.log(write)
+            // console.log(write)
             session.close()
             closeDriver()
         }
@@ -553,15 +575,18 @@ export default function AllusionTable() {
             } else if (query[1] === 'delete') {
                 _().catch(console.error)
                 alert('Linked deleted!')
+            } else if (query[1] === 'allusionEdgeNotes') {
+                _().catch(console.error)
+                alert('Allusion edge notes updated!')
             }
         }
     }, [query])
 
     // table content
     useEffect(() => {
-        let get = 'match (a:Honka) return (a) as honka'
+        let getHonka = 'match (a:Honka) return (a) as honka'
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
-        let getLinks = 'MATCH (n:Honka)-[]-(p:Genji_Poem) RETURN n.id as id, p.pnum as pnum'
+        let getPoemHonka = 'MATCH (n:Honka)-[r:ALLUDES_TO]-(p:Genji_Poem) RETURN n.id as id, p.pnum as pnum, r.notes as notes'
         let getPoet = 'match (p:People) return p.name as poet'
         let getHonkaPoet = 'match (h:Honka)<-[:AUTHOR_OF]-(p:People) return h.id as id, p.name as name'
         let getSource = 'match (s:Source) return s.title as source'
@@ -573,9 +598,9 @@ export default function AllusionTable() {
                 process.env.REACT_APP_NEO4J_PASSWORD)
             const driver = getDriver()
             const session = driver.session()
-            const res = await session.readTransaction(tx => tx.run(get))
+            const resHonka = await session.readTransaction(tx => tx.run(getHonka))
             const resPnum = await session.readTransaction(tx => tx.run(getPnum))
-            const resLink = await session.readTransaction(tx => tx.run(getLinks))
+            const resPoemHonka = await session.readTransaction(tx => tx.run(getPoemHonka))
             const resPoet = await session.readTransaction(tx => tx.run(getPoet))
             const resPoetEdge = await session.readTransaction(tx => tx.run(getHonkaPoet))
             const resSrc = await session.readTransaction(tx => tx.run(getSource))
@@ -598,7 +623,7 @@ export default function AllusionTable() {
             })
             translators = Array.from(translators).map(e => ({value: e, label: e}))
             setTranslators(translators)
-            res.records.map(e => toNativeTypes(e.get('honka'))).forEach(e => {
+            resHonka.records.map(e => toNativeTypes(e.get('honka'))).forEach(e => {
                 delete Object.assign(e.properties, { ['key']: e.properties['id'] })['id']
                 e.properties.translations = transObj[e.properties.key]
                 ans.push(e.properties)
@@ -647,13 +672,14 @@ export default function AllusionTable() {
             })
             ls = sortPnumsFromObjList(ls)
             setPnum(ls)
-            let ll = Array.from(new Set(resLink.records.map(e => JSON.stringify([e.get('id'), e.get('pnum')])))).map(e => JSON.parse(e))
+            // ll is a temporary variable parsing a list of allusion properties out of the result
+            let ll = Array.from(new Set(resPoemHonka.records.map(e => JSON.stringify([e.get('id'), e.get('pnum'), e.get('notes')])))).map(e => JSON.parse(e))
             let links = {}
             ll.forEach(e => {
                 if (e[0] in links) {
-                    links[e[0]].push([e[1], true])
+                    links[e[0]].push([e[1], true, e[2]])
                 } else {
-                    links[e[0]] = [[e[1], true]]
+                    links[e[0]] = [[e[1], true, e[2]]]
                 }
             })
             setAllusion(links)
