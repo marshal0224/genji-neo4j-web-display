@@ -13,6 +13,7 @@ import PoemTable from './components/PoemTable';
 import EditPage from './components/EditPage';
 import { About } from './components/About';
 import { Acknowledgements } from './components/Acknowledgements';
+import Characters from './components/Characters';
 
 let password = prompt("Please enter the password for visiting this site", "Password");
 let auth = false
@@ -44,6 +45,10 @@ if (auth) {
             }
           ]
         }, 
+        {
+          path: "/characters",
+          element: <Characters />
+        },
         {
           path: "/allusions",
           element: <AllusionTable />

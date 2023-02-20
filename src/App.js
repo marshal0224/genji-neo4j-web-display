@@ -43,14 +43,16 @@ export default function App() {
         //   key: 'Chapters',
         //   label: 'Chapters'
         // }, 
-        // {
-        //   key: 'Characters',
-        //   label: 'Characters'
-        // }, 
         {
           key: 'Poem',
           label: (
             <Link to="/poems">Poems</Link>
+          )
+        }, 
+        {
+          key: 'Characters',
+          label: (
+            <Link to="/characters">Characters</Link>
           )
         }, 
         {
