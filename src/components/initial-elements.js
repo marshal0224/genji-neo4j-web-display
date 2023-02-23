@@ -1,5 +1,7 @@
 import React from 'react';
 import { MarkerType, Position } from 'reactflow';
+import { traj } from './traj';
+
 
 export const nodes = [
     {
@@ -8,14 +10,14 @@ export const nodes = [
         data: {
             label: 'Input Node',
         },
-        position: { x: 250, y: 0 },
+        position: { x: traj[0][0], y: traj[0][1] },
     },
     {
         id: '2',
         data: {
             label: 'Default Node',
         },
-        position: { x: 100, y: 100 },
+        position: { x: traj[1][0], y: traj[1][1] },
     },
     {
         id: '3',
@@ -23,12 +25,13 @@ export const nodes = [
         data: {
             label: 'Output Node',
         },
-        position: { x: 400, y: 100 },
+        position: { x: traj[2][0], y: traj[2][1] },
     },
     {
         id: '4',
         type: 'custom',
-        position: { x: 100, y: 200 },
+        position: { x: traj[3][0], y: traj[3][1] },
+        // position: { x: 500, y: 200 },
         data: {
             selects: {
                 'handle-0': 'smoothstep',
@@ -47,7 +50,8 @@ export const nodes = [
             background: '#2B6CB0',
             color: 'white',
         },
-        position: { x: 400, y: 200 },
+        position: { x: traj[4][0], y: traj[4][1] },
+        // position: { x: 400, y: 200 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
     },
@@ -57,12 +61,13 @@ export const nodes = [
         style: {
             background: '#63B3ED',
             color: 'white',
-            width: 100,
+            width: 500,
         },
         data: {
             label: 'Node',
         },
-        position: { x: 400, y: 325 },
+        position: { x: traj[5][0], y: traj[5][1] },
+        // position: { x: 400, y: 325 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
     },
@@ -80,7 +85,8 @@ export const nodes = [
         },
         draggable: false,
         selectable: false,
-        position: { x: 150, y: 400 },
+        position: { x: traj[6][0], y: traj[6][1] },
+        // position: { x: 150, y: 400 },
     },
 ];
 

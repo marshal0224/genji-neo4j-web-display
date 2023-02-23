@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getChpList } from '../utils'
+import { initDriver, getDriver, closeDriver } from '../neo4j.js'
+import { toNativeTypes, getChpList } from './utils'
 import { Select, Col, Row, Button } from 'antd';
 import 'antd/dist/antd.min.css';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';

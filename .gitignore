@@ -28,6 +28,9 @@ yarn-error.log*
 
 *.txt
 
+*.py
+*.ipynb
+
 scratch.js
 getPoem.js
 

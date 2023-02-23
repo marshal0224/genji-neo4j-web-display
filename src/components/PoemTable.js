@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from '../utils'
+import { toNativeTypes, getPoemTableContent, parseChp, parseOrder } from './utils'
 import { useParams } from 'react-router-dom'
 import Edit from './edit'
 import { Link } from 'react-router-dom'

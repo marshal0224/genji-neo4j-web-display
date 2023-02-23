@@ -1,6 +1,6 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getChpList } from '../utils'
+import { toNativeTypes, getChpList } from './utils'
 import { Input, Select, Checkbox, Col, Row, Collapse, Spin, Button, Space, Statistic, BackTop } from 'antd';
 import 'antd/dist/antd.min.css';
 import { Link, Outlet } from 'react-router-dom';

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useReducer, useEffect } from 'react'
-import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes } from '../utils'
+import { initDriver, getDriver, closeDriver } from '../neo4j.js'
+import { toNativeTypes } from './utils'
 import { Select, Col, Row, Button, Space, Divider, Tag, Input } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';

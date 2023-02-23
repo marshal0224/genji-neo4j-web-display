@@ -1,6 +1,6 @@
 import React from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes } from '../utils'
+import { toNativeTypes } from './utils'
 
 // edit pipeline
 // 1. initialize (e.g., mounts upon login)

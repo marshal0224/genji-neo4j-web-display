@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useReducer, useEffect } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { toNativeTypes, getChpList, concatObj } from '../utils'
+import { toNativeTypes, getChpList, concatObj } from './utils'
 import { Select, Col, Row, Button, Space, BackTop, Divider, Tag, Input, Form } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
