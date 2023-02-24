@@ -81,11 +81,8 @@ export default function PoemPage() {
 
     const createRel = () => {
         let selfCheck = false
-        for (let i = 0; i < pnum.length; i++) {
-            if ((parseInt(pnum[i].value.substring(0, 2)) === parseInt(chapter)) && (parseInt(pnum[i].value.substring(4, 6)) === parseInt(number))) {
-                selfCheck = true
-                break
-            }
+        if ((parseInt(IA.substring(0, 2)) === parseInt(chapter)) && (parseInt(IA.substring(4, 6)))) {
+            selfCheck = true
         }
         if (IA === '') {
             alert('Need to select a poem!')
@@ -370,7 +367,9 @@ export default function PoemPage() {
                             style={{
                                 width: '20%',
                             }}
-                        onChange={(value) => setIA(value)}
+                            onChange={(value) => {
+                                setIA(value)
+                            }}
                         ></Select>
                         <Button
                             onClick={() => createRel()}
