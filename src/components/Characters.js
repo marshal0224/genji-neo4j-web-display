@@ -42,7 +42,22 @@ export default function Characters() {
                 data: {
                     label: e
                 },
-                position: {x : traj[id - 1][0], y: traj[id - 1][1]}
+                position: {x : traj[id - 1][0], y: traj[id - 1][1]},
+                draggable: true,
+            })
+            id += 1
+        })
+        id = 1
+        l.forEach(e => {
+            let s = nodes.findIndex(element => element.data.label === e[0])
+            let t = nodes.findIndex(element => element.data.label === e[2])
+            s = (s+1).toString()
+            t = (t+1).toString()
+            edges.push({
+                id: 'e'+id.toString(),
+                source: s,
+                target: t,
+                label: e[1]
             })
             id += 1
         })

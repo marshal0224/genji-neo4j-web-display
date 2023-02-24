@@ -13,18 +13,18 @@ import { concatObj, toNativeTypes } from './utils';
  * @param {Array} l the array of edges
  */
 export default function GeneologyMap({l}) {
+    const [nodes, setNodes] = React.useState(l[0])
+    const [edges, setEdges] = React.useState(l[1])
     const onInit = (reactFlowInstance) => console.log('flow loaded:', reactFlowInstance);
     const onConnect = () => null
     const minimapStyle = {
         height: 120,
     };
-    const onChange = useCallback((evt) => {
-        console.log(evt.target.value);
-    }, [])
+    const onChange = () => null
     return (
         <ReactFlow
-            nodes={l[0]}
-            edges={l[1]}
+            nodes={nodes}
+            edges={edges}
             onNodesChange={onChange}
             onEdgesChange={onChange}
             onConnect={onConnect}
