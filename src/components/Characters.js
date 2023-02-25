@@ -42,7 +42,7 @@ export default function Characters() {
                 data: {
                     label: e
                 },
-                position: {x : traj[id - 1][0], y: traj[id - 1][1]},
+                position: {x : traj[1750-id*2][0], y: traj[1750-id*2][1]},
                 draggable: true,
             })
             id += 1

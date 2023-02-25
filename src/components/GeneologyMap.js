@@ -7,7 +7,6 @@ import ReactFlow, {
     Background,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { concatObj, toNativeTypes } from './utils';
 /**
  * @param {Array} l the array of edges
  */
@@ -28,6 +27,7 @@ export default function GeneologyMap({l}) {
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            // onClick={(event) => console.log(event.target)}
             onConnect={onConnect}
             onInit={onInit}
             fitView
