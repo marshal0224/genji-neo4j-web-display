@@ -1,11 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import ReactFlow, {
-    addEdge,
+    applyEdgeChanges,
+    applyNodeChanges,
     MiniMap,
     Controls,
     Background,
-    useNodes,
-    useEdges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { concatObj, toNativeTypes } from './utils';
@@ -20,13 +19,15 @@ export default function GeneologyMap({l}) {
     const minimapStyle = {
         height: 120,
     };
-    const onChange = () => null
+    // const onChange = () => null
+    const onNodesChange = useCallback( (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),[] );
+    const onEdgesChange = useCallback( (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),[] );
     return (
         <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onChange}
-            onEdgesChange={onChange}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onInit={onInit}
             fitView
