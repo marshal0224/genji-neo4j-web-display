@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useReducer, useEffect } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j.js'
 import { toNativeTypes } from './utils'
-import { Select, Col, Row, Button, Space, Divider, Tag, Input } from 'antd';
+import { Button, Col, Divider, Input, Row, Space, Select, Table, Tag, } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
@@ -37,6 +37,35 @@ export default function PoemPage() {
     const forceUpdate = useReducer(x => x + 1, 0)[1]
     
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
+    const allusionColumns = [
+    {
+        title: 'Honka',
+        dataIndex: 'honka',
+        key: 'honka',
+        render: (value, record) => (
+            <p type='JP'>{value}</p>
+        )
+    },
+    {
+        title: 'Romaji',
+        dataIndex: 'romaji',
+        key: 'romaji',
+    },
+    {
+        title: 'Poet',
+        dataIndex: 'poet',
+        key: 'poet',
+    },
+    {
+        title: 'Source',
+        dataIndex: 'source',
+        key: 'source',
+    },
+    {
+        title: 'Translation',
+        dataIndex: 'translation',
+        key: 'translation',
+    },]
 
     if (number.length === 1) {
         number = '0' + number.toString()
@@ -180,7 +209,12 @@ export default function PoemPage() {
                     sources.push([e, 'N/A'])
                 }
             })
-            setSource(sources)
+            let src_obj = []
+            let index = 0
+            sources.forEach(e => {
+                src_obj.push({id: index, honka: e[0], source: e[1]})
+            })
+            setSource(src_obj)
             let related = new Set()
             resRel.records.map(e => toNativeTypes(e.get('rel'))).forEach(e => related.add([Object.values(e).join('')]))
             related = Array.from(related).flat()
@@ -337,13 +371,13 @@ export default function PoemPage() {
             </Row>
             <Divider>Allusions</Divider>
             <Row>
-                {source.map(e =>
-                    <Col flex={1}>
-                        {e[0]}
-                        <br />
-                        <b>{e[1]}</b>
-                    </Col>
-                )}
+                {source.length !== 0 ?
+                    <Table 
+                        dataSource={source} 
+                        columns={allusionColumns} 
+                        pagination={false}
+                    /> : null
+                }
             </Row>
             <Divider>Related Poems</Divider>
             <Row>

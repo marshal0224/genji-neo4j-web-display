@@ -11,6 +11,10 @@ export default function EditPage() {
     const [form] = Form.useForm()
     const [props, setProps] = React.useState({})
     const [nodeQuery, setNoteQuery] = React.useState('')
+    const [auth, setAuth] = useState(false)
+    const [usr, setUsr] = useState('')
+    const [pwd, setPwd] = useState('')
+    const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
 
     const onLabelChange = (value) => {
         switch (value) {
@@ -117,6 +121,7 @@ export default function EditPage() {
                         onFinish={(values) => {
                             console.log(values);
                         }}
+                        disabled={!auth}
                     >
                         <Form.Item
                             name="label"
@@ -161,10 +166,23 @@ export default function EditPage() {
                         </Form.Item>
                     </Form>
                     <br/>
-                    <Button onClick={submitNode}>Submit</Button>
-                    <Button onClick={resetNodeForm}>Reset</Button>
+                    <Button onClick={submitNode} disabled={!auth}>Submit</Button>
+                    <Button onClick={resetNodeForm} disabled={!auth}>Reset</Button>
                 </Col>
-                <Col span={3}/>
+                <Col span={3}>
+                <Space direction='vertical'>
+                        <Input
+                            placeholder="input username"
+                            onChange={(event) => setUsr(event.target.value)}
+                        />
+                        <Input.Password
+                            placeholder="input password"
+                            onChange={(event) => setPwd(event.target.value)}
+                        />
+                    </Space>
+                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : null}>Login</Button>
+                    <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
+                </Col>
             </Row>
             <Divider />
             <Row>
