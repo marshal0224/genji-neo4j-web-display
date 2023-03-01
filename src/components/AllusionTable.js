@@ -527,7 +527,7 @@ export default function AllusionTable() {
         if (auth) {
             let bool = window.confirm('About to delete a honka link.')
             if (bool) {
-                let index = allusion[id].findIndex(e => JSON.stringify(e) === JSON.stringify([pnum, true]))
+                let index = allusion[id].findIndex(e => e[0] === pnum)
                 let a = allusion
                 a[id][index][1] = false
                 setAllusion(a)
