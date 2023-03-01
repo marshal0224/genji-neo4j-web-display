@@ -83,6 +83,9 @@ export default function AllusionTable() {
                     ...record,
                     ...values,
                 });
+                if (notes === undefined) {
+                    notes = ' '
+                }
                 if (updated) {
                     initDriver(process.env.REACT_APP_NEO4J_URI,
                         process.env.REACT_APP_NEO4J_USERNAME,

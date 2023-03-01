@@ -159,8 +159,8 @@ export default function PoemPage() {
     // pulls the content of a poem page based on chapter and number
     useEffect(() => {
         let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
-        let getHonka = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "' + number + '" return allusions'
-        let getSrc = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:ALLUDES_TO]->(h:Honka)-[:ANTHOLOGIZED_IN]-(s:Source) where g.pnum ends with "' + number + '" return h.Honka as text, s.title as title'
+        // let getHonka = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "' + number + '" return allusions'
+        let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation'
         let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
         let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
@@ -179,8 +179,8 @@ export default function PoemPage() {
             const driver = getDriver()
             const session = driver.session()
             const res = await session.readTransaction(tx => tx.run(get))
-            const resHonka = await session.readTransaction(tx => tx.run(getHonka))
-            const resSrc = await session.readTransaction(tx => tx.run(getSrc))
+            // const resHonka = await session.readTransaction(tx => tx.run(getHonka))
+            const resHonkaInfo = await session.readTransaction(tx => tx.run(getHonkaInfo))
             const resRel = await session.readTransaction(tx => tx.run(getRel))
             const resTag = await session.readTransaction(tx => tx.run(getTag))
             const resType = await session.readTransaction(tx => tx.run(getTagTypes))
@@ -200,19 +200,20 @@ export default function PoemPage() {
                     [e[0]]: e[1]
                 })))
             let allusions = new Set()
-            resHonka.records.map(e => toNativeTypes(e.get('allusions'))).forEach(e => allusions.add(JSON.stringify(e)))
-            allusions = Array.from(allusions).map(e => JSON.parse(e))
-            allusions = allusions.map(e => e.end.properties.Honka)
-            let sources = resSrc.records.map(e => [Object.values(toNativeTypes(e.get('text'))).join(''), Object.values(toNativeTypes(e.get('title'))).join('')])
-            allusions.forEach(e => {
-                if (!JSON.stringify(sources).includes(JSON.stringify(e))) {
-                    sources.push([e, 'N/A'])
-                }
-            })
+            // resHonka.records.map(e => toNativeTypes(e.get('allusions'))).forEach(e => allusions.add(JSON.stringify(e)))
+            // allusions = Array.from(allusions).map(e => JSON.parse(e))
+            // allusions = allusions.map(e => e.end.properties.Honka)
+            console.log(resHonkaInfo)
+            let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join('')])
+            // allusions.forEach(e => {
+            //     if (!JSON.stringify(sources).includes(JSON.stringify(e))) {
+            //         sources.push([e, 'N/A'])
+            //     }
+            // })
             let src_obj = []
             let index = 0
             sources.forEach(e => {
-                src_obj.push({id: index, honka: e[0], source: e[1]})
+                src_obj.push({id: index, honka: e[0], source: e[1], romaji: e[2], poet: e[3], order: e[4], translator: e[5], translation: e[6]})
             })
             setSource(src_obj)
             let related = new Set()
@@ -372,11 +373,45 @@ export default function PoemPage() {
             <Divider>Allusions</Divider>
             <Row>
                 {source.length !== 0 ?
-                    <Table 
+                <>
+                    {source.map(e => 
+                        <Row>
+                            <Col span={8}>
+                                <label><b>Poet</b></label>
+                                <br/>
+                                <p>{e.poet}</p>
+                            </Col>
+                            <Col span={8}>
+                                <label><b>Honka</b></label>
+                                <br/>
+                                <p type={'JP'}>{e.honka}</p>
+                            </Col>
+                            <Col span={8}>
+                                <label><b>Romaji</b></label>
+                                <br/>
+                                <p>{e.romaji}</p>
+                            </Col>
+                            <br/>
+                            <Col span={12}>
+                                <label><b>Source</b></label>
+                                <br/>
+                                {e.order !== undefined ? <p>{e.source + ' ' + e.order}</p> : <p>{e.source}</p>}
+                            </Col>
+                            <Col span={12}>
+                                <label><b>Translation</b></label>
+                                <br/>
+                                <p>{e.translation}</p>
+                                <p>{'--' + e.translator}</p>
+                            </Col>
+                            <Divider />
+                        </Row>
+                    )}
+                    {/* <Table 
                         dataSource={source} 
                         columns={allusionColumns} 
                         pagination={false}
-                    /> : null
+                    /> */}
+                    </> : null
                 }
             </Row>
             <Divider>Related Poems</Divider>
