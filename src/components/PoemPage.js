@@ -23,11 +23,9 @@ export default function PoemPage() {
     const [rel, setRel] = useState([]) // currently linked related poems
     const [IA, setIA] = useState('') // internal allusion selection
     const [pnum, setPnum] = useState([])
-    const [relQuery, setRelQuery] = useState([])
+    const [query, setQuery] = useState([])
     const [tag, setTag] = useState([]) // currently linked tags
     const [tagType, setTagType] = useState([''])
-    const [tagQuery, setTagQuery] = useState([])
-    const [noteQuery, setNoteQuery] = useState('')
     const [select, setSelect] = useState('')
     const [notes, setNotes] = useState("")
     const [auth, setAuth] = useState(false)
@@ -37,35 +35,35 @@ export default function PoemPage() {
     const forceUpdate = useReducer(x => x + 1, 0)[1]
     
     const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
-    const allusionColumns = [
-    {
-        title: 'Honka',
-        dataIndex: 'honka',
-        key: 'honka',
-        render: (value, record) => (
-            <p type='JP'>{value}</p>
-        )
-    },
-    {
-        title: 'Romaji',
-        dataIndex: 'romaji',
-        key: 'romaji',
-    },
-    {
-        title: 'Poet',
-        dataIndex: 'poet',
-        key: 'poet',
-    },
-    {
-        title: 'Source',
-        dataIndex: 'source',
-        key: 'source',
-    },
-    {
-        title: 'Translation',
-        dataIndex: 'translation',
-        key: 'translation',
-    },]
+    // const allusionColumns = [
+    // {
+    //     title: 'Honka',
+    //     dataIndex: 'honka',
+    //     key: 'honka',
+    //     render: (value, record) => (
+    //         <p type='JP'>{value}</p>
+    //     )
+    // },
+    // {
+    //     title: 'Romaji',
+    //     dataIndex: 'romaji',
+    //     key: 'romaji',
+    // },
+    // {
+    //     title: 'Poet',
+    //     dataIndex: 'poet',
+    //     key: 'poet',
+    // },
+    // {
+    //     title: 'Source',
+    //     dataIndex: 'source',
+    //     key: 'source',
+    // },
+    // {
+    //     title: 'Translation',
+    //     dataIndex: 'translation',
+    //     key: 'translation',
+    // },]
 
     if (number.length === 1) {
         number = '0' + number.toString()
@@ -77,7 +75,7 @@ export default function PoemPage() {
         setSelect(value)
     }
 
-    const createLink = () => {
+    const createTag = () => {
         if (select === '') {
             alert('Need to select a tag!')
         } else if (tag.includes(select)) {
@@ -85,7 +83,7 @@ export default function PoemPage() {
         } else {
             let bool = window.confirm('About to tag this poem as ' + select + '. ')
             if (bool) {
-                setTagQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (t:Tag {Type: "' + select + '"}) where g.pnum ends with "' + number + '" merge (g)-[:TAGGED_AS]->(t) return (g)', 'create'])
+                setQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (t:Tag {Type: "' + select + '"}) where g.pnum ends with "' + number + '" merge (g)-[:TAGGED_AS]->(t) return (g)', 'create tag'])
                 let ls = tag
                 ls.push([select, true])
                 setTag(ls)
@@ -94,16 +92,16 @@ export default function PoemPage() {
         setSelect('')
     }
 
-    const deleteLink = (i) => (event) => {
+    const deleteTag = (i) => (event) => {
         let type = event.target.textContent
         if (auth) {
-            let bool = window.confirm('About to delete a tag link.')
+            let bool = window.confirm('About to delete a tag.')
             if (bool) {
                 let temp = tag
                 temp[i][1] = false
                 setTag(temp)
                 forceUpdate()
-                setTagQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[r:TAGGED_AS]->(t:Tag {Type: "' + type + '"}) where g.pnum ends with "' + number + '" delete r return (g)', 'delete'])
+                setQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[r:TAGGED_AS]->(t:Tag {Type: "' + type + '"}) where g.pnum ends with "' + number + '" delete r return (g)', 'delete tag'])
             }
         }
     }
@@ -122,7 +120,7 @@ export default function PoemPage() {
         } else {
             let bool = window.confirm('About to relate this poem to ' + IA + '. ')
             if (bool) {
-                setRelQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (s:Genji_Poem {pnum: "' + IA + '"}) where g.pnum ends with "' + number + '" merge (g)-[:INTERNAL_ALLUSION_TO]->(s) merge (s)-[:INTERNAL_ALLUSION_TO]->(g) return (g)', 'create'])
+                setQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (s:Genji_Poem {pnum: "' + IA + '"}) where g.pnum ends with "' + number + '" merge (g)-[:INTERNAL_ALLUSION_TO]->(s) merge (s)-[:INTERNAL_ALLUSION_TO]->(g) return (g)', 'create rel'])
                 let ls = rel
                 ls.push([IA, true])
                 setRel(ls)
@@ -134,25 +132,23 @@ export default function PoemPage() {
     const deleteRel = (i) => (event) => {
         let p = event.target.textContent
         if (auth) {
-            let bool = window.confirm('About to delete a tag link.')
+            let bool = window.confirm('About to delete a internal allusion link.')
             if (bool) {
                 let temp = rel
                 temp[i][1] = false
                 setRel(temp)
                 forceUpdate()
-                setRelQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[r:INTERNAL_ALLUSION_TO]->(s:Genji_Poem {pnum: "' + p + '"}), (s)-[t:INTERNAL_ALLUSION_TO]->(g) where g.pnum ends with "' + number + '" delete r delete t return (g)', 'delete'])
+                setQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[r:INTERNAL_ALLUSION_TO]->(s:Genji_Poem {pnum: "' + p + '"}), (s)-[t:INTERNAL_ALLUSION_TO]->(g) where g.pnum ends with "' + number + '" delete r delete t return (g)', 'delete rel'])
             }
         }
     }
 
-    const updateNote = () => {
+    const updateNotes = () => {
         let bool = window.confirm('About to update the notes')
         if (bool) {
             let n = notes
-            // n.replace("'", "\\'")
             n = n.toString().replace(/"/g, '\\"');
-            // console.log(n)
-            setNoteQuery('MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}) where g.pnum ends with "' + number + '" SET g.notes = "' + n + '" return (g)')
+            setQuery(['MATCH (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}) where g.pnum ends with "' + number + '" SET g.notes = "' + n + '" return (g)', 'notes'])
         }
     }
 
@@ -199,17 +195,8 @@ export default function PoemPage() {
                     ...prev,
                     [e[0]]: e[1]
                 })))
-            let allusions = new Set()
-            // resHonka.records.map(e => toNativeTypes(e.get('allusions'))).forEach(e => allusions.add(JSON.stringify(e)))
-            // allusions = Array.from(allusions).map(e => JSON.parse(e))
-            // allusions = allusions.map(e => e.end.properties.Honka)
             console.log(resHonkaInfo)
             let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join('')])
-            // allusions.forEach(e => {
-            //     if (!JSON.stringify(sources).includes(JSON.stringify(e))) {
-            //         sources.push([e, 'N/A'])
-            //     }
-            // })
             let src_obj = []
             let index = 0
             sources.forEach(e => {
@@ -250,62 +237,30 @@ export default function PoemPage() {
                 process.env.REACT_APP_NEO4J_PASSWORD)
             const driver = getDriver()
             const session = driver.session()
-            let write = await session.writeTransaction(tx => tx.run(tagQuery[0]))
+            let write = await session.writeTransaction(tx => tx.run(query[0]))
             session.close()
             closeDriver()
         }
-        if (tagQuery.length > 0) {
-            if (tagQuery[1] === 'create') {
+        if (query.length > 0) {
+            if (query[1] === 'create tag') {
                 _().catch(console.error)
-                alert('Link created!')
-            } else if (tagQuery[1] === 'delete') {
+                alert('tag created!')
+            } else if (query[1] === 'delete tag') {
                 _().catch(console.error)
-                alert('Link deleted!')
+                alert('tag deleted!')
+            } else if (query[1] === 'create rel') {
+                _().catch(console.error)
+                alert('link created!')
+            } else if (query[1] === 'delete rel') {
+                _().catch(console.error)
+                alert('link delete!')
+            } else if (query[1] === 'notes' && query[0] !== '') {
+                _().catch(console.error)
+                alert('Notes updated!')
+                setQuery([])
             }
         } 
-    }, [tagQuery])
-
-    // async func for related poem queries
-    useMemo(() => {
-        const _ = async () => {
-            initDriver(process.env.REACT_APP_NEO4J_URI,
-                process.env.REACT_APP_NEO4J_USERNAME,
-                process.env.REACT_APP_NEO4J_PASSWORD)
-            const driver = getDriver()
-            const session = driver.session()
-            let write = await session.writeTransaction(tx => tx.run(relQuery[0]))
-            session.close()
-            closeDriver()
-        }
-        if (relQuery.length > 0) {
-            if (relQuery[1] === 'create') {
-                _().catch(console.error)
-                alert('Link created!')
-            } else if (relQuery[1] === 'delete') {
-                _().catch(console.error)
-                alert('Link deleted!')
-            }
-        } 
-    }, [relQuery])
-
-    // async func for notes. There is probably a way to merge them...
-    useMemo(() => {
-        const _ = async () => {
-            initDriver(process.env.REACT_APP_NEO4J_URI,
-                process.env.REACT_APP_NEO4J_USERNAME,
-                process.env.REACT_APP_NEO4J_PASSWORD)
-            const driver = getDriver()
-            const session = driver.session()
-            let write = await session.writeTransaction(tx => tx.run(noteQuery))
-            session.close()
-            closeDriver()
-        }
-        if (noteQuery !== '') {
-            _().catch(console.error)
-            alert('Notes updated!')
-            setNoteQuery('')
-        } 
-    }, [noteQuery])
+    }, [query])
 
     return (
         <div>
@@ -454,7 +409,7 @@ export default function PoemPage() {
                     {tag.map(e =>
                         <Tag 
                             visible={e[1]}
-                            onClick={deleteLink(tag.indexOf(e))}
+                            onClick={deleteTag(tag.indexOf(e))}
                         >
                             {e[0]}
                         </Tag>
@@ -473,7 +428,7 @@ export default function PoemPage() {
                             onChange={handleSelect}
                         />
                         <Button
-                            onClick={() => createLink()}
+                            onClick={() => createTag()}
                         >
                             Link
                         </Button></>
@@ -486,7 +441,11 @@ export default function PoemPage() {
                 <br />
                 <p type="non-JP">{notes}</p>
                 {auth === true 
-                    ? <><TextArea defaultValue={notes} onChange={(event) => setNotes(event.target.value)}/><Button onClick={() => updateNote()}>Update</Button></>
+                    ? <><TextArea 
+                        defaultValue={notes} 
+                        onChange={(event) => setNotes(event.target.value)}
+                    />
+                    <Button onClick={() => updateNotes()}>Update</Button></>
                 : null}
             </Row>
             <Divider></Divider>
