@@ -10,7 +10,7 @@ export default function App() {
 
   return (
     <div className="App">
-    <HeaderImg title="The Tale of Genji Poem Database" subTitle="Gamma Version"/>
+    <HeaderImg title="The Tale of Genji Poem Database" subTitle="Delta Version"/>
     <Layout
       style={{
         minHeight: "90vh"

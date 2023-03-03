@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useReducer, useEffect } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j.js'
 import { toNativeTypes } from './utils'
-import { Button, Col, Divider, Input, Row, Space, Select, Table, Tag, } from 'antd';
+import { Button, Col, Divider, Input, Row, Space, Select, Tag, } from 'antd';
 import { useParams } from 'react-router-dom';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
+import { Link } from 'react-router-dom';
 
 export default function PoemPage() {
     let { chapter, number } = useParams()
@@ -108,7 +109,7 @@ export default function PoemPage() {
 
     const createRel = () => {
         let selfCheck = false
-        if ((parseInt(IA.substring(0, 2)) === parseInt(chapter)) && (parseInt(IA.substring(4, 6)))) {
+        if ((parseInt(IA.substring(0, 2)) === parseInt(chapter)) && (parseInt(IA.substring(4, 6)) === parseInt(number))) {
             selfCheck = true
         }
         if (IA === '') {
@@ -129,6 +130,10 @@ export default function PoemPage() {
         setIA('')
     }
 
+    /**
+     * 
+     * @param {Number} i index of an internal allusion inside the rel state variable
+     */
     const deleteRel = (i) => (event) => {
         let p = event.target.textContent
         if (auth) {
@@ -155,7 +160,6 @@ export default function PoemPage() {
     // pulls the content of a poem page based on chapter and number
     useEffect(() => {
         let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
-        // let getHonka = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), allusions=(g)-[:ALLUDES_TO]->(:Honka) where g.pnum ends with "' + number + '" return allusions'
         let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation'
         let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
@@ -195,7 +199,6 @@ export default function PoemPage() {
                     ...prev,
                     [e[0]]: e[1]
                 })))
-            console.log(resHonkaInfo)
             let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join('')])
             let src_obj = []
             let index = 0
@@ -373,12 +376,18 @@ export default function PoemPage() {
             <Row>
                 <Col span={24}>
                     {rel.map(e =>
+                        <Link 
+                            to={`/poems/${parseInt(e[0].substring(0, 2))}/${parseInt(e[0].substring(4, 6))}`}
+                            target="_blank"
+                            onClick={(event) => auth ? event.preventDefault() : event}
+                        >
                             <Tag
                                 visible={e[1]}
                                 onClick={deleteRel(rel.indexOf(e))}
                             >
                                 {e[0]}
                             </Tag>
+                        </Link>
                     )}
                 </Col>
                 <Divider></Divider>
