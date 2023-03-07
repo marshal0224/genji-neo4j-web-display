@@ -192,11 +192,11 @@ export default function PoemPage() {
             setAddressee(exchange.map(e => e.end.properties.name))
             setJPRM([exchange[0].segments[0].end.properties.Japanese, exchange[0].segments[0].end.properties.Romaji])
             setNotes(exchange[0].segments[0].end.properties.notes)
-            let transTemp = res.records.map(e => toNativeTypes(e.get('trans'))).map(e => [e.end.properties.name, e.segments[0].end.properties.translation])
+            let transTemp = res.records.map(e => toNativeTypes(e.get('trans'))).map(e => [e.end.properties.name, e.segments[0].end.properties.translation, e.segments[1].start.properties.WaleyPageNum])
             transTemp.forEach(e =>
                 setTrans(prev => ({
                     ...prev,
-                    [e[0]]: e[1]
+                    [e[0]]: e[0] !== 'Waley' ? e[1] : [e[1], e[2]]
                 })))
             let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join(''), e.get('notes') !== null ? Object.values(toNativeTypes(e.get('notes'))).join('') : 'N/A'])
             let src_obj = []
@@ -276,7 +276,7 @@ export default function PoemPage() {
                 <Col span={4}>
                     <b>Speaker</b>
                     {speaker.length !== 0 && speaker.map(e =>
-                        <p>{e}</p>
+                        <p key={e}>{e}</p>
                     )}
                     <b>Proxy</b>
                     <br />
@@ -304,7 +304,8 @@ export default function PoemPage() {
                 <Col flex={1}>
                     <b>Waley</b>
                     <br />
-                    <p type='non-JP'>{trans['Waley']}</p>
+                    <p type='non-JP'>{trans['Waley'][0]}</p>
+                    <p>Page: {trans['Waley'][1] === '-1' ? 'N/A' : trans['Waley'][1]}</p>
                 </Col>
                 <Divider type="vertical" />
                 <Col flex={1}>
