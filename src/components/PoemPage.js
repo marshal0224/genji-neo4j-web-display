@@ -160,7 +160,7 @@ export default function PoemPage() {
     // pulls the content of a poem page based on chapter and number
     useEffect(() => {
         let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
-        let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation'
+        let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[n:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation, n.notes as notes'
         let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
         let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
         let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
@@ -179,7 +179,6 @@ export default function PoemPage() {
             const driver = getDriver()
             const session = driver.session()
             const res = await session.readTransaction(tx => tx.run(get))
-            // const resHonka = await session.readTransaction(tx => tx.run(getHonka))
             const resHonkaInfo = await session.readTransaction(tx => tx.run(getHonkaInfo))
             const resRel = await session.readTransaction(tx => tx.run(getRel))
             const resTag = await session.readTransaction(tx => tx.run(getTag))
@@ -199,11 +198,17 @@ export default function PoemPage() {
                     ...prev,
                     [e[0]]: e[1]
                 })))
-            let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join('')])
+            let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join(''), e.get('notes') !== null ? Object.values(toNativeTypes(e.get('notes'))).join('') : 'N/A'])
             let src_obj = []
             let index = 0
+            let entered_honka = []
             sources.forEach(e => {
-                src_obj.push({id: index, honka: e[0], source: e[1], romaji: e[2], poet: e[3], order: e[4], translator: e[5], translation: e[6]})
+                if (entered_honka.includes(e[0])) {
+                    src_obj[src_obj.findIndex(el => el.honka === e[0])].translation.push([e[5], e[6]])
+                } else {
+                    src_obj.push({id: index, honka: e[0], source: e[1], romaji: e[2], poet: e[3], order: e[4], translation:  [[e[5], e[6]]], notes: e[7]})
+                    entered_honka.push(e[0])
+                }
             })
             setSource(src_obj)
             let related = new Set()
@@ -334,33 +339,42 @@ export default function PoemPage() {
                 <>
                     {source.map(e => 
                         <Row>
-                            <Col span={8}>
+                            <Col span={6}>
                                 <label><b>Poet</b></label>
                                 <br/>
                                 <p>{e.poet}</p>
                             </Col>
-                            <Col span={8}>
+                            <Col span={6}>
+                                <label><b>Source</b></label>
+                                <br/>
+                                {e.order !== undefined ? <p>{e.source + ' ' + e.order}</p> : <p>{e.source}</p>}
+                            </Col>
+                            <Col span={6}>
                                 <label><b>Honka</b></label>
                                 <br/>
                                 <p type={'JP'}>{e.honka}</p>
                             </Col>
-                            <Col span={8}>
+                            <Col span={6}>
                                 <label><b>Romaji</b></label>
                                 <br/>
                                 <p>{e.romaji}</p>
                             </Col>
                             <br/>
-                            <Col span={12}>
-                                <label><b>Source</b></label>
+                            <Col span={24}>
+                                <label><b>Notes</b></label>
                                 <br/>
-                                {e.order !== undefined ? <p>{e.source + ' ' + e.order}</p> : <p>{e.source}</p>}
+                                <p>{e.notes}</p>
                             </Col>
-                            <Col span={12}>
-                                <label><b>Translation</b></label>
-                                <br/>
-                                <p>{e.translation}</p>
-                                <p>{'--' + e.translator}</p>
-                            </Col>
+                            <br/>
+                            {
+                                e.translation.map(el => 
+                                    <Col flex={1}>
+                                        <label><b>{el[0]}</b></label>
+                                        <br/>
+                                        <p>{el[1]}</p>
+                                    </Col>
+                                )
+                            }
                             <Divider />
                         </Row>
                     )}

@@ -211,7 +211,7 @@ export default function AllusionTable() {
                     return a.Poet > b.Poet ? 1 : -1
                 }
             },
-            defaultSortOrder: 'ascend',
+            // defaultSortOrder: 'ascend',
             render: (text, record) => (
                 <Row>
                     <Col span={24}>
@@ -251,7 +251,17 @@ export default function AllusionTable() {
                 } else if (b.Source === undefined) {
                     return -1
                 } else {
-                    return a.Poet > b.Poet ? 1 : -1
+                    if (a.Source[1] !== 'N/A' && b.Source[1] !== 'N/A' && a.Source[0] === b.Source[0]) {
+                        return a.Source[1] > b.Source[1] ? 1 : -1
+                    } else if (a.Source[1] !== 'N/A' && b.Source[1] === 'N/A' && a.Source[0] === b.Source[0]) { 
+                        return -1
+                    } else if (a.Source[1] === 'N/A' && b.Source[1] !== 'N/A' && a.Source[0] === b.Source[0]) { 
+                        return 1
+                    } else if (a.Source[1] === 'N/A' && b.Source[1] === 'N/A' && a.Source[0] === b.Source[0]) {
+                        return -1
+                    } else if (a.Source[0] !== b.Source[0]) {
+                        return a.Source[0] > b.Source[0] ? 1 : -1
+                    }
                 }
             },
             render: (text, record) => (
@@ -293,15 +303,9 @@ export default function AllusionTable() {
                                             let temp = editOrder
                                             temp[record.key] = event.target.value
                                             setEditOrder(temp)
-                                            // forceUpdate()
                                             createSourceEdge(record.key)
                                     }}
                                 />
-                                {/* <Button
-                                    onClick={(event) => createSourceEdge(record.key)}
-                                >
-                                    Link
-                                </Button> */}
                             </>
                             : null}
                     </Col>
@@ -314,7 +318,6 @@ export default function AllusionTable() {
                     value={selectedTranslation} 
                     onChange={(value) => setSelectedTranslation(value)}  
                     options={translators}
-                    // width={100}
                 />
             ),
             dataIndex: 'name',

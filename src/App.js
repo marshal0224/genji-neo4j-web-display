@@ -54,6 +54,12 @@ export default function App() {
           label: (
             <Link to="/characters">Characters</Link>
           )
+        },
+        {
+          key: 'AltChars',
+          label: (
+            <Link to="/alt_characters">AltChar</Link>
+          )
         }, 
         {
           key: 'Allusions',
