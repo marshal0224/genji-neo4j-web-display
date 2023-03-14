@@ -1,4 +1,4 @@
-import Genji_emaki_azumaya from "../assets/Genji_emaki_azumaya.jpg"
+import Genji_emaki_azumaya from "../public/assets/Genji_emaki_azumaya.jpg"
 import React from 'react';
 
 export const HeaderImg = ({title, subTitle}) => {

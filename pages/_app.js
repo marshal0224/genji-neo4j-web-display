@@ -1,12 +1,12 @@
-import './App.css';
+import '../styles/global.css';
 import React from 'react'
-import { Link, Outlet } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
-import { HeaderImg } from './components/Header';
+import { HeaderImg } from './Header';
+import Link from 'next/link';
 
 const { Header, Content, Footer } = Layout;
 
-export default function App() {
+export default function App({ Component, pageProps }) {
 
   return (
     <div className="App">
@@ -36,59 +36,59 @@ export default function App() {
         {
           key: 'Home',
           label: (
-            <Link to="/">Home</Link>
+            <Link href={"/"}>Home</Link>
           )
         }, 
         // {
         //   key: 'Chapters',
         //   label: 'Chapters'
         // }, 
-        {
-          key: 'Poem',
-          label: (
-            <Link to="/poems">Poems</Link>
-          )
-        }, 
-        {
-          key: 'Characters',
-          label: (
-            <Link to="/characters">Characters</Link>
-          )
-        },
-        {
-          key: 'AltChars',
-          label: (
-            <Link to="/alt_characters">AltChar</Link>
-          )
-        }, 
-        {
-          key: 'Allusions',
-          label: (
-            <Link to="/allusions">Allusions</Link>
-          )
-        }, 
-        {
-          key: 'Search',
-          label: (
-            <Link to="/search">Search</Link>
-          )
-        }, 
-        {
-          key: 'Edit',
-          label: (
-            <Link to="/edit">Edit</Link>
-          )
-        }, 
+        // {
+        //   key: 'Poem',
+        //   label: (
+        //     <Link href={"/poems"}>Poems</Link>
+        //   )
+        // }, 
+        // {
+        //   key: 'Characters',
+        //   label: (
+        //     <Link to="/characters">Characters</Link>
+        //   )
+        // },
+        // {
+        //   key: 'AltChars',
+        //   label: (
+        //     <Link to="/alt_characters">AltChar</Link>
+        //   )
+        // }, 
+        // {
+        //   key: 'Allusions',
+        //   label: (
+        //     <Link to="/allusions">Allusions</Link>
+        //   )
+        // }, 
+        // {
+        //   key: 'Search',
+        //   label: (
+        //     <Link to="/search">Search</Link>
+        //   )
+        // }, 
+        // {
+        //   key: 'Edit',
+        //   label: (
+        //     <Link to="/edit">Edit</Link>
+        //   )
+        // }, 
         {
           key: 'About Poetry in the Tale of Genjii',
           label: (
-            <Link to="/about">About Poetry in the Tale of Genji</Link>
+            <Link href={"/about"}>About Poetry in the Tale of Genji</Link>
           )
         }, 
         {
           key: 'Acknowledgements',
           label: (
-            <Link to="/acknowledgements">Acknowledgements</Link>
+            <Link href={"/acknowledgements"}>Acknowledgements</Link>
           )
         }
       ]}
@@ -103,7 +103,7 @@ export default function App() {
         backgroundColor: 'white', 
       }}
     >
-      <Outlet />
+      <Component {...pageProps} />
     </Content>
     {/* <Footer
       style={{

@@ -1,7 +1,7 @@
 import { Col, Row } from 'antd';
 import React from 'react';
 
-export const About = () => {
+export default function About() {
     return (
         <div style={{
             display: 'flex',

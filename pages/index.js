@@ -1,7 +1,7 @@
 import { Col, Row } from 'antd';
 import React from 'react';
 
-export const Home = () => {
+export default function Home() {
     return (
         <div style={{
             display: 'flex',
@@ -28,6 +28,5 @@ export const Home = () => {
                 <Col span={6}></Col>
             </Row>
         </div>
-
     )
 }

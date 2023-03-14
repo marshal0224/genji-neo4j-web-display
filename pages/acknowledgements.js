@@ -1,8 +1,7 @@
 import { Col, Row } from 'antd';
 import React from 'react';
-import { useLocation } from 'react-router-dom';
 
-export const Acknowledgements = () => {
+export default function Acknowledgements() {
     return (
         <div style={{
             display: 'flex',
@@ -29,6 +28,5 @@ export const Acknowledgements = () => {
                 <Col span={6}></Col>
             </Row>
         </div>
-
     )
 }
