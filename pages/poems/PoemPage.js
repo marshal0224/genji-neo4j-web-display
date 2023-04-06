@@ -1,14 +1,115 @@
 import React, { useMemo, useState, useReducer, useEffect } from 'react'
 import { initDriver, getDriver, closeDriver } from '../neo4j.js'
-import { toNativeTypes } from '../../../../utils'
-import { Button, Col, Divider, Input, Row, Space, Select, Tag, } from 'antd';
-import { useParams } from 'react-router-dom';
+import { toNativeTypes } from '../utils'
+import { Button, Col, Divider, Input, Row, Space, Spin, Select, Tag, } from 'antd';
 import 'antd/dist/antd.min.css';
 import TextArea from 'antd/lib/input/TextArea';
-import { Link } from 'react-router-dom';
+import Link from 'next/link.js';
 
-export default function PoemPage() {
-    let { chapter, number } = useParams()
+// export async function getServerSideProps({ query }) {
+//     let chapter = query.chapter
+//     let number = query.number
+//     let speaker = []
+//     let addressee = []
+//     let JPRM = []
+//     let notes = ''
+//     let trans = {
+//         Waley: 'N/A',
+//         Seidensticker: 'N/A',
+//         Tyler: 'N/A',
+//         Washburn: 'N/A',
+//         Cranston: 'N/A'
+//     }
+//     let source = {}
+//     let rel = []
+//     let tag = []
+//     let tagTypes = []
+//     let pnum = []
+//     let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
+//     let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[n:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation, n.notes as notes'
+//     let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
+//     let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
+//     let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
+//     let getTagTypes = 'match (t:Tag) return t.Type as type'
+//     initDriver(process.env.REACT_APP_NEO4J_URI,
+//         process.env.REACT_APP_NEO4J_USERNAME,
+//         process.env.REACT_APP_NEO4J_PASSWORD)
+//     const driver = getDriver()
+//     const session = driver.session()
+//     const res = await session.readTransaction(tx => tx.run(get))
+//     const resHonkaInfo = await session.readTransaction(tx => tx.run(getHonkaInfo))
+//     const resRel = await session.readTransaction(tx => tx.run(getRel))
+//     const resTag = await session.readTransaction(tx => tx.run(getTag))
+//     const resType = await session.readTransaction(tx => tx.run(getTagTypes))
+//     const resPnum = await session.readTransaction(tx => tx.run(getPnum))
+//     // holds unique values of speaker & addressee & Japanese & Romaji (top row)
+//     let exchange = new Set()
+//     res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
+//     exchange = Array.from(exchange).map(e => JSON.parse(e))
+//     speaker = [exchange[0].start.properties.name]
+//     addressee = exchange.map(e => e.end.properties.name)
+//     JPRM = [exchange[0].segments[0].end.properties.Japanese, exchange[0].segments[0].end.properties.Romaji]
+//     notes = exchange[0].segments[0].end.properties.notes
+//     let transTemp = res.records.map(e => toNativeTypes(e.get('trans'))).map(e => [e.end.properties.name, e.segments[0].end.properties.translation, e.segments[1].start.properties.WaleyPageNum])
+//     transTemp.forEach(e =>
+//         trans = prev => ({
+//             ...prev,
+//             [e[0]]: e[0] !== 'Waley' ? e[1] : [e[1], e[2]]
+//         }))
+//     let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join(''), e.get('notes') !== null ? Object.values(toNativeTypes(e.get('notes'))).join('') : 'N/A'])
+//     let src_obj = []
+//     let index = 0
+//     let entered_honka = []
+//     sources.forEach(e => {
+//         if (entered_honka.includes(e[0])) {
+//             src_obj[src_obj.findIndex(el => el.honka === e[0])].translation.push([e[5], e[6]])
+//         } else {
+//             src_obj.push({id: index, honka: e[0], source: e[1], romaji: e[2], poet: e[3], order: e[4], translation:  [[e[5], e[6]]], notes: e[7]})
+//             entered_honka.push(e[0])
+//         }
+//     })
+//     source = src_obj
+//     let related = new Set()
+//     resRel.records.map(e => toNativeTypes(e.get('rel'))).forEach(e => related.add([Object.values(e).join('')]))
+//     related = Array.from(related).flat()
+//     related = related.map(e => [e, true])
+//     rel = related
+//     let tags = new Set()
+//     resTag.records.map(e => toNativeTypes(e.get('type'))).forEach(e => tags.add([Object.values(e).join('')]))
+//     tags = Array.from(tags).flat()
+//     tags = tags.map(e => [e, true])
+//     tag = tags
+//     let types = resType.records.map(e => e.get('type'))
+//     let ls = []
+//     types.forEach(e => ls.push({value: e, label: e})) 
+//     tagTypes = ls
+//     let temp = resPnum.records.map(e => e.get('pnum'))
+//     let pls = []
+//     temp.forEach(e => {
+//         pls.push({value:e, label:e})
+//     })
+//     pnum = pls
+//     session.close()
+//     closeDriver()
+//     return {
+//         props: {
+//             initSpeaker: speaker,
+//             initAddressee: addressee,
+//             initJPRM: JPRM,
+//             initNotes: notes,
+//             initTrans: trans,
+//             initSource: source,
+//             initRel: rel,
+//             initTag: tag,
+//             initTagTypes: tagTypes,
+//             initPnum: pnum
+//         }
+//     }
+// }
+
+export default function PoemPage( props ) {
+    let chapter = props.chapter
+    let number = props.number
     const [speaker, setSpeaker] = useState([])
     const [addressee, setAddressee] = useState([])
     // Japanese and Romaji
@@ -23,7 +124,7 @@ export default function PoemPage() {
     const [source, setSource] = useState([]) // currently linked honka
     const [rel, setRel] = useState([]) // currently linked related poems
     const [IA, setIA] = useState('') // internal allusion selection
-    const [pnum, setPnum] = useState([])
+    const [pnum, setPnum] = useState([]) 
     const [query, setQuery] = useState([])
     const [tag, setTag] = useState([]) // currently linked tags
     const [tagType, setTagType] = useState([''])
@@ -34,46 +135,12 @@ export default function PoemPage() {
     const [pwd, setPwd] = useState('')
 
     const forceUpdate = useReducer(x => x + 1, 0)[1]
-    
-    const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
-    // const allusionColumns = [
-    // {
-    //     title: 'Honka',
-    //     dataIndex: 'honka',
-    //     key: 'honka',
-    //     render: (value, record) => (
-    //         <p type='JP'>{value}</p>
-    //     )
-    // },
-    // {
-    //     title: 'Romaji',
-    //     dataIndex: 'romaji',
-    //     key: 'romaji',
-    // },
-    // {
-    //     title: 'Poet',
-    //     dataIndex: 'poet',
-    //     key: 'poet',
-    // },
-    // {
-    //     title: 'Source',
-    //     dataIndex: 'source',
-    //     key: 'source',
-    // },
-    // {
-    //     title: 'Translation',
-    //     dataIndex: 'translation',
-    //     key: 'translation',
-    // },]
 
+    const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
     if (number.length === 1) {
         number = '0' + number.toString()
     } else {
         number = number.toString()
-    }
-
-    const handleSelect = (value) => {
-        setSelect(value)
     }
 
     const createTag = () => {
@@ -158,84 +225,85 @@ export default function PoemPage() {
     }
 
     // pulls the content of a poem page based on chapter and number
-    useEffect(() => {
-        let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
-        let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[n:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation, n.notes as notes'
-        let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
-        let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
-        let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
-        let getTagTypes = 'match (t:Tag) return t.Type as type'
-        setTrans({
-            Waley: 'N/A',
-            Seidensticker: 'N/A',
-            Tyler: 'N/A',
-            Washburn: 'N/A',
-            Cranston: 'N/A'
-        })
-        const _ = async () => {
-            initDriver(process.env.REACT_APP_NEO4J_URI,
-                process.env.REACT_APP_NEO4J_USERNAME,
-                process.env.REACT_APP_NEO4J_PASSWORD)
-            const driver = getDriver()
-            const session = driver.session()
-            const res = await session.readTransaction(tx => tx.run(get))
-            const resHonkaInfo = await session.readTransaction(tx => tx.run(getHonkaInfo))
-            const resRel = await session.readTransaction(tx => tx.run(getRel))
-            const resTag = await session.readTransaction(tx => tx.run(getTag))
-            const resType = await session.readTransaction(tx => tx.run(getTagTypes))
-            const resPnum = await session.readTransaction(tx => tx.run(getPnum))
-            // holds unique values of speaker & addressee & Japanese & Romaji (top row)
-            let exchange = new Set()
-            res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
-            exchange = Array.from(exchange).map(e => JSON.parse(e))
-            setSpeaker([exchange[0].start.properties.name])
-            setAddressee(exchange.map(e => e.end.properties.name))
-            setJPRM([exchange[0].segments[0].end.properties.Japanese, exchange[0].segments[0].end.properties.Romaji])
-            setNotes(exchange[0].segments[0].end.properties.notes)
-            let transTemp = res.records.map(e => toNativeTypes(e.get('trans'))).map(e => [e.end.properties.name, e.segments[0].end.properties.translation, e.segments[1].start.properties.WaleyPageNum])
-            transTemp.forEach(e =>
-                setTrans(prev => ({
-                    ...prev,
-                    [e[0]]: e[0] !== 'Waley' ? e[1] : [e[1], e[2]]
-                })))
-            let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join(''), e.get('notes') !== null ? Object.values(toNativeTypes(e.get('notes'))).join('') : 'N/A'])
-            let src_obj = []
-            let index = 0
-            let entered_honka = []
-            sources.forEach(e => {
-                if (entered_honka.includes(e[0])) {
-                    src_obj[src_obj.findIndex(el => el.honka === e[0])].translation.push([e[5], e[6]])
-                } else {
-                    src_obj.push({id: index, honka: e[0], source: e[1], romaji: e[2], poet: e[3], order: e[4], translation:  [[e[5], e[6]]], notes: e[7]})
-                    entered_honka.push(e[0])
-                }
-            })
-            setSource(src_obj)
-            let related = new Set()
-            resRel.records.map(e => toNativeTypes(e.get('rel'))).forEach(e => related.add([Object.values(e).join('')]))
-            related = Array.from(related).flat()
-            related = related.map(e => [e, true])
-            setRel(related)
-            let tags = new Set()
-            resTag.records.map(e => toNativeTypes(e.get('type'))).forEach(e => tags.add([Object.values(e).join('')]))
-            tags = Array.from(tags).flat()
-            tags = tags.map(e => [e, true])
-            setTag(tags)
-            let types = resType.records.map(e => e.get('type'))
-            let ls = []
-            types.forEach(e => ls.push({value: e, label: e})) 
-            setTagType(ls)
-            let temp = resPnum.records.map(e => e.get('pnum'))
-            let pls = []
-            temp.forEach(e => {
-                pls.push({value:e, label:e})
-            })
-            setPnum(pls)
-            session.close()
-            closeDriver()
-        }
-        _().catch(console.error)
-    }, [chapter, number])
+    // useEffect(() => {
+    //     setInitRender(false)
+    //     let get = 'match poem=(g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), exchange=(s:Character)-[:SPEAKER_OF]->(g)<-[:ADDRESSEE_OF]-(a:Character), trans=(g)-[:TRANSLATION_OF]-(:Translation)-[:TRANSLATOR_OF]-(:People) where g.pnum ends with "' + number + '" return poem, exchange, trans'
+    //     let getHonkaInfo = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[n:ALLUDES_TO]->(h:Honka)-[r:ANTHOLOGIZED_IN]-(s:Source), (h)<-[:AUTHOR_OF]-(a:People), (h)<-[:TRANSLATION_OF]-(t:Translation)<-[:TRANSLATOR_OF]-(p:People) where g.pnum ends with "' + number + '" return h.Honka as honka, h.Romaji as romaji, s.title as title, a.name as poet, r.order as order, p.name as translator, t.translation as translation, n.notes as notes'
+    //     let getRel = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:INTERNAL_ALLUSION_TO]->(s:Genji_Poem) where g.pnum ends with "' + number + '" return s.pnum as rel'
+    //     let getPnum = 'match (g:Genji_Poem) return g.pnum as pnum'
+    //     let getTag = 'match (g:Genji_Poem)-[:INCLUDED_IN]->(:Chapter {chapter_number: "' + chapter + '"}), (g)-[:TAGGED_AS]->(t:Tag) where g.pnum ends with "' + number + '" return t.Type as type'
+    //     let getTagTypes = 'match (t:Tag) return t.Type as type'
+    //     setTrans({
+    //         Waley: 'N/A',
+    //         Seidensticker: 'N/A',
+    //         Tyler: 'N/A',
+    //         Washburn: 'N/A',
+    //         Cranston: 'N/A'
+    //     })
+    //     const _ = async () => {
+    //         initDriver(process.env.REACT_APP_NEO4J_URI,
+    //             process.env.REACT_APP_NEO4J_USERNAME,
+    //             process.env.REACT_APP_NEO4J_PASSWORD)
+    //         const driver = getDriver()
+    //         const session = driver.session()
+    //         const res = await session.readTransaction(tx => tx.run(get))
+    //         const resHonkaInfo = await session.readTransaction(tx => tx.run(getHonkaInfo))
+    //         const resRel = await session.readTransaction(tx => tx.run(getRel))
+    //         const resTag = await session.readTransaction(tx => tx.run(getTag))
+    //         const resType = await session.readTransaction(tx => tx.run(getTagTypes))
+    //         const resPnum = await session.readTransaction(tx => tx.run(getPnum))
+    //         // holds unique values of speaker & addressee & Japanese & Romaji (top row)
+    //         let exchange = new Set()
+    //         res.records.map(e => JSON.stringify(toNativeTypes(e.get('exchange')))).forEach(e => exchange.add(e))
+    //         exchange = Array.from(exchange).map(e => JSON.parse(e))
+    //         setSpeaker([exchange[0].start.properties.name])
+    //         setAddressee(exchange.map(e => e.end.properties.name))
+    //         setJPRM([exchange[0].segments[0].end.properties.Japanese, exchange[0].segments[0].end.properties.Romaji])
+    //         setNotes(exchange[0].segments[0].end.properties.notes)
+    //         let transTemp = res.records.map(e => toNativeTypes(e.get('trans'))).map(e => [e.end.properties.name, e.segments[0].end.properties.translation, e.segments[1].start.properties.WaleyPageNum])
+    //         transTemp.forEach(e =>
+    //             setTrans(prev => ({
+    //                 ...prev,
+    //                 [e[0]]: e[0] !== 'Waley' ? e[1] : [e[1], e[2]]
+    //             })))
+    //         let sources = resHonkaInfo.records.map(e => [Object.values(toNativeTypes(e.get('honka'))).join(''), Object.values(toNativeTypes(e.get('title'))).join(''), Object.values(toNativeTypes(e.get('romaji'))).join(''), Object.values(toNativeTypes(e.get('poet'))).join(''), Object.values(toNativeTypes(e.get('order'))).join(''), Object.values(toNativeTypes(e.get('translator'))).join(''), Object.values(toNativeTypes(e.get('translation'))).join(''), e.get('notes') !== null ? Object.values(toNativeTypes(e.get('notes'))).join('') : 'N/A'])
+    //         let src_obj = []
+    //         let index = 0
+    //         let entered_honka = []
+    //         sources.forEach(e => {
+    //             if (entered_honka.includes(e[0])) {
+    //                 src_obj[src_obj.findIndex(el => el.honka === e[0])].translation.push([e[5], e[6]])
+    //             } else {
+    //                 src_obj.push({id: index, honka: e[0], source: e[1], romaji: e[2], poet: e[3], order: e[4], translation:  [[e[5], e[6]]], notes: e[7]})
+    //                 entered_honka.push(e[0])
+    //             }
+    //         })
+    //         setSource(src_obj)
+    //         let related = new Set()
+    //         resRel.records.map(e => toNativeTypes(e.get('rel'))).forEach(e => related.add([Object.values(e).join('')]))
+    //         related = Array.from(related).flat()
+    //         related = related.map(e => [e, true])
+    //         setRel(related)
+    //         let tags = new Set()
+    //         resTag.records.map(e => toNativeTypes(e.get('type'))).forEach(e => tags.add([Object.values(e).join('')]))
+    //         tags = Array.from(tags).flat()
+    //         tags = tags.map(e => [e, true])
+    //         setTag(tags)
+    //         let types = resType.records.map(e => e.get('type'))
+    //         let ls = []
+    //         types.forEach(e => ls.push({value: e, label: e})) 
+    //         setTagType(ls)
+    //         let temp = resPnum.records.map(e => e.get('pnum'))
+    //         let pls = []
+    //         temp.forEach(e => {
+    //             pls.push({value:e, label:e})
+    //         })
+    //         setPnum(pls)
+    //         session.close()
+    //         closeDriver()
+    //     }
+    //     _().catch(console.error)
+    // }, [chapter, number])
 
     // async func for tag queries
     useMemo(() => {
@@ -449,7 +517,7 @@ export default function PoemPage() {
                             style={{
                                 width: '20%',
                             }}
-                            onChange={handleSelect}
+                            onChange={(value) => setSelect(value)}
                         />
                         <Button
                             onClick={() => createTag()}

@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
 import { ReactFlowProvider } from 'reactflow';
 import { initDriver, getDriver, closeDriver } from '../neo4j'
-import { concatObj, toNativeTypes } from './utils';
-import GeneologyMap from './GeneologyMap';
-import { traj } from './traj'
+import { concatObj, toNativeTypes } from '../utils';
+import GeneologyMap from '../GeneologyMap';
+import { traj } from '../traj'
 import 'reactflow/dist/style.css';
-import '../reactflow.css'
 
 export default function Characters() {
     const [graph, setGraph] = React.useState([])

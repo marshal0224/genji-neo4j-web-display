@@ -2,7 +2,7 @@ import { ForceGraph2D } from "react-force-graph";
 import SpriteText from 'three-spritetext';
 import { React, useEffect, useState } from "react";
 import { closeDriver, getDriver, initDriver } from "../neo4j";
-import { concatObj, toNativeTypes } from "./utils";
+import { concatObj, toNativeTypes } from "../utils";
 
 export default function AltChar() {
     const [graph, setGraph] = useState({nodes: [], links: []})
