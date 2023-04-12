@@ -3,7 +3,7 @@ name: Push source to openshift and trigger a build and deploy
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   build:
     name: Provision environment variables and deploy to OpenShift with nodeshift
