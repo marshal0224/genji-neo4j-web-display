@@ -543,7 +543,7 @@ export default function PoemPage( props ) {
             <Divider></Divider>
             <Row align='middle'>
                 <Col offset={10}>
-                    <Space direction='vertical'>
+                    {/* <Space direction='vertical'>
                         <Input
                             placeholder="input username"
                             onChange={(event) => setUsr(event.target.value)}
@@ -552,9 +552,9 @@ export default function PoemPage( props ) {
                             placeholder="input password"
                             onChange={(event) => setPwd(event.target.value)}
                         />
-                    </Space>
-                    <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : null}>Login</Button>
-                    <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button>
+                    </Space> */}
+                    {/* <Button disabled={auth} onClick={() => (usr === vincent[0]) && (pwd === vincent[1]) ? setAuth(true) : null}>Login</Button>
+                    <Button disabled={!auth} onClick={() => setAuth(false)}>Logout</Button> */}
                 </Col>
             </Row>
         </div>
