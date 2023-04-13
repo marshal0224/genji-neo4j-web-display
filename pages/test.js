@@ -11,23 +11,23 @@ export default function test() {
         defaultAccessMode: neo4j.session.READ
     })
     const [data, setData] = useState(0)
-    useMemo(() => {
-        console.log('line 11')
-        // const _ = async () => {
-        //     const result = await session.run(
-        //         'MATCH (n) RETURN n LIMIT 25'
-        //     )
-        //     const singleRecord = result.records[0]
-        //     const node = singleRecord.get(0)
-        //     console.log(node.properties)
-        // }
-        // _().catch(console.error)
-        session.run(
-                    'MATCH (n:Character) RETURN n.name LIMIT 25'
-                ).then(result => {
-                    console.log(result.records)
-                })
-    }, [data])
+    // useMemo(() => {
+    //     console.log('line 11')
+    //     // const _ = async () => {
+    //     //     const result = await session.run(
+    //     //         'MATCH (n) RETURN n LIMIT 25'
+    //     //     )
+    //     //     const singleRecord = result.records[0]
+    //     //     const node = singleRecord.get(0)
+    //     //     console.log(node.properties)
+    //     // }
+    //     // _().catch(console.error)
+    //     session.run(
+    //                 'MATCH (n:Character) RETURN n.name LIMIT 25'
+    //             ).then(result => {
+    //                 console.log(result.records)
+    //             })
+    // }, [data])
     return (
         <div>
             <h1>Test</h1>
