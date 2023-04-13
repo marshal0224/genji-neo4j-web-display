@@ -1,6 +1,6 @@
 import '../styles/global.css';
-import React from 'react'
-import { Layout, Menu } from 'antd';
+import React, { Suspense } from 'react'
+import { Layout, Menu, Spin } from 'antd';
 import { HeaderImg } from './Header';
 import Link from 'next/link';
 import 'antd/dist/antd.css';
@@ -56,24 +56,24 @@ export default function App({ Component, pageProps }) {
                 <Link href={"/characters"} scroll={false}>Characters</Link>
               )
             },
+            // {
+            //   key: 'AltChars',
+            //   label: (
+            //     <Link href={"/altchar"} scroll={false}>AltChar</Link>
+            //   )
+            // }, 
             {
-              key: 'AltChars',
+              key: 'Allusions',
               label: (
-                <Link href={"/altchar"} scroll={false}>AltChar</Link>
+                <Link href={"/allusions"} scroll={false}>Allusions</Link>
               )
             }, 
-            // {
-            //   key: 'Allusions',
-            //   label: (
-            //     <Link href={"/allusions"} scroll={false}>Allusions</Link>
-            //   )
-            // }, 
-            // {
-            //   key: 'Search',
-            //   label: (
-            //     <Link href={"/search"} scroll={false}>Search</Link>
-            //   )
-            // }, 
+            {
+              key: 'Test',
+              label: (
+                <Link href={"/test"} scroll={false}>Test</Link>
+              )
+            }, 
             {
               key: 'Edit',
               label: (
@@ -104,7 +104,9 @@ export default function App({ Component, pageProps }) {
             backgroundColor: 'white', 
           }}
         >
-          <Component {...pageProps} />
+          <Suspense fallback={<Spin />}>
+            <Component {...pageProps} />
+          </Suspense>
         </Content>
         {/* <Footer
           style={{

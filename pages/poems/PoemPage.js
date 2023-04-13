@@ -136,7 +136,7 @@ export default function PoemPage( props ) {
 
     const forceUpdate = useReducer(x => x + 1, 0)[1]
 
-    const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
+    // const vincent = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_PASSWORD]
     if (number.length === 1) {
         number = '0' + number.toString()
     } else {
@@ -305,38 +305,38 @@ export default function PoemPage( props ) {
     //     _().catch(console.error)
     // }, [chapter, number])
 
-    // async func for tag queries
-    useMemo(() => {
-        const _ = async () => {
-            initDriver(process.env.REACT_APP_NEO4J_URI,
-                process.env.REACT_APP_NEO4J_USERNAME,
-                process.env.REACT_APP_NEO4J_PASSWORD)
-            const driver = getDriver()
-            const session = driver.session()
-            let write = await session.writeTransaction(tx => tx.run(query[0]))
-            session.close()
-            closeDriver()
-        }
-        if (query.length > 0) {
-            if (query[1] === 'create tag') {
-                _().catch(console.error)
-                alert('tag created!')
-            } else if (query[1] === 'delete tag') {
-                _().catch(console.error)
-                alert('tag deleted!')
-            } else if (query[1] === 'create rel') {
-                _().catch(console.error)
-                alert('link created!')
-            } else if (query[1] === 'delete rel') {
-                _().catch(console.error)
-                alert('link delete!')
-            } else if (query[1] === 'notes' && query[0] !== '') {
-                _().catch(console.error)
-                alert('Notes updated!')
-                setQuery([])
-            }
-        } 
-    }, [query])
+    // // async func for tag queries
+    // useMemo(() => {
+    //     const _ = async () => {
+    //         initDriver(process.env.REACT_APP_NEO4J_URI,
+    //             process.env.REACT_APP_NEO4J_USERNAME,
+    //             process.env.REACT_APP_NEO4J_PASSWORD)
+    //         const driver = getDriver()
+    //         const session = driver.session()
+    //         let write = await session.writeTransaction(tx => tx.run(query[0]))
+    //         session.close()
+    //         closeDriver()
+    //     }
+    //     if (query.length > 0) {
+    //         if (query[1] === 'create tag') {
+    //             _().catch(console.error)
+    //             alert('tag created!')
+    //         } else if (query[1] === 'delete tag') {
+    //             _().catch(console.error)
+    //             alert('tag deleted!')
+    //         } else if (query[1] === 'create rel') {
+    //             _().catch(console.error)
+    //             alert('link created!')
+    //         } else if (query[1] === 'delete rel') {
+    //             _().catch(console.error)
+    //             alert('link delete!')
+    //         } else if (query[1] === 'notes' && query[0] !== '') {
+    //             _().catch(console.error)
+    //             alert('Notes updated!')
+    //             setQuery([])
+    //         }
+    //     } 
+    // }, [query])
 
     return (
         <div>
