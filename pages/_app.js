@@ -68,12 +68,12 @@ export default function App({ Component, pageProps }) {
                 <Link href={"/allusions"} scroll={false}>Allusions</Link>
               )
             }, 
-            {
-              key: 'Test',
-              label: (
-                <Link href={"/test"} scroll={false}>Test</Link>
-              )
-            }, 
+            // {
+            //   key: 'Test',
+            //   label: (
+            //     <Link href={"/test"} scroll={false}>Test</Link>
+            //   )
+            // }, 
             {
               key: 'Edit',
               label: (
