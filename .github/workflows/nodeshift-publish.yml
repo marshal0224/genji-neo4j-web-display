@@ -25,6 +25,7 @@ jobs:
       - name: Nodeshift deploy
         run: |
           npx nodeshift NPM_RUN="npm start" --deploy.port 3000 --expose \
+            --deploy.env YARN_ENABLED=true \
             --username=${{ secrets.OC_USERNAME }} --password="${{ secrets.OC_PASSWORD }}" \
             --server=${{ secrets.OC_SERVER }} \
             --namespace.name ${{ secrets.OC_NAMESPACE }}
