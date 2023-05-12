@@ -14,7 +14,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
       - name: Create .env.local with secret environment variables
@@ -25,6 +25,7 @@ jobs:
       - name: Nodeshift deploy
         run: |
           npx nodeshift NPM_RUN="npm start" --deploy.port 3000 --expose \
+            --dockerImage=registry.access.redhat.com/ubi8/nodejs-16 \
             --deploy.env YARN_ENABLED=true \
             --username=${{ secrets.OC_USERNAME }} --password="${{ secrets.OC_PASSWORD }}" \
             --server=${{ secrets.OC_SERVER }} \
