@@ -1,4 +1,4 @@
-# This project has been transferred to the following new reop: 
+# This project has been transferred to the following new repo: 
 https://github.com/bryanteoh964/genji-neo4j-web-display-next
 # Neo4j Database Requirements
 Our DB is on Aura, and the Cypher commands embeded in the scripts will likely only fit our DB. If you are interested in using this project for your own DB, consider rewriting the cypher queries, and subsequently how are the data being treated throughout. If you also have a textual database, we will eventually post our node and relationship layout, as well as our schema. Until then, feel free to reach out.
